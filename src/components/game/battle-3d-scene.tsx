@@ -105,7 +105,7 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
     g.rotation.z = -facing * dp * 1.2;
   });
 
-  const scale = 1.12;
+  const scale = 1.0;
 
   return (
     <group ref={group} position={position} scale={scale}>
@@ -143,7 +143,7 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
       </Suspense>
 
       {/* Floating nameplate: HP bar + active marker, always facing camera */}
-      <Billboard follow lockX lockZ position={[0, 2.35, 0]}>
+      <Billboard follow lockX lockZ position={[0, 2.65, 0]}>
         {isActive && hero.isAlive && (
           <mesh position={[0, 0.32, 0]} rotation={[0, 0, Math.PI]}>
             <coneGeometry args={[0.13, 0.26, 4]} />
@@ -196,8 +196,8 @@ function CameraRig() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     state.camera.position.x = Math.sin(t * 0.1) * 0.25;
-    state.camera.position.y = 2.5 + Math.sin(t * 0.16) * 0.1;
-    state.camera.lookAt(0, 1.15, 0);
+    state.camera.position.y = 2.7 + Math.sin(t * 0.16) * 0.1;
+    state.camera.lookAt(0, 1.3, 0);
   });
   return null;
 }
@@ -208,8 +208,8 @@ function CameraRig() {
 // sits closest to the centre line; the rest recede outward and back.
 function teamPositions(count: number, side: number): [number, number, number][] {
   return Array.from({ length: count }, (_, i) => {
-    const x = side * (2.3 + i * 0.62);
-    const z = 1.9 - i * 1.3;
+    const x = side * (2.55 + i * 0.72);
+    const z = 1.6 - i * 1.4;
     return [x, 0, z] as [number, number, number];
   });
 }
@@ -278,7 +278,7 @@ export default function Battle3DScene({ battle }: { battle: BattleState }) {
       shadows
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      camera={{ position: [0, 2.5, 8.6], fov: 44 }}
+      camera={{ position: [0, 2.7, 9.6], fov: 46 }}
       style={{ width: '100%', height: '100%', background: 'transparent' }}
     >
       <SceneContents battle={battle} />
