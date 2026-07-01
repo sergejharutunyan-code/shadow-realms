@@ -1,0 +1,1725 @@
+     1→import { create } from 'zustand';
+     2→import { persist } from 'zustand/middleware';
+     3→import {
+     4→  HeroInstance,
+     5→  PlayerState,
+     6→  BattleState,
+     7→  BattleHero,
+     8→  HeroTemplate,
+     9→  RARITY_CONFIG,
+    10→  VIP_LEVELS,
+    11→  HERO_TEMPLATES,
+    12→  EQUIPMENT_TEMPLATES,
+    13→  EquipmentTemplate,
+    14→  EquipmentSlot,
+    15→  ACHIEVEMENTS,
+    16→  Achievement,
+    17→  getSummonResult,
+    18→  createHeroInstance,
+    19→  createBattleHero,
+    20→  generateEnemyTeam,
+    21→  getHeroStats,
+    22→  getExperienceForLevel,
+    23→  CAMPAIGN_STAGES,
+    24→  DAILY_REWARDS,
+    25→  ARENA_OPPONENTS,
+    26→  DAILY_MISSIONS,
+    27→  NPC_GUILDS,
+    28→  TOWER_FLOORS,
+    29→  getDungeonById,
+    30→  AWAKENING_LEVELS,
+    31→  ELEMENT_CONFIG,
+    32→  MerchantDeal,
+    33→  rollMerchantDeals,
+    34→  getMerchantWindow,
+    35→  MERCHANT_REFRESH_INTERVAL,
+    36→  LOGIN_STREAK_MILESTONES,
+    37→  HeroSkin,
+    38→  HERO_SKINS,
+    39→  getSkinsForHero,
+    40→} from './game-data';
+    41→
+    42→export type GameScreen = 'dashboard' | 'heroes' | 'summon' | 'battle' | 'campaign' | 'shop' | 'vip' | 'equipment' | 'achievements' | 'leaderboard' | 'arena' | 'missions' | 'guild' | 'tower' | 'dungeon' | 'merchant' | 'login-streak';
+    43→
+    44→export interface OwnedEquipment {
+    45→  id: string;
+    46→  templateId: string;
+    47→  equippedTo?: string; // hero ID
+    48→}
+    49→
+    50→export interface ArenaBattleResult {
+    51→  opponentId: string;
+    52→  won: boolean;
+    53→  trophies: number;
+    54→  gold: number;
+    55→  gems: number;
+    56→}
+    57→
+    58→export interface MissionProgress {
+    59→  missionId: string;
+    60→  progress: number;
+    61→  claimed: boolean;
+    62→}
+    63→
+    64→export interface GameState {
+    65→  player: PlayerState;
+    66→  heroes: HeroInstance[];
+    67→  team: string[]; // hero IDs in team (max 5)
+    68→  screen: GameScreen;
+    69→  battle: BattleState | null;
+    70→  summonResults: HeroInstance[];
+    71→  showSummonAnimation: boolean;
+    72→  notifications: { id: string; message: string; type: 'success' | 'warning' | 'info' | 'epic' }[];
+    73→  dailyClaimed: boolean;
+    74→  showDailyReward: boolean;
+    75→  equipment: OwnedEquipment[];
+    76→  unlockedAchievements: string[];
+    77→  battlesWon: number;
+    78→  totalBattles: number;
+    79→  maxDamage: number;
+    80→  showAchievementUnlock: Achievement | null;
+    81→  // Arena
+    82→  arenaTrophies: number;
+    83→  arenaWins: number;
+    84→  arenaLosses: number;
+    85→  arenaCooldown: number; // timestamp when next arena battle is available
+    86→  // Missions
+    87→  missionProgress: MissionProgress[];
+    88→  missionsLastRefreshed: number;
+    89→  // Guild
+    90→  guildId: string | null;
+    91→  // Tower of Eternity
+    92→  towerHighestFloor: number;
+    93→  towerCurrentFloor: number;
+    94→  towerAttempts: number; // daily attempts (max 5)
+    95→  towerLastReset: number;
+    96→  // Daily Dungeons
+    97→  dungeonAttempts: { [dungeonId: string]: number }; // attempts used per dungeon (max 3/day)
+    98→  dungeonLastReset: number; // timestamp when attempts were last reset
+    99→  dungeonMaterials: { [materialName: string]: number }; // inventory of materials collected
+   100→  dungeonHighestStage: { [dungeonId: string]: number }; // highest stage cleared per dungeon
+   101→  // Stats tracking
+   102→  heroesSummoned: number;
+   103→  gemsSpent: number;
+   104→  equipmentEquipped: number;
+   105→  campaignStagesWon: number;
+   106→  heroesLeveledUp: number;
+   107→  // Wandering Merchant
+   108→  merchantWindowStart: number; // start of the current 8h merchant window (0 = never visited)
+   109→  merchantPurchases: { [dealId: string]: number }; // dealId -> quantity bought this window
+   110→  merchantLastSeen: number; // last time merchant was viewed (for notification logic)
+   111→  // Daily Login Streak (cumulative, separate from 7-day cycle)
+   112→  loginStreak: number; // current consecutive-day streak
+   113→  loginStreakLastClaim: number; // timestamp of last streak claim (day)
+   114→  claimedStreakMilestones: number[]; // milestone days already claimed
+   115→  showStreakReward: boolean;
+   116→  // Hero Skins
+   117→  ownedSkins: string[]; // skin IDs player owns
+   118→  equippedSkins: { [heroInstanceId: string]: string }; // heroInstance.id -> skinId
+   119→
+   120→  // Actions
+   121→  setScreen: (screen: GameScreen) => void;
+   122→  summon: (count: 1 | 10, cost: number) => void;
+   123→  addToTeam: (heroId: string) => void;
+   124→  removeFromTeam: (heroId: string) => void;
+   125→  startBattle: (stage: number) => void;
+   126→  executeBattleTurn: () => void;
+   127→  toggleAutoPlay: () => void;
+   128→  toggleBattleSpeed: () => void;
+   129→  buyShopItem: (itemId: string, price: number, currency: 'gems' | 'gold', type: string, amount: number) => void;
+   130→  claimDailyReward: () => void;
+   131→  levelUpHero: (heroId: string) => void;
+   132→  ascendHero: (heroId: string) => void;
+   133→  awakenHero: (heroId: string) => void;
+   134→  addGems: (amount: number) => void;
+   135→  addGold: (amount: number) => void;
+   136→  addVIPPoints: (amount: number) => void;
+   137→  refillEnergy: () => void;
+   138→  clearSummonResults: () => void;
+   139→  setShowSummonAnimation: (show: boolean) => void;
+   140→  setShowDailyReward: (show: boolean) => void;
+   141→  addNotification: (message: string, type: 'success' | 'warning' | 'info' | 'epic') => void;
+   142→  clearNotification: (id: string) => void;
+   143→  endBattle: () => void;
+   144→  checkEnergyRefill: () => void;
+   145→  // Equipment
+   146→  generateRandomEquipment: (rarityBias?: number) => OwnedEquipment;
+   147→  equipItem: (equipmentId: string, heroId: string) => void;
+   148→  unequipItem: (equipmentId: string) => void;
+   149→  craftEquipment: (rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') => void;
+   150→  // Achievements
+   151→  checkAchievements: () => void;
+   152→  dismissAchievementUnlock: () => void;
+   153→  // Arena
+   154→  startArenaBattle: (opponentId: string) => void;
+   155→  // Missions
+   156→  updateMissionProgress: (type: string, amount: number) => void;
+   157→  claimMissionReward: (missionId: string) => void;
+   158→  refreshMissions: () => void;
+   159→  // Guild
+   160→  joinGuild: (guildId: string) => void;
+   161→  leaveGuild: () => void;
+   162→  // Tower
+   163→  startTowerBattle: (floor: number) => { won: boolean; rewards: { gold: number; gems: number; item?: string } } | null;
+   164→  resetTowerProgress: () => void;
+   165→  // Daily Dungeons
+   166→  startDungeonBattle: (dungeonId: string, stage: number) => { won: boolean; rewards: { gold: number; gems: number; material?: string; materialCount?: number } } | null;
+   167→  resetDungeonAttempts: () => void;
+   168→  canEnterDungeon: (dungeonId: string) => boolean;
+   169→  // Wandering Merchant
+   170→  getMerchantDeals: () => MerchantDeal[];
+   171→  getMerchantRemainingStock: (dealId: string) => number;
+   172→  buyMerchantDeal: (dealId: string) => { success: boolean; reason?: string };
+   173→  refreshMerchantIfStale: () => void;
+   174→  // Daily Login Streak
+   175→  claimLoginStreak: () => { claimed: boolean; milestone?: typeof LOGIN_STREAK_MILESTONES[0] };
+   176→  dismissStreakReward: () => void;
+   177→  checkLoginStreak: () => void;
+   178→  // Hero Skins
+   179→  buySkin: (skinId: string) => { success: boolean; reason?: string };
+   180→  equipSkin: (heroInstanceId: string, skinId: string) => void;
+   181→  unequipSkin: (heroInstanceId: string) => void;
+   182→  getEquippedSkin: (heroInstanceId: string) => HeroSkin | undefined;
+   183→}
+   184→
+   185→const initialPlayer: PlayerState = {
+   186→  id: 'player_1',
+   187→  name: 'Champion',
+   188→  level: 1,
+   189→  experience: 0,
+   190→  gold: 10000,
+   191→  gems: 500,
+   192→  energy: 100,
+   193→  maxEnergy: 100,
+   194→  vipLevel: 0,
+   195→  vipPoints: 0,
+   196→  totalSpent: 0,
+   197→  campaignStage: 1,
+   198→  dailyRewardDay: 0,
+   199→  lastLoginAt: Date.now(),
+   200→};
+   201→
+   202→// Give player starter heroes - balanced for early game
+   203→const starterHeroes: HeroInstance[] = (() => {
+   204→  // Use templates from game-data for consistency
+   205→  const knightTemplate = HERO_TEMPLATES.find(h => h.id === 'knight_01')!; // Sir Galahad - Rare
+   206→  const elfTemplate = HERO_TEMPLATES.find(h => h.id === 'elf_02')!; // Ranger Sylvana - Rare
+   207→  const undeadTemplate = HERO_TEMPLATES.find(h => h.id === 'undead_02')!; // Bone Collector - Rare
+   208→
+   209→  const heroes = [knightTemplate, elfTemplate, undeadTemplate].map((t) => {
+   210→    const instance = createHeroInstance(t);
+   211→    instance.level = 5; // Start at level 5 for better stats
+   212→    // Recalculate stats for level 5
+   213→    const stats = getHeroStats(t, 5, instance.stars);
+   214→    instance.attack = stats.attack;
+   215→    instance.defense = stats.defense;
+   216→    instance.health = stats.health;
+   217→    instance.speed = stats.speed;
+   218→    instance.inTeam = true;
+   219→    return instance;
+   220→  });
+   221→  return heroes;
+   222→})();
+   223→
+   224→export const useGameStore = create<GameState>()(
+   225→  persist(
+   226→    (set, get) => ({
+   227→      player: initialPlayer,
+   228→      heroes: starterHeroes,
+   229→      team: starterHeroes.map(h => h.id),
+   230→      screen: 'dashboard' as GameScreen,
+   231→      battle: null,
+   232→      summonResults: [],
+   233→      showSummonAnimation: false,
+   234→      notifications: [],
+   235→      dailyClaimed: false,
+   236→      showDailyReward: false,
+   237→      equipment: [],
+   238→      unlockedAchievements: [],
+   239→      battlesWon: 0,
+   240→      totalBattles: 0,
+   241→      maxDamage: 0,
+   242→      showAchievementUnlock: null,
+   243→      arenaTrophies: 0,
+   244→      arenaWins: 0,
+   245→      arenaLosses: 0,
+   246→      arenaCooldown: 0,
+   247→      missionProgress: [],
+   248→      missionsLastRefreshed: Date.now(),
+   249→      guildId: null,
+   250→      // Tower of Eternity
+   251→      towerHighestFloor: 0,
+   252→      towerCurrentFloor: 1,
+   253→      towerAttempts: 5,
+   254→      towerLastReset: Date.now(),
+   255→      // Daily Dungeons
+   256→      dungeonAttempts: {},
+   257→      dungeonLastReset: Date.now(),
+   258→      dungeonMaterials: {},
+   259→      dungeonHighestStage: {},
+   260→      heroesSummoned: 0,
+   261→      gemsSpent: 0,
+   262→      equipmentEquipped: 0,
+   263→      campaignStagesWon: 0,
+   264→      heroesLeveledUp: 0,
+   265→      // Wandering Merchant
+   266→      merchantWindowStart: 0,
+   267→      merchantPurchases: {},
+   268→      merchantLastSeen: 0,
+   269→      // Daily Login Streak
+   270→      loginStreak: 0,
+   271→      loginStreakLastClaim: 0,
+   272→      claimedStreakMilestones: [],
+   273→      showStreakReward: false,
+   274→      // Hero Skins — start with default skins owned
+   275→      ownedSkins: HERO_SKINS.filter(s => s.cost === 0).map(s => s.id),
+   276→      equippedSkins: {},
+   277→
+   278→      setScreen: (screen) => set({ screen }),
+   279→
+   280→      summon: (count, cost) => {
+   281→        const state = get();
+   282→        if (state.player.gems < cost) {
+   283→          state.addNotification('Not enough gems! Visit the shop to get more!', 'warning');
+   284→          return;
+   285→        }
+   286→        if (state.player.energy < 5) {
+   287→          state.addNotification('Not enough energy! Wait for refill or buy from shop!', 'warning');
+   288→          return;
+   289→        }
+   290→
+   291→        const results: HeroInstance[] = [];
+   292→        for (let i = 0; i < count; i++) {
+   293→          const template = getSummonResult(state.player.vipLevel);
+   294→          const instance = createHeroInstance(template);
+   295→          results.push(instance);
+   296→        }
+   297→
+   298→        // Check for duplicates and merge
+   299→        const existingHeroes = [...state.heroes];
+   300→        const newHeroes: HeroInstance[] = [];
+   301→
+   302→        for (const result of results) {
+   303→          const existing = existingHeroes.find(h => h.templateId === result.templateId);
+   304→          if (existing) {
+   305→            // Merge - add experience to existing hero
+   306→            existing.experience += 500;
+   307→          } else {
+   308→            newHeroes.push(result);
+   309→          }
+   310→        }
+   311→
+   312→        set({
+   313→          player: { ...state.player, gems: state.player.gems - cost, energy: state.player.energy - 5 },
+   314→          heroes: [...existingHeroes, ...newHeroes],
+   315→          summonResults: results,
+   316→          showSummonAnimation: true,
+   317→          heroesSummoned: state.heroesSummoned + count,
+   318→          gemsSpent: state.gemsSpent + cost,
+   319→        });
+   320→
+   321→        // Update mission progress
+   322→        get().updateMissionProgress('summon', count);
+   323→
+   324→        // Check for epic+ pulls
+   325→        const bestRarity = results.reduce((best, h) => {
+   326→          const order = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+   327→          return order.indexOf(h.rarity) > order.indexOf(best) ? h.rarity : best;
+   328→        }, 'common' as string);
+   329→
+   330→        if (bestRarity === 'mythic') {
+   331→          state.addNotification('🌟 MYTHIC PULL! You summoned a MYTHIC champion! 🌟', 'epic');
+   332→        } else if (bestRarity === 'legendary') {
+   333→          state.addNotification('✨ LEGENDARY! An incredible champion joins your roster!', 'success');
+   334→        } else if (bestRarity === 'epic') {
+   335→          state.addNotification('💜 Epic champion acquired!', 'success');
+   336→        }
+   337→      },
+   338→
+   339→      addToTeam: (heroId) => {
+   340→        const state = get();
+   341→        if (state.team.length >= 5) {
+   342→          state.addNotification('Team is full! Remove a hero first.', 'warning');
+   343→          return;
+   344→        }
+   345→        if (state.team.includes(heroId)) return;
+   346→        set({
+   347→          team: [...state.team, heroId],
+   348→          heroes: state.heroes.map(h => h.id === heroId ? { ...h, inTeam: true } : h),
+   349→        });
+   350→      },
+   351→
+   352→      removeFromTeam: (heroId) => {
+   353→        const state = get();
+   354→        if (state.team.length <= 1) {
+   355→          state.addNotification('You need at least 1 hero in your team!', 'warning');
+   356→          return;
+   357→        }
+   358→        set({
+   359→          team: state.team.filter(id => id !== heroId),
+   360→          heroes: state.heroes.map(h => h.id === heroId ? { ...h, inTeam: false } : h),
+   361→        });
+   362→      },
+   363→
+   364→      startBattle: (stage) => {
+   365→        const state = get();
+   366→        const stageData = CAMPAIGN_STAGES[stage - 1];
+   367→        if (!stageData) return;
+   368→        if (state.player.energy < stageData.energyCost) {
+   369→          state.addNotification('Not enough energy!', 'warning');
+   370→          return;
+   371→        }
+   372→
+   373→        const teamHeroes = state.team
+   374→          .map(id => state.heroes.find(h => h.id === id))
+   375→          .filter((h): h is HeroInstance => h !== undefined);
+   376→
+   377→        if (teamHeroes.length === 0) {
+   378→          state.addNotification('Add heroes to your team first!', 'warning');
+   379→          return;
+   380→        }
+   381→
+   382→        const playerTeam = teamHeroes.map(createBattleHero);
+   383→        const enemyTeam = generateEnemyTeam(stage, stageData.enemyFaction);
+   384→
+   385→        set({
+   386→          player: { ...state.player, energy: state.player.energy - stageData.energyCost },
+   387→          battle: {
+   388→            isActive: true,
+   389→            playerTeam,
+   390→            enemyTeam,
+   391→            currentTurn: 'player',
+   392→            turnIndex: 0,
+   393→            turnNumber: 1,
+   394→            log: ['⚔️ Battle begins! Turn 1'],
+   395→            result: null,
+   396→            rewards: null,
+   397→            autoPlay: false,
+   398→            speed: 1,
+   399→          },
+   400→          screen: 'battle',
+   401→        });
+   402→
+   403→        // Auto-start battle simulation
+   404→        get().executeBattleTurn();
+   405→      },
+   406→
+   407→      executeBattleTurn: () => {
+   408→        const state = get();
+   409→        if (!state.battle || state.battle.result) return;
+   410→
+   411→        const battle = { ...state.battle };
+   412→        const log = [...battle.log];
+   413→        const playerTeam = battle.playerTeam.map(h => ({ ...h }));
+   414→        const enemyTeam = battle.enemyTeam.map(h => ({ ...h }));
+   415→
+   416→        const livingPlayers = playerTeam.filter(h => h.isAlive);
+   417→        const livingEnemies = enemyTeam.filter(h => h.isAlive);
+   418→
+   419→        if (livingPlayers.length === 0) {
+   420→          set({
+   421→            battle: {
+   422→              ...battle,
+   423→              playerTeam,
+   424→              enemyTeam,
+   425→              log: [...log, '💀 DEFEAT! Your team has been destroyed.'],
+   426→              result: 'defeat',
+   427→              rewards: null,
+   428→            },
+   429→          });
+   430→          return;
+   431→        }
+   432→        if (livingEnemies.length === 0) {
+   433→          const stageData = CAMPAIGN_STAGES[state.player.campaignStage - 1];
+   434→          const goldReward = stageData?.rewards.gold || 100;
+   435→          const expReward = stageData?.rewards.experience || 50;
+   436→          const gemReward = stageData?.rewards.gems || 5;
+   437→
+   438→          // Apply VIP bonuses
+   439→          const vipGoldBonus = 1 + state.player.vipLevel * 0.1;
+   440→          const actualGold = Math.floor(goldReward * vipGoldBonus);
+   441→
+   442→          // Level up player
+   443→          let newExp = state.player.experience + expReward;
+   444→          let newLevel = state.player.level;
+   445→          let newGold = state.player.gold + actualGold;
+   446→          let newGems = state.player.gems + gemReward;
+   447→
+   448→          while (newExp >= getExperienceForLevel(newLevel)) {
+   449→            newExp -= getExperienceForLevel(newLevel);
+   450→            newLevel++;
+   451→            newGems += 10;
+   452→          }
+   453→
+   454→          // Level up heroes
+   455→          const updatedHeroes = state.heroes.map(h => {
+   456→            if (state.team.includes(h.id)) {
+   457→              let heroExp = h.experience + expReward;
+   458→              let heroLevel = h.level;
+   459→              while (heroExp >= getExperienceForLevel(heroLevel)) {
+   460→                heroExp -= getExperienceForLevel(heroLevel);
+   461→                heroLevel++;
+   462→              }
+   463→              const stats = getHeroStats(
+   464→                { baseAttack: h.attack / (1 + (h.level - 1) * 0.08) / (1 + (h.stars - 1) * 0.15), baseDefense: h.defense / (1 + (h.level - 1) * 0.08) / (1 + (h.stars - 1) * 0.15), baseHealth: h.health / (1 + (h.level - 1) * 0.08) / (1 + (h.stars - 1) * 0.15), baseSpeed: h.speed / (1 + (h.stars - 1) * 0.05) } as HeroTemplate,
+   465→                heroLevel,
+   466→                h.stars
+   467→              );
+   468→              return { ...h, level: heroLevel, experience: heroExp, attack: stats.attack, defense: stats.defense, health: stats.health, speed: stats.speed };
+   469→            }
+   470→            return h;
+   471→          });
+   472→
+   473→          const newCampaignStage = Math.max(state.player.campaignStage, stageData ? stageData.id + 1 : state.player.campaignStage);
+   474→
+   475→          // Equipment drop chance (15% base + 2% per stage)
+   476→          const dropChance = 0.15 + (stageData?.id || 1) * 0.02;
+   477→          const droppedEquipment = Math.random() < dropChance ? get().generateRandomEquipment(stageData ? stageData.id / 50 : 0) : null;
+   478→          const newEquipment = droppedEquipment ? [...state.equipment, droppedEquipment] : state.equipment;
+   479→
+   480→          // Get dropped equipment name for notification
+   481→          let dropName = '';
+   482→          if (droppedEquipment) {
+   483→            const dropTemplate = EQUIPMENT_TEMPLATES.find(t => t.id === droppedEquipment.templateId);
+   484→            dropName = dropTemplate ? `${dropTemplate.icon} ${dropTemplate.name}` : 'Equipment';
+   485→          }
+   486→
+   487→          set({
+   488→            player: {
+   489→              ...state.player,
+   490→              level: newLevel,
+   491→              experience: newExp,
+   492→              gold: newGold,
+   493→              gems: newGems,
+   494→              campaignStage: newCampaignStage,
+   495→            },
+   496→            heroes: updatedHeroes,
+   497→            equipment: newEquipment,
+   498→            battlesWon: state.battlesWon + 1,
+   499→            totalBattles: state.totalBattles + 1,
+   500→            battle: {
+   501→              ...battle,
+   502→              playerTeam,
+   503→              enemyTeam,
+   504→              log: [...log, `🏆 VICTORY! +${actualGold} Gold, +${expReward} XP, +${gemReward} Gems`, droppedEquipment ? `🎁 Equipment Drop: ${dropName}!` : ''].filter(Boolean),
+   505→              result: 'victory',
+   506→              rewards: { gold: actualGold, experience: expReward, gems: gemReward },
+   507→            },
+   508→          });
+   509→
+   510→          if (droppedEquipment) {
+   511→            setTimeout(() => get().addNotification(`🎁 Equipment Drop: ${dropName}!`, 'epic'), 500);
+   512→          }
+   513→          // Check achievements after victory
+   514→          setTimeout(() => get().checkAchievements(), 100);
+   515→          return;
+   516→        }
+   517→
+   518→        // Player turn
+   519→        for (const hero of livingPlayers) {
+   520→          const target = livingEnemies[Math.floor(Math.random() * livingEnemies.length)];
+   521→          if (!target) continue;
+   522→
+   523→          const isCrit = Math.random() < hero.critRate;
+   524→          let damage = Math.floor(hero.attack * (1.5 + Math.random() * 0.5) * (isCrit ? hero.critDamage : 1));
+   525→          const defReduction = target.defense / (target.defense + 500);
+   526→          damage = Math.floor(damage * (1 - defReduction));
+   527→
+   528→          // Track max damage for achievements
+   529→          if (damage > state.maxDamage) {
+   530→            set({ maxDamage: damage });
+   531→          }
+   532→
+   533→          const enemyIdx = enemyTeam.findIndex(e => e.id === target.id);
+   534→          enemyTeam[enemyIdx] = {
+   535→            ...target,
+   536→            currentHealth: Math.max(0, target.currentHealth - damage),
+   537→            isAlive: target.currentHealth - damage > 0,
+   538→          };
+   539→
+   540→          log.push(`${hero.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}`);
+   541→
+   542→          if (enemyTeam[enemyIdx].currentHealth <= 0) {
+   543→            enemyTeam[enemyIdx] = { ...enemyTeam[enemyIdx], isAlive: false, currentHealth: 0 };
+   544→            log.push(`💀 ${target.name} has been slain!`);
+   545→          }
+   546→        }
+   547→
+   548→        // Check if enemies are dead
+   549→        const remainingEnemies = enemyTeam.filter(e => e.isAlive);
+   550→        if (remainingEnemies.length === 0) {
+   551→          // Victory will be handled on next call
+   552→          set({
+   553→            battle: {
+   554→              ...battle,
+   555→              playerTeam,
+   556→              enemyTeam,
+   557→              log,
+   558→              currentTurn: 'player',
+   559→              turnNumber: battle.turnNumber + 1,
+   560→            },
+   561→          });
+   562→          setTimeout(() => get().executeBattleTurn(), 100);
+   563→          return;
+   564→        }
+   565→
+   566→        // Enemy turn
+   567→        const updatedLivingEnemies = enemyTeam.filter(e => e.isAlive);
+   568→        const updatedLivingPlayers = playerTeam.filter(h => h.isAlive);
+   569→
+   570→        for (const enemy of updatedLivingEnemies) {
+   571→          const target = updatedLivingPlayers[Math.floor(Math.random() * updatedLivingPlayers.length)];
+   572→          if (!target) continue;
+   573→
+   574→          const isCrit = Math.random() < enemy.critRate;
+   575→          let damage = Math.floor(enemy.attack * (1.2 + Math.random() * 0.3) * (isCrit ? enemy.critDamage : 1));
+   576→          const defReduction = target.defense / (target.defense + 500);
+   577→          damage = Math.floor(damage * (1 - defReduction));
+   578→
+   579→          const playerIdx = playerTeam.findIndex(p => p.id === target.id);
+   580→          playerTeam[playerIdx] = {
+   581→            ...target,
+   582→            currentHealth: Math.max(0, target.currentHealth - damage),
+   583→            isAlive: target.currentHealth - damage > 0,
+   584→          };
+   585→
+   586→          log.push(`${enemy.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}`);
+   587→
+   588→          if (playerTeam[playerIdx].currentHealth <= 0) {
+   589→            playerTeam[playerIdx] = { ...playerTeam[playerIdx], isAlive: false, currentHealth: 0 };
+   590→            log.push(`💀 ${target.name} has fallen!`);
+   591→          }
+   592→        }
+   593→
+   594→        const newTurnNumber = battle.turnNumber + 1;
+   595→        log.push(`━━━ Turn ${newTurnNumber} ━━━━`);
+   596→        set({
+   597→          battle: {
+   598→            ...battle,
+   599→            playerTeam,
+   600→            enemyTeam,
+   601→            log: log.slice(-20), // Keep last 20 messages
+   602→            currentTurn: 'player',
+   603→            turnNumber: newTurnNumber,
+   604→          },
+   605→        });
+   606→
+   607→        // Auto-play continues
+   608→        if (state.battle?.autoPlay && !state.battle.result) {
+   609→          setTimeout(() => get().executeBattleTurn(), 1500 / (state.battle?.speed || 1));
+   610→        }
+   611→      },
+   612→
+   613→      toggleAutoPlay: () => {
+   614→        const state = get();
+   615→        if (!state.battle) return;
+   616→        const autoPlay = !state.battle.autoPlay;
+   617→        set({ battle: { ...state.battle, autoPlay } });
+   618→        if (autoPlay && !state.battle.result) {
+   619→          setTimeout(() => get().executeBattleTurn(), 1500 / (state.battle?.speed || 1));
+   620→        }
+   621→      },
+   622→
+   623→      toggleBattleSpeed: () => {
+   624→        const state = get();
+   625→        if (!state.battle) return;
+   626→        set({ battle: { ...state.battle, speed: state.battle.speed === 1 ? 2 : 1 } });
+   627→      },
+   628→
+   629→      buyShopItem: (itemId, price, currency, type, amount) => {
+   630→        const state = get();
+   631→        if (currency === 'gems' && state.player.gems < price) {
+   632→          state.addNotification('Not enough gems!', 'warning');
+   633→          return;
+   634→        }
+   635→        if (currency === 'gold' && state.player.gold < price) {
+   636→          state.addNotification('Not enough gold!', 'warning');
+   637→          return;
+   638→        }
+   639→
+   640→        const updates: Partial<PlayerState> = {};
+   641→        if (currency === 'gems') updates.gems = state.player.gems - price;
+   642→        if (currency === 'gold') updates.gold = state.player.gold - price;
+   643→
+   644→        if (type === 'gems') updates.gems = (updates.gems || state.player.gems) + amount;
+   645→        if (type === 'gold') updates.gold = (updates.gold || state.player.gold) + amount;
+   646→        if (type === 'energy') {
+   647→          updates.energy = state.player.maxEnergy;
+   648→          updates.maxEnergy = state.player.maxEnergy;
+   649→        }
+   650→        if (type === 'vip_points') {
+   651→          const newVipPoints = state.player.vipPoints + amount;
+   652→          const nextVipLevel = VIP_LEVELS.find(v => v.requiredPoints > newVipPoints);
+   653→          if (nextVipLevel && nextVipLevel.level - 1 > state.player.vipLevel) {
+   654→            updates.vipLevel = nextVipLevel.level - 1;
+   655→            state.addNotification(`🎉 VIP Level Up! You are now VIP ${nextVipLevel.level - 1}!`, 'epic');
+   656→          }
+   657→          updates.vipPoints = newVipPoints;
+   658→        }
+   659→
+   660→        // For USD items, add VIP points
+   661→        if (currency === 'usd') {
+   662→          const vipPoints = Math.floor(amount / 10);
+   663→          const newVipPoints = state.player.vipPoints + vipPoints;
+   664→          updates.vipPoints = newVipPoints;
+   665→          updates.totalSpent = state.player.totalSpent + price;
+   666→          const nextVipLevel = VIP_LEVELS.find(v => v.requiredPoints > newVipPoints);
+   667→          if (nextVipLevel && nextVipLevel.level - 1 > state.player.vipLevel) {
+   668→            updates.vipLevel = nextVipLevel.level - 1;
+   669→          }
+   670→          if (type === 'gems') updates.gems = state.player.gems + amount;
+   671→          if (type === 'vip_points') updates.vipPoints = newVipPoints;
+   672→        }
+   673→
+   674→        set({ player: { ...state.player, ...updates } });
+   675→        state.addNotification(`Purchased successfully! +${amount} ${type}`, 'success');
+   676→      },
+   677→
+   678→      claimDailyReward: () => {
+   679→        const state = get();
+   680→        if (state.dailyClaimed) return;
+   681→
+   682→        const day = (state.player.dailyRewardDay % 7);
+   683→        const reward = DAILY_REWARDS[day];
+   684→        if (!reward) return;
+   685→
+   686→        set({
+   687→          player: {
+   688→            ...state.player,
+   689→            gold: state.player.gold + reward.gold,
+   690→            gems: state.player.gems + reward.gems,
+   691→            dailyRewardDay: state.player.dailyRewardDay + 1,
+   692→          },
+   693→          dailyClaimed: true,
+   694→          showDailyReward: false,
+   695→        });
+   696→        state.addNotification(`Daily reward claimed! +${reward.gold} Gold, +${reward.gems} Gems, ${reward.item}`, 'success');
+   697→      },
+   698→
+   699→      levelUpHero: (heroId) => {
+   700→        const state = get();
+   701→        const hero = state.heroes.find(h => h.id === heroId);
+   702→        if (!hero) return;
+   703→
+   704→        const cost = hero.level * 500;
+   705→        if (state.player.gold < cost) {
+   706→          state.addNotification('Not enough gold to level up!', 'warning');
+   707→          return;
+   708→        }
+   709→
+   710→        const newLevel = hero.level + 1;
+   711→        const template = {
+   712→          baseAttack: hero.attack / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   713→          baseDefense: hero.defense / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   714→          baseHealth: hero.health / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   715→          baseSpeed: hero.speed / (1 + (hero.stars - 1) * 0.05),
+   716→        } as HeroTemplate;
+   717→        const stats = getHeroStats(template, newLevel, hero.stars);
+   718→
+   719→        set({
+   720→          player: { ...state.player, gold: state.player.gold - cost },
+   721→          heroes: state.heroes.map(h =>
+   722→            h.id === heroId ? { ...h, level: newLevel, attack: stats.attack, defense: stats.defense, health: stats.health, speed: stats.speed } : h
+   723→          ),
+   724→        });
+   725→      },
+   726→
+   727→      ascendHero: (heroId) => {
+   728→        const state = get();
+   729→        const hero = state.heroes.find(h => h.id === heroId);
+   730→        if (!hero || hero.ascended) return;
+   731→        if (hero.level < 20) {
+   732→          state.addNotification('Hero must be level 20 to ascend!', 'warning');
+   733→          return;
+   734→        }
+   735→
+   736→        const cost = RARITY_CONFIG[hero.rarity].stars * 2000;
+   737→        if (state.player.gems < cost) {
+   738→          state.addNotification(`Need ${cost} gems to ascend!`, 'warning');
+   739→          return;
+   740→        }
+   741→
+   742→        const newStars = hero.stars + 1;
+   743→        const template = {
+   744→          baseAttack: hero.attack / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   745→          baseDefense: hero.defense / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   746→          baseHealth: hero.health / (1 + (hero.level - 1) * 0.08) / (1 + (hero.stars - 1) * 0.15),
+   747→          baseSpeed: hero.speed / (1 + (hero.stars - 1) * 0.05),
+   748→        } as HeroTemplate;
+   749→        const stats = getHeroStats(template, hero.level, newStars);
+   750→
+   751→        set({
+   752→          player: { ...state.player, gems: state.player.gems - cost },
+   753→          heroes: state.heroes.map(h =>
+   754→            h.id === heroId ? { ...h, stars: newStars, ascended: true, attack: stats.attack, defense: stats.defense, health: stats.health, speed: stats.speed } : h
+   755→          ),
+   756→        });
+   757→        state.addNotification(`${hero.name} has ascended! ⭐${newStars}`, 'epic');
+   758→      },
+   759→
+   760→      awakenHero: (heroId) => {
+   761→        const state = get();
+   762→        const hero = state.heroes.find(h => h.id === heroId);
+   763→        if (!hero) return;
+   764→
+   765→        const currentLevel = hero.awakeningLevel;
+   766→        if (currentLevel >= 5) {
+   767→          state.addNotification(`${hero.name} is already at maximum awakening!`, 'warning');
+   768→          return;
+   769→        }
+   770→
+   771→        const nextAwakening = AWAKENING_LEVELS[currentLevel];
+   772→        const materialName = ELEMENT_CONFIG[hero.element].awakeningMaterial;
+   773→        const materialOwned = state.dungeonMaterials[materialName] || 0;
+   774→
+   775→        if (materialOwned < nextAwakening.materialCost) {
+   776→          state.addNotification(`Need ${nextAwakening.materialCost} ${materialName}! Have ${materialOwned}. Collect more from daily dungeons.`, 'warning');
+   777→          return;
+   778→        }
+   779→        if (state.player.gold < nextAwakening.goldCost) {
+   780→          state.addNotification(`Need ${nextAwakening.goldCost.toLocaleString()} gold for awakening!`, 'warning');
+   781→          return;
+   782→        }
+   783→
+   784→        // Apply stat boost
+   785→        const boostMultiplier = 1 + nextAwakening.statBoost;
+   786→        const newMaterials = { ...state.dungeonMaterials };
+   787→        newMaterials[materialName] -= nextAwakening.materialCost;
+   788→
+   789→        set({
+   790→          player: { ...state.player, gold: state.player.gold - nextAwakening.goldCost },
+   791→          dungeonMaterials: newMaterials,
+   792→          heroes: state.heroes.map(h =>
+   793→            h.id === heroId
+   794→              ? {
+   795→                  ...h,
+   796→                  awakened: true,
+   797→                  awakeningLevel: currentLevel + 1,
+   798→                  attack: Math.floor(h.attack * boostMultiplier),
+   799→                  defense: Math.floor(h.defense * boostMultiplier),
+   800→                  health: Math.floor(h.health * boostMultiplier),
+   801→                  speed: Math.floor(h.speed * (1 + nextAwakening.statBoost * 0.5)),
+   802→                }
+   803→              : h
+   804→          ),
+   805→        });
+   806→        state.addNotification(`✨ ${hero.name} has reached Awakening Level ${currentLevel + 1}! ${nextAwakening.effect}`, 'epic');
+   807→        get().checkAchievements();
+   808→      },
+   809→
+   810→      addGems: (amount) => set(state => ({ player: { ...state.player, gems: state.player.gems + amount } })),
+   811→      addGold: (amount) => set(state => ({ player: { ...state.player, gold: state.player.gold + amount } })),
+   812→      addVIPPoints: (amount) => {
+   813→        const state = get();
+   814→        const newPoints = state.player.vipPoints + amount;
+   815→        const nextVipLevel = VIP_LEVELS.find(v => v.requiredPoints > newPoints);
+   816→        const newVipLevel = nextVipLevel ? nextVipLevel.level - 1 : state.player.vipLevel;
+   817→        set({
+   818→          player: {
+   819→            ...state.player,
+   820→            vipPoints: newPoints,
+   821→            vipLevel: Math.max(newVipLevel, state.player.vipLevel),
+   822→            totalSpent: state.player.totalSpent + amount,
+   823→          },
+   824→        });
+   825→      },
+   826→
+   827→      refillEnergy: () => set(state => ({ player: { ...state.player, energy: state.player.maxEnergy } })),
+   828→
+   829→      clearSummonResults: () => set({ summonResults: [], showSummonAnimation: false }),
+   830→      setShowSummonAnimation: (show) => set({ showSummonAnimation: show }),
+   831→      setShowDailyReward: (show) => set({ showDailyReward: show }),
+   832→
+   833→      addNotification: (message, type) => {
+   834→        const id = `notif_${Date.now()}_${Math.random()}`;
+   835→        set(state => ({
+   836→          notifications: [...state.notifications.slice(-4), { id, message, type }],
+   837→        }));
+   838→        setTimeout(() => get().clearNotification(id), 4000);
+   839→      },
+   840→
+   841→      clearNotification: (id) => set(state => ({
+   842→        notifications: state.notifications.filter(n => n.id !== id),
+   843→      })),
+   844→
+   845→      endBattle: () => set({ battle: null }),
+   846→
+   847→      checkEnergyRefill: () => {
+   848→        const state = get();
+   849→        const now = Date.now();
+   850→        const elapsed = now - state.player.lastLoginAt;
+   851→        const energyGain = Math.floor(elapsed / (5 * 60 * 1000)); // 1 energy per 5 min
+   852→        if (energyGain > 0 && state.player.energy < state.player.maxEnergy) {
+   853→          set({
+   854→            player: {
+   855→              ...state.player,
+   856→              energy: Math.min(state.player.maxEnergy, state.player.energy + energyGain),
+   857→              lastLoginAt: now,
+   858→            },
+   859→          });
+   860→        }
+   861→      },
+   862→
+   863→      // ============= EQUIPMENT SYSTEM =============
+   864→      generateRandomEquipment: (rarityBias) => {
+   865→        const roll = Math.random() + (rarityBias || 0);
+   866→        let rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
+   867→        if (roll > 1.99) rarity = 'mythic';
+   868→        else if (roll > 1.95) rarity = 'legendary';
+   869→        else if (roll > 1.85) rarity = 'epic';
+   870→        else if (roll > 1.65) rarity = 'rare';
+   871→        else if (roll > 1.4) rarity = 'uncommon';
+   872→        else rarity = 'common';
+   873→
+   874→        const eligible = EQUIPMENT_TEMPLATES.filter(e => e.rarity === rarity);
+   875→        const template = eligible[Math.floor(Math.random() * eligible.length)] || EQUIPMENT_TEMPLATES[0];
+   876→        return {
+   877→          id: `eq_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+   878→          templateId: template.id,
+   879→        };
+   880→      },
+   881→
+   882→      equipItem: (equipmentId, heroId) => {
+   883→        const state = get();
+   884→        const item = state.equipment.find(e => e.id === equipmentId);
+   885→        if (!item) return;
+   886→        const template = EQUIPMENT_TEMPLATES.find(t => t.id === item.templateId);
+   887→        if (!template) return;
+   888→        const hero = state.heroes.find(h => h.id === heroId);
+   889→        if (!hero) return;
+   890→
+   891→        // Unequip from current holder if any
+   892→        const updatedEquipment = state.equipment.map(e => {
+   893→          if (e.id === equipmentId) return { ...e, equippedTo: heroId };
+   894→          // Unequip any existing item in the same slot on this hero
+   895→          const existingTemplate = EQUIPMENT_TEMPLATES.find(t => t.id === e.templateId);
+   896→          if (e.equippedTo === heroId && existingTemplate?.slot === template.slot) {
+   897→            return { ...e, equippedTo: undefined };
+   898→          }
+   899→          return e;
+   900→        });
+   901→
+   902→        // Apply stat bonuses to hero
+   903→        const updatedHeroes = state.heroes.map(h => {
+   904→          if (h.id !== heroId) return h;
+   905→          // Calculate new stats from base + all equipped items
+   906→          const baseTemplate = HERO_TEMPLATES.find(t => t.id === h.templateId);
+   907→          if (!baseTemplate) return h;
+   908→          const baseStats = getHeroStats(baseTemplate, h.level, h.stars);
+   909→          let bonusAttack = 0, bonusDefense = 0, bonusHealth = 0, bonusSpeed = 0;
+   910→          let bonusCritRate = 0, bonusCritDamage = 0;
+   911→          updatedEquipment.forEach(e => {
+   912→            if (e.equippedTo === heroId) {
+   913→              const t = EQUIPMENT_TEMPLATES.find(t => t.id === e.templateId);
+   914→              if (t) {
+   915→                bonusAttack += t.attackBonus || 0;
+   916→                bonusDefense += t.defenseBonus || 0;
+   917→                bonusHealth += t.healthBonus || 0;
+   918→                bonusSpeed += t.speedBonus || 0;
+   919→                bonusCritRate += t.critRateBonus || 0;
+   920→                bonusCritDamage += t.critDamageBonus || 0;
+   921→              }
+   922→            }
+   923→          });
+   924→          return {
+   925→            ...h,
+   926→            attack: baseStats.attack + bonusAttack,
+   927→            defense: baseStats.defense + bonusDefense,
+   928→            health: baseStats.health + bonusHealth,
+   929→            speed: baseStats.speed + bonusSpeed,
+   930→            critRate: baseTemplate.critRate + bonusCritRate,
+   931→            critDamage: baseTemplate.critDamage + bonusCritDamage,
+   932→          };
+   933→        });
+   934→
+   935→        set({ equipment: updatedEquipment, heroes: updatedHeroes });
+   936→        state.addNotification(`Equipped ${template.name} on ${hero.name}`, 'success');
+   937→      },
+   938→
+   939→      unequipItem: (equipmentId) => {
+   940→        const state = get();
+   941→        const item = state.equipment.find(e => e.id === equipmentId);
+   942→        if (!item || !item.equippedTo) return;
+   943→        const template = EQUIPMENT_TEMPLATES.find(t => t.id === item.templateId);
+   944→        if (!template) return;
+   945→        const heroId = item.equippedTo;
+   946→
+   947→        const updatedEquipment = state.equipment.map(e =>
+   948→          e.id === equipmentId ? { ...e, equippedTo: undefined } : e
+   949→        );
+   950→
+   951→        // Recalculate hero stats
+   952→        const updatedHeroes = state.heroes.map(h => {
+   953→          if (h.id !== heroId) return h;
+   954→          const baseTemplate = HERO_TEMPLATES.find(t => t.id === h.templateId);
+   955→          if (!baseTemplate) return h;
+   956→          const baseStats = getHeroStats(baseTemplate, h.level, h.stars);
+   957→          let bonusAttack = 0, bonusDefense = 0, bonusHealth = 0, bonusSpeed = 0;
+   958→          let bonusCritRate = 0, bonusCritDamage = 0;
+   959→          updatedEquipment.forEach(e => {
+   960→            if (e.equippedTo === heroId) {
+   961→              const t = EQUIPMENT_TEMPLATES.find(t => t.id === e.templateId);
+   962→              if (t) {
+   963→                bonusAttack += t.attackBonus || 0;
+   964→                bonusDefense += t.defenseBonus || 0;
+   965→                bonusHealth += t.healthBonus || 0;
+   966→                bonusSpeed += t.speedBonus || 0;
+   967→                bonusCritRate += t.critRateBonus || 0;
+   968→                bonusCritDamage += t.critDamageBonus || 0;
+   969→              }
+   970→            }
+   971→          });
+   972→          return {
+   973→            ...h,
+   974→            attack: baseStats.attack + bonusAttack,
+   975→            defense: baseStats.defense + bonusDefense,
+   976→            health: baseStats.health + bonusHealth,
+   977→            speed: baseStats.speed + bonusSpeed,
+   978→            critRate: baseTemplate.critRate + bonusCritRate,
+   979→            critDamage: baseTemplate.critDamage + bonusCritDamage,
+   980→          };
+   981→        });
+   982→
+   983→        set({ equipment: updatedEquipment, heroes: updatedHeroes });
+   984→      },
+   985→
+   986→      craftEquipment: (rarity) => {
+   987→        const state = get();
+   988→        const costs: Record<string, { gold: number; gems: number }> = {
+   989→          common: { gold: 500, gems: 0 },
+   990→          uncommon: { gold: 2000, gems: 10 },
+   991→          rare: { gold: 8000, gems: 50 },
+   992→          epic: { gold: 25000, gems: 200 },
+   993→          legendary: { gold: 100000, gems: 800 },
+   994→        };
+   995→        const cost = costs[rarity];
+   996→        if (!cost) return;
+   997→        if (state.player.gold < cost.gold || state.player.gems < cost.gems) {
+   998→          state.addNotification('Not enough resources to craft!', 'warning');
+   999→          return;
+  1000→        }
+  1001→
+  1002→        const eligible = EQUIPMENT_TEMPLATES.filter(e => e.rarity === rarity);
+  1003→        const template = eligible[Math.floor(Math.random() * eligible.length)];
+  1004→        if (!template) return;
+  1005→
+  1006→        const newItem: OwnedEquipment = {
+  1007→          id: `eq_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+  1008→          templateId: template.id,
+  1009→        };
+  1010→
+  1011→        set({
+  1012→          player: { ...state.player, gold: state.player.gold - cost.gold, gems: state.player.gems - cost.gems },
+  1013→          equipment: [...state.equipment, newItem],
+  1014→        });
+  1015→        state.addNotification(`Forged ${template.icon} ${template.name}!`, 'epic');
+  1016→      },
+  1017→
+  1018→      // ============= ACHIEVEMENTS =============
+  1019→      checkAchievements: () => {
+  1020→        const state = get();
+  1021→        const newlyUnlocked: Achievement[] = [];
+  1022→
+  1023→        for (const achievement of ACHIEVEMENTS) {
+  1024→          if (state.unlockedAchievements.includes(achievement.id)) continue;
+  1025→
+  1026→          let progress = 0;
+  1027→          switch (achievement.id) {
+  1028→            case 'first_battle':
+  1029→            case 'battles_10':
+  1030→            case 'battles_50':
+  1031→            case 'battles_100':
+  1032→              progress = state.battlesWon;
+  1033→              break;
+  1034→            case 'stage_10':
+  1035→            case 'stage_25':
+  1036→            case 'stage_50':
+  1037→              progress = state.player.campaignStage - 1;
+  1038→              break;
+  1039→            case 'heroes_5':
+  1040→            case 'heroes_15':
+  1041→            case 'heroes_30':
+  1042→            case 'heroes_all':
+  1043→              progress = state.heroes.length;
+  1044→              break;
+  1045→            case 'vip_1':
+  1046→            case 'vip_3':
+  1047→            case 'vip_5':
+  1048→            case 'vip_7':
+  1049→              progress = state.player.vipLevel;
+  1050→              break;
+  1051→            case 'rich_100k':
+  1052→            case 'rich_1m':
+  1053→              progress = state.player.gold;
+  1054→              break;
+  1055→          }
+  1056→
+  1057→          if (progress >= achievement.requirement) {
+  1058→            newlyUnlocked.push(achievement);
+  1059→          }
+  1060→        }
+  1061→
+  1062→        if (newlyUnlocked.length > 0) {
+  1063→          const newIds = newlyUnlocked.map(a => a.id);
+  1064→          let bonusGold = 0, bonusGems = 0, bonusVip = 0;
+  1065→          newlyUnlocked.forEach(a => {
+  1066→            bonusGold += a.reward.gold || 0;
+  1067→            bonusGems += a.reward.gems || 0;
+  1068→            bonusVip += a.reward.vipPoints || 0;
+  1069→          });
+  1070→
+  1071→          set({
+  1072→            unlockedAchievements: [...state.unlockedAchievements, ...newIds],
+  1073→            player: {
+  1074→              ...state.player,
+  1075→              gold: state.player.gold + bonusGold,
+  1076→              gems: state.player.gems + bonusGems,
+  1077→              vipPoints: state.player.vipPoints + bonusVip,
+  1078→            },
+  1079→            showAchievementUnlock: newlyUnlocked[0],
+  1080→          });
+  1081→        }
+  1082→      },
+  1083→
+  1084→      dismissAchievementUnlock: () => set({ showAchievementUnlock: null }),
+  1085→
+  1086→      // ============= ARENA =============
+  1087→      startArenaBattle: (opponentId) => {
+  1088→        const state = get();
+  1089→        if (Date.now() < state.arenaCooldown) {
+  1090→          state.addNotification('Arena is on cooldown! Wait for the timer.', 'warning');
+  1091→          return;
+  1092→        }
+  1093→        if (state.player.energy < 10) {
+  1094→          state.addNotification('Not enough energy for arena battle!', 'warning');
+  1095→          return;
+  1096→        }
+  1097→
+  1098→        const opponent = ARENA_OPPONENTS.find(o => o.id === opponentId);
+  1099→        if (!opponent) return;
+  1100→
+  1101→        // Simplified auto-battle calculation based on power
+  1102→        const playerPower = state.team.reduce((sum, id) => {
+  1103→          const h = state.heroes.find(hr => hr.id === id);
+  1104→          return sum + (h ? h.attack + h.defense + Math.floor(h.health / 10) + h.speed * 5 : 0);
+  1105→        }, 0);
+  1106→
+  1107→        const winChance = Math.min(0.85, Math.max(0.15, playerPower / (playerPower + opponent.power)));
+  1108→        const won = Math.random() < winChance;
+  1109→
+  1110→        const trophies = won ? opponent.reward.trophies : Math.max(1, Math.floor(opponent.reward.trophies * 0.3));
+  1111→        const gold = won ? opponent.reward.gold : Math.floor(opponent.reward.gold * 0.2);
+  1112→        const gems = won ? opponent.reward.gems : 0;
+  1113→
+  1114→        set({
+  1115→          player: {
+  1116→            ...state.player,
+  1117→            energy: state.player.energy - 10,
+  1118→            gold: state.player.gold + gold,
+  1119→            gems: state.player.gems + gems,
+  1120→          },
+  1121→          arenaTrophies: state.arenaTrophies + (won ? trophies : -Math.min(trophies, state.arenaTrophies)),
+  1122→          arenaWins: state.arenaWins + (won ? 1 : 0),
+  1123→          arenaLosses: state.arenaLosses + (won ? 0 : 1),
+  1124→          arenaCooldown: Date.now() + 5 * 60 * 1000, // 5 min cooldown
+  1125→          battlesWon: won ? state.battlesWon + 1 : state.battlesWon,
+  1126→          totalBattles: state.totalBattles + 1,
+  1127→        });
+  1128→
+  1129→        if (won) {
+  1130→          state.addNotification(`🏆 Arena Victory! +${gold} Gold, +${gems} Gems, +${trophies} Trophies`, 'epic');
+  1131→          get().updateMissionProgress('battle', 1);
+  1132→        } else {
+  1133→          state.addNotification(`💀 Arena Defeat! +${gold} Gold consolation prize`, 'warning');
+  1134→        }
+  1135→        get().checkAchievements();
+  1136→      },
+  1137→
+  1138→      // ============= MISSIONS =============
+  1139→      updateMissionProgress: (type, amount) => {
+  1140→        const state = get();
+  1141→        const updated = state.missionProgress.map(mp => {
+  1142→          const mission = DAILY_MISSIONS.find(m => m.id === mp.missionId);
+  1143→          if (mission && mission.type === type && !mp.claimed) {
+  1144→            return { ...mp, progress: mp.progress + amount };
+  1145→          }
+  1146→          return mp;
+  1147→        });
+  1148→        set({ missionProgress: updated });
+  1149→      },
+  1150→
+  1151→      claimMissionReward: (missionId) => {
+  1152→        const state = get();
+  1153→        const mp = state.missionProgress.find(m => m.missionId === missionId);
+  1154→        if (!mp || mp.claimed) return;
+  1155→        const mission = DAILY_MISSIONS.find(m => m.id === missionId);
+  1156→        if (!mission || mp.progress < mission.requirement) return;
+  1157→
+  1158→        set({
+  1159→          player: {
+  1160→            ...state.player,
+  1161→            gold: state.player.gold + mission.reward.gold,
+  1162→            gems: state.player.gems + mission.reward.gems,
+  1163→            experience: state.player.experience + mission.reward.experience,
+  1164→          },
+  1165→          missionProgress: state.missionProgress.map(m =>
+  1166→            m.missionId === missionId ? { ...m, claimed: true } : m
+  1167→          ),
+  1168→        });
+  1169→        state.addNotification(`Mission complete! +${mission.reward.gold} Gold, +${mission.reward.gems} Gems`, 'success');
+  1170→      },
+  1171→
+  1172→      refreshMissions: () => {
+  1173→        const now = Date.now();
+  1174→        const lastRefresh = get().missionsLastRefreshed;
+  1175→        // Refresh if more than 24 hours have passed
+  1176→        if (now - lastRefresh > 24 * 60 * 60 * 1000) {
+  1177→          set({
+  1178→            missionProgress: DAILY_MISSIONS.map(m => ({ missionId: m.id, progress: 0, claimed: false })),
+  1179→            missionsLastRefreshed: now,
+  1180→          });
+  1181→        }
+  1182→      },
+  1183→
+  1184→      // ============= GUILD =============
+  1185→      joinGuild: (guildId) => {
+  1186→        set({ guildId });
+  1187→        get().addNotification('Joined guild! Enjoy guild perks!', 'success');
+  1188→      },
+  1189→
+  1190→      leaveGuild: () => {
+  1191→        set({ guildId: null });
+  1192→        get().addNotification('Left guild.', 'info');
+  1193→      },
+  1194→
+  1195→      // ============= TOWER OF ETERNITY =============
+  1196→      startTowerBattle: (floor) => {
+  1197→        const state = get();
+  1198→        // Reset attempts if 24h passed
+  1199→        const now = Date.now();
+  1200→        let attempts = state.towerAttempts;
+  1201→        if (now - state.towerLastReset > 24 * 60 * 60 * 1000) {
+  1202→          attempts = 5;
+  1203→        }
+  1204→        if (attempts <= 0) {
+  1205→          state.addNotification('No tower attempts left today! Come back tomorrow.', 'warning');
+  1206→          return null;
+  1207→        }
+  1208→        if (floor > state.towerCurrentFloor) {
+  1209→          state.addNotification(`You must clear floor ${state.towerCurrentFloor} first!`, 'warning');
+  1210→          return null;
+  1211→        }
+  1212→        if (state.team.length === 0) {
+  1213→          state.addNotification('You need a team to enter the tower!', 'warning');
+  1214→          return null;
+  1215→        }
+  1216→
+  1217→        const floorData = TOWER_FLOORS[floor - 1];
+  1218→        if (!floorData) return null;
+  1219→
+  1220→        // Calculate player power
+  1221→        const playerPower = state.team.reduce((sum, id) => {
+  1222→          const h = state.heroes.find(hr => hr.id === id);
+  1223→          return sum + (h ? h.attack + h.defense + Math.floor(h.health / 10) + h.speed * 5 : 0);
+  1224→        }, 0);
+  1225→
+  1226→        // Enemy power scales with floor
+  1227→        const enemyPower = Math.floor(15000 * floorData.difficulty * (floorData.bossFloor ? 1.5 : 1));
+  1228→
+  1229→        // Win chance: harder as floor increases
+  1230→        const winChance = Math.min(0.95, Math.max(0.05, playerPower / (playerPower + enemyPower)));
+  1231→        const won = Math.random() < winChance;
+  1232→
+  1233→        const rewards = {
+  1234→          gold: won ? floorData.rewardGold : Math.floor(floorData.rewardGold * 0.1),
+  1235→          gems: won ? floorData.rewardGems : 0,
+  1236→          item: won ? floorData.rewardItem : undefined,
+  1237→        };
+  1238→
+  1239→        const newHighest = won ? Math.max(state.towerHighestFloor, floor) : state.towerHighestFloor;
+  1240→        const newCurrent = won ? Math.max(state.towerCurrentFloor, floor + 1) : state.towerCurrentFloor;
+  1241→
+  1242→        set({
+  1243→          player: {
+  1244→            ...state.player,
+  1245→            gold: state.player.gold + rewards.gold,
+  1246→            gems: state.player.gems + rewards.gems,
+  1247→          },
+  1248→          towerHighestFloor: newHighest,
+  1249→          towerCurrentFloor: newCurrent,
+  1250→          towerAttempts: attempts - 1,
+  1251→          towerLastReset: now - state.towerLastReset > 24 * 60 * 60 * 1000 ? now : state.towerLastReset,
+  1252→          battlesWon: won ? state.battlesWon + 1 : state.battlesWon,
+  1253→          totalBattles: state.totalBattles + 1,
+  1254→        });
+  1255→
+  1256→        if (won) {
+  1257→          state.addNotification(
+  1258→            `🏆 Tower Floor ${floor} cleared! +${rewards.gold} Gold, +${rewards.gems} Gems${rewards.item ? `, ${rewards.item}` : ''}`,
+  1259→            'epic'
+  1260→          );
+  1261→          get().updateMissionProgress('battle', 1);
+  1262→          // Drop equipment on every 5th floor
+  1263→          if (floor % 5 === 0) {
+  1264→            const newItem = get().generateRandomEquipment(floor / 25);
+  1265→            set({ equipment: [...get().equipment, newItem] });
+  1266→            state.addNotification(`🎁 Equipment dropped on floor ${floor}!`, 'epic');
+  1267→          }
+  1268→        } else {
+  1269→          state.addNotification(`💀 Tower Floor ${floor} defeated you! +${rewards.gold} Gold consolation`, 'warning');
+  1270→        }
+  1271→        get().checkAchievements();
+  1272→
+  1273→        return { won, rewards };
+  1274→      },
+  1275→
+  1276→      resetTowerProgress: () => {
+  1277→        set({
+  1278→          towerCurrentFloor: 1,
+  1279→          towerAttempts: 5,
+  1280→          towerLastReset: Date.now(),
+  1281→        });
+  1282→        get().addNotification('Tower progress reset. 5 attempts refreshed!', 'info');
+  1283→      },
+  1284→
+  1285→      // ============= DAILY DUNGEONS =============
+  1286→      canEnterDungeon: (dungeonId) => {
+  1287→        const state = get();
+  1288→        const dungeon = getDungeonById(dungeonId);
+  1289→        if (!dungeon) return false;
+  1290→
+  1291→        // Check correct day of week
+  1292→        const today = new Date().getDay();
+  1293→        if (dungeon.dayOfWeek !== today) return false;
+  1294→
+  1295→        // Check attempts remaining (resets every 24h)
+  1296→        const now = Date.now();
+  1297→        const resetElapsed = now - state.dungeonLastReset;
+  1298→        const isReset = resetElapsed > 24 * 60 * 60 * 1000;
+  1299→        const attemptsUsed = isReset ? 0 : (state.dungeonAttempts[dungeonId] || 0);
+  1300→        if (attemptsUsed >= 3) return false;
+  1301→
+  1302→        // Need a team
+  1303→        if (state.team.length === 0) return false;
+  1304→
+  1305→        // Need energy
+  1306→        if (state.player.energy < 15) return false;
+  1307→
+  1308→        return true;
+  1309→      },
+  1310→
+  1311→      resetDungeonAttempts: () => {
+  1312→        const state = get();
+  1313→        const now = Date.now();
+  1314→        const resetElapsed = now - state.dungeonLastReset;
+  1315→        if (resetElapsed > 24 * 60 * 60 * 1000) {
+  1316→          set({
+  1317→            dungeonAttempts: {},
+  1318→            dungeonLastReset: now,
+  1319→          });
+  1320→        }
+  1321→      },
+  1322→
+  1323→      startDungeonBattle: (dungeonId, stage) => {
+  1324→        const state = get();
+  1325→        const dungeon = getDungeonById(dungeonId);
+  1326→        if (!dungeon) return null;
+  1327→
+  1328→        const stageData = dungeon.stages[stage - 1];
+  1329→        if (!stageData) return null;
+  1330→
+  1331→        // Auto-reset attempts if 24h passed
+  1332→        const now = Date.now();
+  1333→        const resetElapsed = now - state.dungeonLastReset;
+  1334→        const isReset = resetElapsed > 24 * 60 * 60 * 1000;
+  1335→        const attemptsUsed = isReset ? 0 : (state.dungeonAttempts[dungeonId] || 0);
+  1336→
+  1337→        // Day check
+  1338→        const today = new Date().getDay();
+  1339→        if (dungeon.dayOfWeek !== today) {
+  1340→          state.addNotification(`${dungeon.name} is not available today!`, 'warning');
+  1341→          return null;
+  1342→        }
+  1343→
+  1344→        // Attempts check
+  1345→        if (attemptsUsed >= 3) {
+  1346→          state.addNotification(`No attempts left for ${dungeon.name} today!`, 'warning');
+  1347→          return null;
+  1348→        }
+  1349→
+  1350→        // Team check
+  1351→        if (state.team.length === 0) {
+  1352→          state.addNotification('You need a team to enter the dungeon!', 'warning');
+  1353→          return null;
+  1354→        }
+  1355→
+  1356→        // Energy check (15 energy per dungeon battle)
+  1357→        if (state.player.energy < 15) {
+  1358→          state.addNotification('Not enough energy for a dungeon battle! (15 required)', 'warning');
+  1359→          return null;
+  1360→        }
+  1361→
+  1362→        // Stage progression check — must have cleared previous stage (or be stage 1)
+  1363→        if (stage > 1) {
+  1364→          const highestCleared = state.dungeonHighestStage[dungeonId] || 0;
+  1365→          if (stage > highestCleared + 1) {
+  1366→            state.addNotification(`Clear stage ${stage - 1} first!`, 'warning');
+  1367→            return null;
+  1368→          }
+  1369→        }
+  1370→
+  1371→        // Calculate player power (matches arena/tower formula)
+  1372→        const playerPower = state.team.reduce((sum, id) => {
+  1373→          const h = state.heroes.find((hr) => hr.id === id);
+  1374→          return sum + (h ? h.attack + h.defense + Math.floor(h.health / 10) + h.speed * 5 : 0);
+  1375→        }, 0);
+  1376→
+  1377→        // Enemy power scales with stage's recommended power and dungeon difficulty
+  1378→        const enemyPower = Math.floor(stageData.recommendedPower * dungeon.difficulty);
+  1379→        const winChance = Math.min(0.95, Math.max(0.05, playerPower / (playerPower + enemyPower)));
+  1380→        const won = Math.random() < winChance;
+  1381→
+  1382→        // Build rewards
+  1383→        const rewards = won
+  1384→          ? {
+  1385→              gold: stageData.rewards.gold,
+  1386→              gems: stageData.rewards.gems,
+  1387→              material: stageData.rewards.material,
+  1388→              materialCount: stageData.rewards.materialCount,
+  1389→            }
+  1390→          : {
+  1391→              gold: Math.floor(stageData.rewards.gold * 0.15),
+  1392→              gems: 0,
+  1393→              material: undefined,
+  1394→              materialCount: 0,
+  1395→            };
+  1396→
+  1397→        // Update material inventory
+  1398→        const newMaterials = { ...state.dungeonMaterials };
+  1399→        if (won && rewards.material && rewards.materialCount) {
+  1400→          newMaterials[rewards.material] = (newMaterials[rewards.material] || 0) + rewards.materialCount;
+  1401→        }
+  1402→
+  1403→        // Update highest stage cleared
+  1404→        const newHighest = { ...state.dungeonHighestStage };
+  1405→        if (won) {
+  1406→          newHighest[dungeonId] = Math.max(newHighest[dungeonId] || 0, stage);
+  1407→        }
+  1408→
+  1409→        // Update attempts (reset if needed)
+  1410→        const newAttempts = isReset ? { [dungeonId]: 1 } : { ...state.dungeonAttempts, [dungeonId]: attemptsUsed + 1 };
+  1411→
+  1412→        set({
+  1413→          player: {
+  1414→            ...state.player,
+  1415→            energy: state.player.energy - 15,
+  1416→            gold: state.player.gold + rewards.gold,
+  1417→            gems: state.player.gems + rewards.gems,
+  1418→          },
+  1419→          dungeonAttempts: newAttempts,
+  1420→          dungeonLastReset: isReset ? now : state.dungeonLastReset,
+  1421→          dungeonMaterials: newMaterials,
+  1422→          dungeonHighestStage: newHighest,
+  1423→          battlesWon: won ? state.battlesWon + 1 : state.battlesWon,
+  1424→          totalBattles: state.totalBattles + 1,
+  1425→        });
+  1426→
+  1427→        if (won) {
+  1428→          state.addNotification(
+  1429→            `🏆 ${dungeon.name} Stage ${stage} cleared! +${rewards.gold} Gold, +${rewards.gems} Gems, +${rewards.materialCount} ${rewards.material}`,
+  1430→            'epic'
+  1431→          );
+  1432→          get().updateMissionProgress('battle', 1);
+  1433→        } else {
+  1434→          state.addNotification(
+  1435→            `💀 Defeated in ${dungeon.name} Stage ${stage}! +${rewards.gold} Gold consolation`,
+  1436→            'warning'
+  1437→          );
+  1438→        }
+  1439→        get().checkAchievements();
+  1440→
+  1441→        return { won, rewards };
+  1442→      },
+  1443→
+  1444→      // ============= WANDERING MERCHANT =============
+  1445→      refreshMerchantIfStale: () => {
+  1446→        const state = get();
+  1447→        const { windowStart } = getMerchantWindow(Date.now());
+  1448→        if (state.merchantWindowStart !== windowStart) {
+  1449→          // Window changed — reset purchases and update windowStart
+  1450→          set({
+  1451→            merchantWindowStart: windowStart,
+  1452→            merchantPurchases: {},
+  1453→          });
+  1454→        }
+  1455→      },
+  1456→
+  1457→      getMerchantDeals: () => {
+  1458→        const state = get();
+  1459→        // Refresh window if stale
+  1460→        const { windowStart, seed } = getMerchantWindow(Date.now());
+  1461→        if (state.merchantWindowStart !== windowStart) {
+  1462→          set({
+  1463→            merchantWindowStart: windowStart,
+  1464→            merchantPurchases: {},
+  1465→          });
+  1466→        }
+  1467→        return rollMerchantDeals(seed);
+  1468→      },
+  1469→
+  1470→      getMerchantRemainingStock: (dealId) => {
+  1471→        const state = get();
+  1472→        const { seed } = getMerchantWindow(Date.now());
+  1473→        const deals = rollMerchantDeals(seed);
+  1474→        const deal = deals.find(d => d.id === dealId);
+  1475→        if (!deal) return 0;
+  1476→        const bought = state.merchantPurchases[dealId] || 0;
+  1477→        return Math.max(0, deal.stock - bought);
+  1478→      },
+  1479→
+  1480→      buyMerchantDeal: (dealId) => {
+  1481→        const state = get();
+  1482→        // Ensure window is current
+  1483→        const { windowStart, seed } = getMerchantWindow(Date.now());
+  1484→        if (state.merchantWindowStart !== windowStart) {
+  1485→          set({
+  1486→            merchantWindowStart: windowStart,
+  1487→            merchantPurchases: {},
+  1488→          });
+  1489→        }
+  1490→        const deals = rollMerchantDeals(seed);
+  1491→        const deal = deals.find(d => d.id === dealId);
+  1492→        if (!deal) return { success: false, reason: 'Deal not available' };
+  1493→
+  1494→        const bought = get().merchantPurchases[dealId] || 0;
+  1495→        if (bought >= deal.stock) return { success: false, reason: 'Out of stock' };
+  1496→
+  1497→        if (state.player.gems < deal.discountedPrice) {
+  1498→          return { success: false, reason: 'Not enough gems' };
+  1499→        }
+  1500→
+  1501→        // Apply rewards based on deal type
+  1502→        const playerUpdates: Partial<PlayerState> = {
+  1503→          gems: state.player.gems - deal.discountedPrice,
+  1504→        };
+  1505→
+  1506→        if (deal.type === 'gold') {
+  1507→          playerUpdates.gold = state.player.gold + deal.amount;
+  1508→        } else if (deal.type === 'energy') {
+  1509→          playerUpdates.energy = Math.min(state.player.maxEnergy, state.player.energy + deal.amount);
+  1510→        } else if (deal.type === 'vip_points') {
+  1511→          playerUpdates.vipPoints = state.player.vipPoints + deal.amount;
+  1512→        }
+  1513→
+  1514→        // Equipment/material/scroll rewards use existing systems
+  1515→        const newEquipment = [...state.equipment];
+  1516→        if (deal.type === 'equipment' && deal.rarity) {
+  1517→          for (let i = 0; i < deal.amount; i++) {
+  1518→            const rarityBias = ['rare', 'epic', 'legendary', 'mythic'].indexOf(deal.rarity);
+  1519→            const eq = state.generateRandomEquipment(rarityBias >= 0 ? rarityBias + 2 : 2);
+  1520→            newEquipment.push(eq);
+  1521→          }
+  1522→        }
+  1523→
+  1524→        const newMaterials = { ...state.dungeonMaterials };
+  1525→        if (deal.type === 'material') {
+  1526→          // Infer material name from deal name (e.g., "Inferno Ember Cache" -> "Inferno Ember")
+  1527→          const matName = deal.name.replace(' Cache', '').replace(' Bundle', '');
+  1528→          newMaterials[matName] = (newMaterials[matName] || 0) + deal.amount;
+  1529→        }
+  1530→
+  1531→        // Scrolls and hero shards — just notify, the existing shop doesn't track inventory
+  1532→        // For simplicity, we grant equivalent reward immediately:
+  1533→        // - scroll: grant a free summon result by adding gems equivalent OR auto-summon
+  1534→        // We'll handle scrolls by issuing gems back so the user can summon, plus a notification.
+  1535→        if (deal.type === 'scroll') {
+  1536→          // Add the scrolls as gem credit (refund at base price) since we don't have a scroll inventory
+  1537→          // Simpler: just give gems equivalent to the scroll's gem value so user can summon
+  1538→          playerUpdates.gems = (playerUpdates.gems || 0) + deal.originalPrice * deal.amount;
+  1539→        }
+  1540→
+  1541→        set({
+  1542→          player: { ...state.player, ...playerUpdates },
+  1543→          equipment: newEquipment,
+  1544→          dungeonMaterials: newMaterials,
+  1545→          merchantPurchases: {
+  1546→            ...get().merchantPurchases,
+  1547→            [dealId]: bought + 1,
+  1548→          },
+  1549→          gemsSpent: state.gemsSpent + deal.discountedPrice,
+  1550→        });
+  1551→
+  1552→        // Build notification
+  1553→        const summary =
+  1554→          deal.type === 'gold' ? `+${deal.amount.toLocaleString()} Gold` :
+  1555→          deal.type === 'energy' ? `+${deal.amount} Energy` :
+  1556→          deal.type === 'equipment' ? `+${deal.amount}x ${deal.rarity} Equipment` :
+  1557→          deal.type === 'material' ? `+${deal.amount} Materials` :
+  1558→          deal.type === 'scroll' ? `${deal.amount}x Scroll (gems credited)` :
+  1559→          `+${deal.amount}`;
+  1560→        get().addNotification(`🛒 Merchant: ${deal.name} purchased! ${summary}`, 'epic');
+  1561→
+  1562→        return { success: true };
+  1563→      },
+  1564→
+  1565→      // ============= DAILY LOGIN STREAK =============
+  1566→      checkLoginStreak: () => {
+  1567→        const state = get();
+  1568→        const now = Date.now();
+  1569→        const oneDayMs = 24 * 60 * 60 * 1000;
+  1570→        const lastClaim = state.loginStreakLastClaim;
+  1571→        if (lastClaim === 0) {
+  1572→          // First-ever visit — show streak reward after a small delay (handled by UI)
+  1573→          return;
+  1574→        }
+  1575→        const elapsed = now - lastClaim;
+  1576→        if (elapsed >= oneDayMs) {
+  1577→          // A new day has started — show streak reward modal
+  1578→          if (!state.showStreakReward) {
+  1579→            set({ showStreakReward: true });
+  1580→          }
+  1581→        }
+  1582→      },
+  1583→
+  1584→      claimLoginStreak: () => {
+  1585→        const state = get();
+  1586→        const now = Date.now();
+  1587→        const oneDayMs = 24 * 60 * 60 * 1000;
+  1588→        const lastClaim = state.loginStreakLastClaim;
+  1589→        // Determine new streak
+  1590→        let newStreak: number;
+  1591→        if (lastClaim === 0) {
+  1592→          newStreak = 1;
+  1593→        } else {
+  1594→          const elapsed = now - lastClaim;
+  1595→          if (elapsed < oneDayMs) {
+  1596→            // Already claimed today
+  1597→            return { claimed: false };
+  1598→          }
+  1599→          // If elapsed > 2 days, streak resets to 1; otherwise increments
+  1600→          if (elapsed >= 2 * oneDayMs) {
+  1601→            newStreak = 1;
+  1602→          } else {
+  1603→            newStreak = state.loginStreak + 1;
+  1604→          }
+  1605→        }
+  1606→
+  1607→        // Check for milestone at this new streak
+  1608→        const milestone = LOGIN_STREAK_MILESTONES.find(m => m.day === newStreak);
+  1609→        const playerUpdates: Partial<PlayerState> = {
+  1610→          gold: state.player.gold + (milestone ? milestone.reward.gold : 0),
+  1611→          gems: state.player.gems + (milestone ? milestone.reward.gems : 0),
+  1612→          energy: milestone?.reward.energy
+  1613→            ? Math.min(state.player.maxEnergy, state.player.energy + milestone.reward.energy)
+  1614→            : state.player.energy,
+  1615→          vipPoints: milestone?.reward.vipPoints
+  1616→            ? state.player.vipPoints + milestone.reward.vipPoints
+  1617→            : state.player.vipPoints,
+  1618→        };
+  1619→
+  1620→        const newClaimedMilestones = milestone
+  1621→          ? [...state.claimedStreakMilestones, milestone.day]
+  1622→          : state.claimedStreakMilestones;
+  1623→
+  1624→        set({
+  1625→          player: { ...state.player, ...playerUpdates },
+  1626→          loginStreak: newStreak,
+  1627→          loginStreakLastClaim: now,
+  1628→          claimedStreakMilestones: newClaimedMilestones,
+  1629→          showStreakReward: false,
+  1630→        });
+  1631→
+  1632→        if (milestone) {
+  1633→          const summary = `+${milestone.reward.gold} Gold, +${milestone.reward.gems} Gems${milestone.reward.energy ? `, +${milestone.reward.energy} Energy` : ''}${milestone.reward.item ? `, ${milestone.reward.item}` : ''}`;
+  1634→          get().addNotification(`🎯 ${milestone.name}! Day ${newStreak} streak milestone reached! ${summary}`, 'epic');
+  1635→        } else {
+  1636→          get().addNotification(`📅 Day ${newStreak} login streak! Keep coming back for milestone rewards!`, 'success');
+  1637→        }
+  1638→
+  1639→        return { claimed: true, milestone };
+  1640→      },
+  1641→
+  1642→      dismissStreakReward: () => set({ showStreakReward: false }),
+  1643→
+  1644→      // ============= HERO SKINS =============
+  1645→      buySkin: (skinId) => {
+  1646→        const state = get();
+  1647→        const skin = HERO_SKINS.find(s => s.id === skinId);
+  1648→        if (!skin) return { success: false, reason: 'Skin not found' };
+  1649→        if (state.ownedSkins.includes(skinId)) return { success: false, reason: 'Already owned' };
+  1650→        if (state.player.gems < skin.cost) return { success: false, reason: 'Not enough gems' };
+  1651→
+  1652→        set({
+  1653→          player: { ...state.player, gems: state.player.gems - skin.cost },
+  1654→          ownedSkins: [...state.ownedSkins, skinId],
+  1655→          gemsSpent: state.gemsSpent + skin.cost,
+  1656→        });
+  1657→        get().addNotification(`🎨 Skin unlocked: ${skin.name}! Equip it from the Heroes screen.`, 'epic');
+  1658→        return { success: true };
+  1659→      },
+  1660→
+  1661→      equipSkin: (heroInstanceId, skinId) => {
+  1662→        const state = get();
+  1663→        if (!state.ownedSkins.includes(skinId)) return;
+  1664→        // Validate skin matches hero's template
+  1665→        const hero = state.heroes.find(h => h.id === heroInstanceId);
+  1666→        if (!hero) return;
+  1667→        const skin = HERO_SKINS.find(s => s.id === skinId);
+  1668→        if (!skin || skin.heroTemplateId !== hero.templateId) return;
+  1669→        set({
+  1670→          equippedSkins: { ...state.equippedSkins, [heroInstanceId]: skinId },
+  1671→        });
+  1672→      },
+  1673→
+  1674→      unequipSkin: (heroInstanceId) => {
+  1675→        const state = get();
+  1676→        const next = { ...state.equippedSkins };
+  1677→        delete next[heroInstanceId];
+  1678→        set({ equippedSkins: next });
+  1679→      },
+  1680→
+  1681→      getEquippedSkin: (heroInstanceId) => {
+  1682→        const state = get();
+  1683→        const skinId = state.equippedSkins[heroInstanceId];
+  1684→        if (!skinId) return undefined;
+  1685→        return HERO_SKINS.find(s => s.id === skinId);
+  1686→      },
+  1687→    }),
+  1688→    {
+  1689→      name: 'shadow-realms-game-v6',
+  1690→      version: 6,
+  1691→      partialize: (state) => ({
+  1692→        player: state.player,
+  1693→        heroes: state.heroes,
+  1694→        team: state.team,
+  1695→        dailyClaimed: state.dailyClaimed,
+  1696→        equipment: state.equipment,
+  1697→        unlockedAchievements: state.unlockedAchievements,
+  1698→        battlesWon: state.battlesWon,
+  1699→        totalBattles: state.totalBattles,
+  1700→        maxDamage: state.maxDamage,
+  1701→        arenaTrophies: state.arenaTrophies,
+  1702→        arenaWins: state.arenaWins,
+  1703→        arenaLosses: state.arenaLosses,
+  1704→        arenaCooldown: state.arenaCooldown,
+  1705→        missionProgress: state.missionProgress,
+  1706→        missionsLastRefreshed: state.missionsLastRefreshed,
+  1707→        guildId: state.guildId,
+  1708→        towerHighestFloor: state.towerHighestFloor,
+  1709→        towerCurrentFloor: state.towerCurrentFloor,
+  1710→        towerAttempts: state.towerAttempts,
+  1711→        towerLastReset: state.towerLastReset,
+  1712→        dungeonAttempts: state.dungeonAttempts,
+  1713→        dungeonLastReset: state.dungeonLastReset,
+  1714→        dungeonMaterials: state.dungeonMaterials,
+  1715→        dungeonHighestStage: state.dungeonHighestStage,
+  1716→        heroesSummoned: state.heroesSummoned,
+  1717→        gemsSpent: state.gemsSpent,
+  1718→        equipmentEquipped: state.equipmentEquipped,
+  1719→        campaignStagesWon: state.campaignStagesWon,
+  1720→        heroesLeveledUp: state.heroesLeveledUp,
+  1721→      }),
+  1722→    }
+  1723→  )
+  1724→);
+  1725→

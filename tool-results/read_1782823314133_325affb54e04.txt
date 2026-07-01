@@ -1,0 +1,900 @@
+     1→'use client';
+     2→
+     3→import { useGameStore } from '@/lib/game-store';
+     4→import { HeroCard } from './hero-card';
+     5→import { RARITY_CONFIG, FACTION_CONFIG, ELEMENT_CONFIG, HeroInstance, Rarity, Faction, EQUIPMENT_TEMPLATES, AWAKENING_LEVELS } from '@/lib/game-data';
+     6→import { getHeroImageUrl, getHeroGradient } from '@/lib/hero-images';
+     7→import { useState, useEffect, useCallback, useMemo } from 'react';
+     8→import { motion, AnimatePresence } from 'framer-motion';
+     9→import { Search, Filter, Star, Swords, Shield, Heart, Zap, ArrowUp, ChevronDown, Sparkles, X, Shirt, Crown } from 'lucide-react';
+    10→
+    11→// ─── Swirling Particle Component ────────────────────────────────────────────
+    12→function SwirlingParticle({ index, total, color, delay }: { index: number; total: number; color: string; delay: number }) {
+    13→  const angle = (index / total) * Math.PI * 2;
+    14→  const radius = 80 + Math.random() * 120;
+    15→
+    16→  return (
+    17→    <motion.div
+    18→      className="absolute rounded-full"
+    19→      style={{
+    20→        width: 3 + Math.random() * 5,
+    21→        height: 3 + Math.random() * 5,
+    22→        background: color,
+    23→        boxShadow: `0 0 ${6 + Math.random() * 8}px ${color}`,
+    24→        left: '50%',
+    25→        top: '50%',
+    26→      }}
+    27→      initial={{
+    28→        x: Math.cos(angle) * radius,
+    29→        y: Math.sin(angle) * radius,
+    30→        opacity: 0,
+    31→        scale: 0,
+    32→      }}
+    33→      animate={{
+    34→        x: [
+    35→          Math.cos(angle) * radius,
+    36→          Math.cos(angle + 1.5) * (radius * 0.6),
+    37→          Math.cos(angle + 3) * (radius * 1.1),
+    38→          Math.cos(angle + 4.5) * (radius * 0.8),
+    39→        ],
+    40→        y: [
+    41→          Math.sin(angle) * radius,
+    42→          Math.sin(angle + 1.5) * (radius * 0.6),
+    43→          Math.sin(angle + 3) * (radius * 1.1),
+    44→          Math.sin(angle + 4.5) * (radius * 0.8),
+    45→        ],
+    46→        opacity: [0, 1, 1, 0.6, 1],
+    47→        scale: [0, 1.2, 0.8, 1],
+    48→      }}
+    49→      transition={{
+    50→        duration: 2.8,
+    51→        delay: delay,
+    52→        repeat: Infinity,
+    53→        repeatType: 'loop',
+    54→        ease: 'easeInOut',
+    55→      }}
+    56→    />
+    57→  );
+    58→}
+    59→
+    60→// ─── Sparkle Burst Component ────────────────────────────────────────────────
+    61→function SparkleBurst({ x, y, delay, color }: { x: number; y: number; delay: number; color: string }) {
+    62→  return (
+    63→    <motion.div
+    64→      className="absolute"
+    65→      style={{ left: `${x}%`, top: `${y}%` }}
+    66→      initial={{ scale: 0, opacity: 0, rotate: 0 }}
+    67→      animate={{
+    68→        scale: [0, 1.5, 0],
+    69→        opacity: [0, 1, 0],
+    70→        rotate: [0, 180],
+    71→      }}
+    72→      transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+    73→    >
+    74→      <Sparkles className="w-4 h-4" style={{ color }} />
+    75→    </motion.div>
+    76→  );
+    77→}
+    78→
+    79→// ─── Flying Stat Number ─────────────────────────────────────────────────────
+    80→function FlyingStat({ icon, label, from, to, delay, color }: { icon: React.ReactNode; label: string; from: number; to: number; delay: number; color: string }) {
+    81→  const boost = to - from;
+    82→  return (
+    83→    <motion.div
+    84→      className="flex items-center gap-2"
+    85→      initial={{ x: -40, opacity: 0 }}
+    86→      animate={{ x: 0, opacity: 1 }}
+    87→      transition={{ delay, duration: 0.5, ease: 'backOut' }}
+    88→    >
+    89→      <span className={color}>{icon}</span>
+    90→      <span className="text-xs text-gray-400 w-16">{label}</span>
+    91→      <span className="text-sm font-bold text-gray-300 line-through decoration-red-500/60">{from}</span>
+    92→      <motion.span
+    93→        className="text-sm font-bold"
+    94→        style={{ color }}
+    95→        initial={{ scale: 0.5 }}
+    96→        animate={{ scale: [0.5, 1.3, 1] }}
+    97→        transition={{ delay: delay + 0.3, duration: 0.4 }}
+    98→      >
+    99→        {to}
+   100→      </motion.span>
+   101→      <motion.span
+   102→        className="text-xs font-bold text-green-400"
+   103→        initial={{ opacity: 0, y: 5 }}
+   104→        animate={{ opacity: 1, y: 0 }}
+   105→        transition={{ delay: delay + 0.5, duration: 0.3 }}
+   106→      >
+   107→        +{boost}
+   108→      </motion.span>
+   109→    </motion.div>
+   110→  );
+   111→}
+   112→
+   113→// ─── Ascension Animation Overlay ────────────────────────────────────────────
+   114→function AscensionAnimationOverlay({
+   115→  hero,
+   116→  prevStats,
+   117→  onComplete,
+   118→}: {
+   119→  hero: HeroInstance;
+   120→  prevStats: { attack: number; defense: number; health: number; speed: number };
+   121→  onComplete: () => void;
+   122→}) {
+   123→  const rarity = RARITY_CONFIG[hero.rarity];
+   124→  const element = ELEMENT_CONFIG[hero.element];
+   125→  const faction = FACTION_CONFIG[hero.faction];
+   126→  const heroImage = getHeroImageUrl(hero.templateId);
+   127→  const heroGradient = getHeroGradient(hero.rarity);
+   128→
+   129→  // Generate particle configs once
+   130→  const particles = useMemo(() => {
+   131→    const goldenColors = ['#fbbf24', '#f59e0b', '#d97706', '#eab308', '#fcd34d'];
+   132→    const purpleColors = ['#a855f7', '#9333ea', '#7c3aed', '#c084fc', '#d8b4fe'];
+   133→    const allColors = [...goldenColors, ...purpleColors];
+   134→    return Array.from({ length: 40 }, (_, i) => ({
+   135→      index: i,
+   136→      total: 40,
+   137→      color: allColors[i % allColors.length],
+   138→      delay: Math.random() * 0.5,
+   139→    }));
+   140→  }, []);
+   141→
+   142→  // Generate sparkle positions once
+   143→  const sparkles = useMemo(() => {
+   144→    return Array.from({ length: 12 }, (_, i) => ({
+   145→      x: 30 + Math.random() * 40,
+   146→      y: 25 + Math.random() * 35,
+   147→      delay: 0.8 + i * 0.12,
+   148→      color: i % 2 === 0 ? '#fbbf24' : '#a855f7',
+   149→    }));
+   150→  }, []);
+   151→
+   152→  // Auto-dismiss after 3 seconds
+   153→  useEffect(() => {
+   154→    const timer = setTimeout(onComplete, 3000);
+   155→    return () => clearTimeout(timer);
+   156→  }, [onComplete]);
+   157→
+   158→  return (
+   159→    <motion.div
+   160→      className="fixed inset-0 z-[100] flex items-center justify-center"
+   161→      initial={{ opacity: 0 }}
+   162→      animate={{ opacity: 1 }}
+   163→      exit={{ opacity: 0 }}
+   164→      transition={{ duration: 0.3 }}
+   165→    >
+   166→      {/* Dark background overlay */}
+   167→      <motion.div
+   168→        className="absolute inset-0 bg-black"
+   169→        initial={{ opacity: 0 }}
+   170→        animate={{ opacity: 0.92 }}
+   171→        transition={{ duration: 0.5 }}
+   172→      />
+   173→
+   174→      {/* Radial light burst behind hero */}
+   175→      <motion.div
+   176→        className="absolute w-[500px] h-[500px] rounded-full"
+   177→        style={{
+   178→          background: 'radial-gradient(circle, rgba(251,191,36,0.15) 0%, rgba(168,85,247,0.1) 40%, transparent 70%)',
+   179→        }}
+   180→        initial={{ scale: 0, opacity: 0 }}
+   181→        animate={{ scale: [0, 1.5, 1.2], opacity: [0, 1, 0.8] }}
+   182→        transition={{ duration: 1.2, ease: 'easeOut' }}
+   183→      />
+   184→
+   185→      {/* Concentric ring pulse */}
+   186→      <motion.div
+   187→        className="absolute w-64 h-64 rounded-full border-2 border-amber-400/30"
+   188→        initial={{ scale: 0, opacity: 1 }}
+   189→        animate={{ scale: [0, 3], opacity: [1, 0] }}
+   190→        transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+   191→      />
+   192→      <motion.div
+   193→        className="absolute w-64 h-64 rounded-full border border-purple-400/20"
+   194→        initial={{ scale: 0, opacity: 1 }}
+   195→        animate={{ scale: [0, 3.5], opacity: [1, 0] }}
+   196→        transition={{ duration: 2, delay: 0.5, repeat: Infinity, ease: 'easeOut' }}
+   197→      />
+   198→
+   199→      {/* Swirling particles */}
+   200→      <div className="absolute inset-0 pointer-events-none">
+   201→        {particles.map((p) => (
+   202→          <SwirlingParticle key={p.index} index={p.index} total={p.total} color={p.color} delay={p.delay} />
+   203→        ))}
+   204→      </div>
+   205→
+   206→      {/* Main content */}
+   207→      <div className="relative z-10 flex flex-col items-center">
+   208→        {/* Hero portrait - enlarged and centered with pulsing glow */}
+   209→        <motion.div
+   210→          className={`relative w-32 h-32 rounded-2xl overflow-hidden border-3 ${rarity.borderColor}`}
+   211→          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+   212→          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+   213→          transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+   214→        >
+   215→          {/* Pulsing glow border */}
+   216→          <motion.div
+   217→            className="absolute -inset-1 rounded-2xl"
+   218→            style={{
+   219→              background: `linear-gradient(135deg, rgba(251,191,36,0.6), rgba(168,85,247,0.6))`,
+   220→              zIndex: -1,
+   221→            }}
+   222→            animate={{
+   223→              boxShadow: [
+   224→                '0 0 20px rgba(251,191,36,0.3), 0 0 40px rgba(168,85,247,0.2)',
+   225→                '0 0 40px rgba(251,191,36,0.6), 0 0 80px rgba(168,85,247,0.4)',
+   226→                '0 0 20px rgba(251,191,36,0.3), 0 0 40px rgba(168,85,247,0.2)',
+   227→              ],
+   228→            }}
+   229→            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+   230→          />
+   231→
+   232→          {heroImage ? (
+   233→            <img src={heroImage} alt={hero.name} className="w-full h-full object-cover" />
+   234→          ) : (
+   235→            <div className={`w-full h-full bg-gradient-to-br ${heroGradient} flex items-center justify-center text-5xl`}>
+   236→              {faction.icon}
+   237→            </div>
+   238→          )}
+   239→
+   240→          {/* Shimmer overlay */}
+   241→          <motion.div
+   242→            className="absolute inset-0"
+   243→            style={{
+   244→              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
+   245→            }}
+   246→            animate={{ x: ['-100%', '200%'] }}
+   247→            transition={{ duration: 1.5, delay: 0.5, ease: 'easeInOut' }}
+   248→          />
+   249→        </motion.div>
+   250→
+   251→        {/* Hero name */}
+   252→        <motion.h2
+   253→          className="mt-4 text-xl font-bold text-white"
+   254→          initial={{ opacity: 0, y: 10 }}
+   255→          animate={{ opacity: 1, y: 0 }}
+   256→          transition={{ delay: 0.5 }}
+   257→        >
+   258→          {hero.name}
+   259→        </motion.h2>
+   260→
+   261→        {/* Rarity & element badges */}
+   262→        <motion.div
+   263→          className="flex items-center gap-2 mt-1"
+   264→          initial={{ opacity: 0 }}
+   265→          animate={{ opacity: 1 }}
+   266→          transition={{ delay: 0.6 }}
+   267→        >
+   268→          <span className={`text-[10px] px-1.5 py-0.5 rounded ${rarity.bgColor} ${rarity.color} font-medium`}>{rarity.label}</span>
+   269→          <span className={`text-[10px] px-1.5 py-0.5 rounded ${element.bgColor} ${element.color}`}>{element.icon}</span>
+   270→        </motion.div>
+   271→
+   272→        {/* Star count incrementing with sparkle effects */}
+   273→        <div className="flex items-center gap-0.5 mt-3 relative h-7">
+   274→          {Array.from({ length: hero.stars }, (_, i) => (
+   275→            <motion.div
+   276→              key={i}
+   277→              initial={{ scale: 0, rotate: -180, opacity: 0 }}
+   278→              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+   279→              transition={{
+   280→                delay: 0.8 + i * 0.15,
+   281→                type: 'spring',
+   282→                stiffness: 300,
+   283→                damping: 12,
+   284→              }}
+   285→            >
+   286→              <Star
+   287→                className={`w-5 h-5 ${i === hero.stars - 1 ? 'fill-amber-300 text-amber-300' : 'fill-yellow-400 text-yellow-400'}`}
+   288→              />
+   289→            </motion.div>
+   290→          ))}
+   291→
+   292→          {/* Sparkle effects around new star */}
+   293→          {sparkles.map((s, i) => (
+   294→            <SparkleBurst key={i} x={s.x} y={s.y} delay={s.delay} color={s.color} />
+   295→          ))}
+   296→        </div>
+   297→
+   298→        {/* "ASCENDED!" dramatic text */}
+   299→        <motion.div
+   300→          className="mt-4"
+   301→          initial={{ scale: 0, opacity: 0 }}
+   302→          animate={{ scale: [0, 1.4, 1], opacity: [0, 1, 1] }}
+   303→          transition={{ delay: 1.0, duration: 0.6, ease: 'backOut' }}
+   304→        >
+   305→          <div className="relative">
+   306→            <motion.span
+   307→              className="text-3xl sm:text-4xl font-black tracking-widest"
+   308→              style={{
+   309→                background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #a855f7, #7c3aed)',
+   310→                WebkitBackgroundClip: 'text',
+   311→                WebkitTextFillColor: 'transparent',
+   312→                backgroundClip: 'text',
+   313→              }}
+   314→              animate={{
+   315→                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+   316→              }}
+   317→              transition={{ duration: 2, repeat: Infinity }}
+   318→            >
+   319→              ASCENDED!
+   320→            </motion.span>
+   321→            {/* Glow behind text */}
+   322→            <motion.div
+   323→              className="absolute inset-0 blur-lg"
+   324→              style={{
+   325→                background: 'linear-gradient(135deg, rgba(251,191,36,0.4), rgba(168,85,247,0.4))',
+   326→              }}
+   327→              animate={{ opacity: [0.4, 0.8, 0.4] }}
+   328→              transition={{ duration: 1.5, repeat: Infinity }}
+   329→            />
+   330→          </div>
+   331→        </motion.div>
+   332→
+   333→        {/* Stat boosts with flying numbers */}
+   334→        <motion.div
+   335→          className="mt-4 bg-black/60 backdrop-blur-sm rounded-xl p-3 border border-amber-500/20 space-y-1.5 min-w-[260px]"
+   336→          initial={{ opacity: 0, y: 20 }}
+   337→          animate={{ opacity: 1, y: 0 }}
+   338→          transition={{ delay: 1.2, duration: 0.5 }}
+   339→        >
+   340→          <FlyingStat icon={<Swords className="w-4 h-4" />} label="Attack" from={prevStats.attack} to={hero.attack} delay={1.3} color="#f87171" />
+   341→          <FlyingStat icon={<Shield className="w-4 h-4" />} label="Defense" from={prevStats.defense} to={hero.defense} delay={1.5} color="#60a5fa" />
+   342→          <FlyingStat icon={<Heart className="w-4 h-4" />} label="Health" from={prevStats.health} to={hero.health} delay={1.7} color="#4ade80" />
+   343→          <FlyingStat icon={<Zap className="w-4 h-4" />} label="Speed" from={prevStats.speed} to={hero.speed} delay={1.9} color="#facc15" />
+   344→        </motion.div>
+   345→      </div>
+   346→    </motion.div>
+   347→  );
+   348→}
+   349→
+   350→// ─── Main Hero Roster Component ─────────────────────────────────────────────
+   351→export function HeroRoster() {
+   352→  const heroes = useGameStore(s => s.heroes);
+   353→  const team = useGameStore(s => s.team);
+   354→  const addToTeam = useGameStore(s => s.addToTeam);
+   355→  const removeFromTeam = useGameStore(s => s.removeFromTeam);
+   356→  const levelUpHero = useGameStore(s => s.levelUpHero);
+   357→  const ascendHero = useGameStore(s => s.ascendHero);
+   358→  const equipment = useGameStore(s => s.equipment);
+   359→  const player = useGameStore(s => s.player);
+   360→
+   361→  const [search, setSearch] = useState('');
+   362→  const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
+   363→  const [factionFilter, setFactionFilter] = useState<Faction | 'all'>('all');
+   364→  const [selectedHero, setSelectedHero] = useState<HeroInstance | null>(null);
+   365→  const [showFilters, setShowFilters] = useState(false);
+   366→  const [showAscendConfirm, setShowAscendConfirm] = useState(false);
+   367→  const [ascensionAnimating, setAscensionAnimating] = useState(false);
+   368→  const [ascendedHero, setAscendedHero] = useState<HeroInstance | null>(null);
+   369→  const [prevStats, setPrevStats] = useState<{ attack: number; defense: number; health: number; speed: number } | null>(null);
+   370→
+   371→  const filteredHeroes = heroes.filter(h => {
+   372→    if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
+   373→    if (rarityFilter !== 'all' && h.rarity !== rarityFilter) return false;
+   374→    if (factionFilter !== 'all' && h.faction !== factionFilter) return false;
+   375→    return true;
+   376→  });
+   377→
+   378→  const sortedHeroes = [...filteredHeroes].sort((a, b) => {
+   379→    const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+   380→    return rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity) || b.level - a.level;
+   381→  });
+   382→
+   383→  const handleHeroClick = (hero: HeroInstance) => {
+   384→    setSelectedHero(selectedHero?.id === hero.id ? null : hero);
+   385→    setShowAscendConfirm(false);
+   386→  };
+   387→
+   388→  const handleToggleTeam = (heroId: string) => {
+   389→    if (team.includes(heroId)) {
+   390→      removeFromTeam(heroId);
+   391→    } else {
+   392→      addToTeam(heroId);
+   393→    }
+   394→  };
+   395→
+   396→  const handleAscendAnimationComplete = useCallback(() => {
+   397→    setAscensionAnimating(false);
+   398→    setAscendedHero(null);
+   399→    setPrevStats(null);
+   400→  }, []);
+   401→
+   402→  const handleAscend = () => {
+   403→    if (!selectedHero) return;
+   404→    // Capture prev stats before ascending
+   405→    const before = {
+   406→      attack: selectedHero.attack,
+   407→      defense: selectedHero.defense,
+   408→      health: selectedHero.health,
+   409→      speed: selectedHero.speed,
+   410→    };
+   411→    setPrevStats(before);
+   412→    ascendHero(selectedHero.id);
+   413→    setShowAscendConfirm(false);
+   414→    // Get the updated hero after ascension
+   415→    const updated = useGameStore.getState().heroes.find(h => h.id === selectedHero.id);
+   416→    if (updated) {
+   417→      setSelectedHero(updated);
+   418→      setAscendedHero(updated);
+   419→      setAscensionAnimating(true);
+   420→    }
+   421→  };
+   422→
+   423→  return (
+   424→    <div className="p-3 sm:p-4 max-w-4xl mx-auto">
+   425→      {/* Header */}
+   426→      <div className="flex items-center justify-between mb-3">
+   427→        <h2 className="text-lg font-bold gold-text">Hero Collection</h2>
+   428→        <span className="text-xs text-muted-foreground">{heroes.length} Champions</span>
+   429→      </div>
+   430→
+   431→      {/* Search & Filters */}
+   432→      <div className="mb-3 space-y-2">
+   433→        <div className="relative">
+   434→          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+   435→          <input
+   436→            type="text"
+   437→            placeholder="Search heroes..."
+   438→            value={search}
+   439→            onChange={e => setSearch(e.target.value)}
+   440→            className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+   441→          />
+   442→        </div>
+   443→        <button
+   444→          onClick={() => setShowFilters(!showFilters)}
+   445→          className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"
+   446→        >
+   447→          <Filter className="w-3.5 h-3.5" />
+   448→          Filters
+   449→          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+   450→        </button>
+   451→        <AnimatePresence>
+   452→          {showFilters && (
+   453→            <motion.div
+   454→              initial={{ height: 0, opacity: 0 }}
+   455→              animate={{ height: 'auto', opacity: 1 }}
+   456→              exit={{ height: 0, opacity: 0 }}
+   457→              className="overflow-hidden"
+   458→            >
+   459→              <div className="space-y-2 p-2 bg-gray-900/30 rounded-lg">
+   460→                <div>
+   461→                  <div className="text-[10px] text-gray-500 mb-1">Rarity</div>
+   462→                  <div className="flex flex-wrap gap-1">
+   463→                    <FilterChip label="All" active={rarityFilter === 'all'} onClick={() => setRarityFilter('all')} />
+   464→                    {Object.entries(RARITY_CONFIG).map(([key, val]) => (
+   465→                      <FilterChip key={key} label={val.label} active={rarityFilter === key} onClick={() => setRarityFilter(key as Rarity)} color={val.color} />
+   466→                    ))}
+   467→                  </div>
+   468→                </div>
+   469→                <div>
+   470→                  <div className="text-[10px] text-gray-500 mb-1">Faction</div>
+   471→                  <div className="flex flex-wrap gap-1">
+   472→                    <FilterChip label="All" active={factionFilter === 'all'} onClick={() => setFactionFilter('all')} />
+   473→                    {Object.entries(FACTION_CONFIG).map(([key, val]) => (
+   474→                      <FilterChip key={key} label={val.label} active={factionFilter === key} onClick={() => setFactionFilter(key as Faction)} color={val.color} />
+   475→                    ))}
+   476→                  </div>
+   477→                </div>
+   478→              </div>
+   479→            </motion.div>
+   480→          )}
+   481→        </AnimatePresence>
+   482→      </div>
+   483→
+   484→      {/* Team bar */}
+   485→      <div className="bg-gradient-to-r from-amber-900/20 to-amber-800/10 border border-amber-500/20 rounded-lg p-2 mb-3">
+   486→        <div className="text-[10px] text-amber-400 font-medium mb-1">ACTIVE TEAM ({team.length}/5)</div>
+   487→        <div className="flex gap-1.5">
+   488→          {team.map(id => {
+   489→            const hero = heroes.find(h => h.id === id);
+   490→            if (!hero) return null;
+   491→            return (
+   492→              <div key={id} className="flex items-center gap-1 bg-black/30 rounded px-1.5 py-0.5">
+   493→                <span className="text-xs">{ELEMENT_CONFIG[hero.element].icon}</span>
+   494→                <span className="text-[10px] text-white font-medium">{hero.name}</span>
+   495→                <button onClick={() => removeFromTeam(id)} className="text-red-400 hover:text-red-300 text-[10px]">✕</button>
+   496→              </div>
+   497→            );
+   498→          })}
+   499→        </div>
+   500→      </div>
+   501→
+   502→      {/* Hero Grid */}
+   503→      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+   504→        {sortedHeroes.map(hero => (
+   505→          <HeroCard
+   506→            key={hero.id}
+   507→            hero={hero}
+   508→            onClick={() => handleHeroClick(hero)}
+   509→            selected={selectedHero?.id === hero.id}
+   510→            showStats
+   511→          />
+   512→        ))}
+   513→      </div>
+   514→
+   515→      {/* Hero Detail Modal */}
+   516→      <AnimatePresence>
+   517→        {selectedHero && (
+   518→          <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedHero(null)}>
+   519→            <motion.div
+   520→              initial={{ y: 100, opacity: 0 }}
+   521→              animate={{ y: 0, opacity: 1 }}
+   522→              exit={{ y: 100, opacity: 0 }}
+   523→              className="bg-gradient-to-b from-[#1a0a2e] to-[#0f0f23] border border-amber-500/20 rounded-t-2xl sm:rounded-2xl p-5 max-w-md w-full max-h-[85vh] overflow-y-auto game-scrollbar"
+   524→              onClick={e => e.stopPropagation()}
+   525→            >
+   526→              <HeroDetail
+   527→                hero={selectedHero}
+   528→                isInTeam={team.includes(selectedHero.id)}
+   529→                onToggleTeam={() => handleToggleTeam(selectedHero.id)}
+   530→                onLevelUp={() => {
+   531→                  levelUpHero(selectedHero.id);
+   532→                  const updated = useGameStore.getState().heroes.find(h => h.id === selectedHero.id);
+   533→                  if (updated) setSelectedHero(updated);
+   534→                }}
+   535→                onAscend={() => setShowAscendConfirm(true)}
+   536→                gold={player.gold}
+   537→                gems={player.gems}
+   538→                equipment={equipment}
+   539→                showAscendConfirm={showAscendConfirm}
+   540→                onConfirmAscend={handleAscend}
+   541→                onCancelAscend={() => setShowAscendConfirm(false)}
+   542→              />
+   543→            </motion.div>
+   544→          </div>
+   545→        )}
+   546→      </AnimatePresence>
+   547→
+   548→      {/* Ascension Animation Overlay */}
+   549→      <AnimatePresence>
+   550→        {ascensionAnimating && ascendedHero && prevStats && (
+   551→          <AscensionAnimationOverlay
+   552→            hero={ascendedHero}
+   553→            prevStats={prevStats}
+   554→            onComplete={handleAscendAnimationComplete}
+   555→          />
+   556→        )}
+   557→      </AnimatePresence>
+   558→    </div>
+   559→  );
+   560→}
+   561→
+   562→function HeroDetail({ hero, isInTeam, onToggleTeam, onLevelUp, onAscend, gold, gems, equipment, showAscendConfirm, onConfirmAscend, onCancelAscend }: {
+   563→  hero: HeroInstance;
+   564→  isInTeam: boolean;
+   565→  onToggleTeam: () => void;
+   566→  onLevelUp: () => void;
+   567→  onAscend: () => void;
+   568→  gold: number;
+   569→  gems: number;
+   570→  equipment: { id: string; templateId: string; equippedTo?: string }[];
+   571→  showAscendConfirm: boolean;
+   572→  onConfirmAscend: () => void;
+   573→  onCancelAscend: () => void;
+   574→}) {
+   575→  const rarity = RARITY_CONFIG[hero.rarity];
+   576→  const element = ELEMENT_CONFIG[hero.element];
+   577→  const faction = FACTION_CONFIG[hero.faction];
+   578→  const levelUpCost = hero.level * 500;
+   579→  const ascendCost = RARITY_CONFIG[hero.rarity].stars * 2000;
+   580→
+   581→  // Awakening system
+   582→  const awakenHero = useGameStore(s => s.awakenHero);
+   583→  const dungeonMaterials = useGameStore(s => s.dungeonMaterials);
+   584→  const awakeningLevel = hero.awakeningLevel || 0;
+   585→  const nextAwakening = awakeningLevel < 5 ? AWAKENING_LEVELS[awakeningLevel] : null;
+   586→  const materialName = element.awakeningMaterial;
+   587→  const materialOwned = dungeonMaterials[materialName] || 0;
+   588→  const heroImage = getHeroImageUrl(hero.templateId);
+   589→  const heroGradient = getHeroGradient(hero.rarity);
+   590→  const heroPower = hero.attack + hero.defense + Math.floor(hero.health / 10) + hero.speed * 5;
+   591→
+   592→  // Get equipped items for this hero
+   593→  const equippedItems = equipment.filter(e => e.equippedTo === hero.id);
+   594→
+   595→  const canAscend = !hero.ascended && hero.level >= 20 && gems >= ascendCost;
+   596→  const ascendBlockedReason = hero.ascended
+   597→    ? 'Already ascended'
+   598→    : hero.level < 20
+   599→    ? `Requires level 20 (current: ${hero.level})`
+   600→    : gems < ascendCost
+   601→    ? `Need ${ascendCost} gems`
+   602→    : null;
+   603→
+   604→  return (
+   605→    <div>
+   606→      {/* Hero Portrait Header */}
+   607→      <div className={`relative -mx-5 -mt-5 mb-4 p-5 pb-4 bg-gradient-to-b ${heroGradient} border-b border-amber-500/20`}>
+   608→        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f0f23]" />
+   609→        <div className="relative z-10 flex items-center gap-4">
+   610→          {/* Portrait */}
+   611→          <div className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 ${rarity.borderColor} ${rarity.glowColor} shadow-lg`}>
+   612→            {heroImage ? (
+   613→              <img src={heroImage} alt={hero.name} className="w-full h-full object-cover" />
+   614→            ) : (
+   615→              <div className={`w-full h-full bg-gradient-to-br ${heroGradient} flex items-center justify-center text-3xl`}>
+   616→                {faction.icon}
+   617→              </div>
+   618→            )}
+   619→            {/* Level badge */}
+   620→            <div className="absolute bottom-0 inset-x-0 bg-black/80 text-center text-[10px] font-bold text-amber-300 py-0.5">
+   621→              Lv.{hero.level}
+   622→            </div>
+   623→          </div>
+   624→
+   625→          {/* Info */}
+   626→          <div className="flex-1 min-w-0">
+   627→            <h3 className="text-lg font-bold text-white truncate">{hero.name}</h3>
+   628→            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+   629→              <span className={`text-[10px] px-1.5 py-0.5 rounded ${rarity.bgColor} ${rarity.color} font-medium`}>{rarity.label}</span>
+   630→              <span className={`text-[10px] px-1.5 py-0.5 rounded ${element.bgColor} ${element.color}`}>{element.icon}</span>
+   631→              <span className="text-[10px] text-gray-400">{faction.icon} {faction.label}</span>
+   632→            </div>
+   633→            <div className="flex gap-0.5 mt-1.5">
+   634→              {Array.from({ length: hero.stars }, (_, i) => (
+   635→                <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+   636→              ))}
+   637→              {hero.ascended && (
+   638→                <span className="ml-1 text-[10px] text-amber-300 font-bold flex items-center gap-0.5">
+   639→                  <Crown className="w-2.5 h-2.5" /> ASCENDED
+   640→                </span>
+   641→              )}
+   642→            </div>
+   643→          </div>
+   644→        </div>
+   645→
+   646→        {/* Power rating */}
+   647→        <div className="relative z-10 mt-3 flex items-center justify-between bg-black/40 rounded-lg px-3 py-1.5">
+   648→          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Power</span>
+   649→          <span className="text-sm font-bold gold-text">{heroPower.toLocaleString()}</span>
+   650→        </div>
+   651→      </div>
+   652→
+   653→      {/* Stats Grid */}
+   654→      <div className="grid grid-cols-2 gap-2 mb-3">
+   655→        <StatBlock icon={<Swords className="w-4 h-4" />} label="Attack" value={hero.attack} color="text-red-400" />
+   656→        <StatBlock icon={<Shield className="w-4 h-4" />} label="Defense" value={hero.defense} color="text-blue-400" />
+   657→        <StatBlock icon={<Heart className="w-4 h-4" />} label="Health" value={hero.health} color="text-green-400" />
+   658→        <StatBlock icon={<Zap className="w-4 h-4" />} label="Speed" value={hero.speed} color="text-yellow-400" />
+   659→      </div>
+   660→
+   661→      {/* Crit stats */}
+   662→      <div className="flex gap-3 text-[11px] text-muted-foreground mb-3 bg-black/20 rounded-lg px-3 py-1.5">
+   663→        <span>Crit Rate: <span className="text-amber-300 font-medium">{(hero.critRate * 100).toFixed(0)}%</span></span>
+   664→        <span>Crit Damage: <span className="text-amber-300 font-medium">{(hero.critDamage * 100).toFixed(0)}%</span></span>
+   665→      </div>
+   666→
+   667→      {/* Equipment slots */}
+   668→      <div className="mb-3">
+   669→        <div className="flex items-center gap-1.5 mb-1.5 text-[11px] text-gray-400">
+   670→          <Shirt className="w-3 h-3" />
+   671→          <span className="uppercase tracking-wider">Equipment ({equippedItems.length}/6)</span>
+   672→        </div>
+   673→        <div className="grid grid-cols-6 gap-1">
+   674→          {['weapon', 'helmet', 'armor', 'boots', 'ring', 'amulet'].map(slot => {
+   675→            const item = equippedItems.find(e => {
+   676→              const t = EQUIPMENT_TEMPLATES.find(t => t.id === e.templateId);
+   677→              return t?.slot === slot;
+   678→            });
+   679→            const template = item ? EQUIPMENT_TEMPLATES.find(t => t.id === item.templateId) : null;
+   680→            return (
+   681→              <div
+   682→                key={slot}
+   683→                className={`aspect-square rounded-md border flex items-center justify-center text-base ${
+   684→                  template
+   685→                    ? `${RARITY_CONFIG[template.rarity].borderColor} ${RARITY_CONFIG[template.rarity].bgColor}`
+   686→                    : 'border-dashed border-gray-700/50 bg-black/30 text-gray-700'
+   687→                }`}
+   688→                title={template ? template.name : `Empty ${slot} slot`}
+   689→              >
+   690→                {template ? template.icon : ''}
+   691→              </div>
+   692→            );
+   693→          })}
+   694→        </div>
+   695→      </div>
+   696→
+   697→      {/* Skills */}
+   698→      <div className="space-y-1.5 mb-4">
+   699→        <div className="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Skills</div>
+   700→        <SkillDisplay name={hero.skill1Name} desc={hero.skill1Desc} stars={1} />
+   701→        {hero.skill2Name && <SkillDisplay name={hero.skill2Name} desc={hero.skill2Desc} stars={2} />}
+   702→        {hero.skill3Name && <SkillDisplay name={hero.skill3Name} desc={hero.skill3Desc} stars={3} />}
+   703→      </div>
+   704→
+   705→      {/* Lore */}
+   706→      <div className="mb-4 bg-black/20 rounded-lg p-2.5 border-l-2 border-amber-500/30">
+   707→        <div className="text-[10px] text-amber-400/70 uppercase tracking-wider mb-1">Lore</div>
+   708→        <div className="text-[11px] text-gray-400 italic">{hero.lore}</div>
+   709→      </div>
+   710→
+   711→      {/* Ascend Confirmation */}
+   712→      <AnimatePresence>
+   713→        {showAscendConfirm && (
+   714→          <motion.div
+   715→            initial={{ opacity: 0, height: 0 }}
+   716→            animate={{ opacity: 1, height: 'auto' }}
+   717→            exit={{ opacity: 0, height: 0 }}
+   718→            className="mb-3 bg-gradient-to-r from-purple-900/40 to-amber-900/30 border border-purple-500/40 rounded-lg p-3 overflow-hidden"
+   719→          >
+   720→            <div className="flex items-center gap-2 mb-1">
+   721→              <Sparkles className="w-4 h-4 text-purple-300" />
+   722→              <span className="text-sm font-bold text-purple-200">Confirm Ascension</span>
+   723→            </div>
+   724→            <p className="text-[11px] text-gray-300 mb-2">
+   725→              Sacrifice {ascendCost} 💎 to elevate <span className="text-amber-300 font-medium">{hero.name}</span> to ★{hero.stars + 1}.
+   726→              All stats will be permanently boosted by ~15%.
+   727→            </p>
+   728→            <div className="flex gap-2">
+   729→              <button
+   730→                onClick={onConfirmAscend}
+   731→                disabled={!canAscend}
+   732→                className="flex-1 py-1.5 rounded-lg font-medium text-xs bg-gradient-to-r from-purple-500 to-amber-500 text-white hover:from-purple-400 hover:to-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
+   733→              >
+   734→                ⚡ Ascend Now
+   735→              </button>
+   736→              <button
+   737→                onClick={onCancelAscend}
+   738→                className="px-3 py-1.5 rounded-lg text-xs bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+   739→              >
+   740→                Cancel
+   741→              </button>
+   742→            </div>
+   743→          </motion.div>
+   744→        )}
+   745→      </AnimatePresence>
+   746→
+   747→      {/* Actions */}
+   748→      <div className="grid grid-cols-2 gap-2">
+   749→        <button
+   750→          onClick={onToggleTeam}
+   751→          className={`py-2 rounded-lg font-medium text-sm transition-all ${
+   752→            isInTeam
+   753→              ? 'bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30'
+   754→              : 'bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600/30'
+   755→          }`}
+   756→        >
+   757→          {isInTeam ? '✕ Remove' : '+ Add to Team'}
+   758→        </button>
+   759→        <button
+   760→          onClick={onLevelUp}
+   761→          disabled={gold < levelUpCost}
+   762→          className="py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+   763→        >
+   764→          <ArrowUp className="w-3.5 h-3.5" />
+   765→          Lv.Up {levelUpCost}🪙
+   766→        </button>
+   767→      </div>
+   768→
+   769→      {/* Ascend Button */}
+   770→      <button
+   771→        onClick={onAscend}
+   772→        disabled={!!ascendBlockedReason}
+   773→        className="w-full mt-2 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-purple-600/40 to-amber-600/40 text-purple-100 border border-purple-500/40 hover:from-purple-600/60 hover:to-amber-600/60 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all"
+   774→      >
+   775→        <Crown className="w-3.5 h-3.5" />
+   776→        {hero.ascended ? 'Already Ascended' : `Ascend (${ascendCost} 💎)`}
+   777→      </button>
+   778→      {ascendBlockedReason && !hero.ascended && (
+   779→        <div className="text-center text-[10px] text-red-400/70 mt-1">⚠ {ascendBlockedReason}</div>
+   780→      )}
+   781→
+   782→      {/* Awakening System */}
+   783→      <div className="mt-3 bg-gradient-to-br from-purple-950/40 to-[#0f0f23] border border-purple-500/30 rounded-xl p-3">
+   784→        <div className="flex items-center gap-1.5 mb-2">
+   785→          <Sparkles className="w-4 h-4 text-purple-300" />
+   786→          <span className="text-xs font-bold text-purple-200 uppercase tracking-wider">Hero Awakening</span>
+   787→          <span className="ml-auto text-[10px] text-purple-400">Lv.{awakeningLevel}/5</span>
+   788→        </div>
+   789→
+   790→        {/* Awakening level progress dots */}
+   791→        <div className="flex items-center justify-center gap-1.5 mb-2">
+   792→          {[1, 2, 3, 4, 5].map(lvl => (
+   793→            <div
+   794→              key={lvl}
+   795→              className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border ${
+   796→                lvl <= awakeningLevel
+   797→                  ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white border-purple-300 shadow-lg shadow-purple-500/50'
+   798→                  : lvl === awakeningLevel + 1
+   799→                  ? 'bg-purple-900/40 text-purple-300 border-purple-400/50 animate-pulse'
+   800→                  : 'bg-gray-800/50 text-gray-600 border-gray-700/50'
+   801→              }`}
+   802→            >
+   803→              {lvl <= awakeningLevel ? '✦' : lvl}
+   804→            </div>
+   805→          ))}
+   806→        </div>
+   807→
+   808→        {awakeningLevel > 0 && (
+   809→          <div className="text-[10px] text-purple-300/70 text-center mb-2 italic">
+   810→            Current: {AWAKENING_LEVELS[awakeningLevel - 1].effect}
+   811→          </div>
+   812→        )}
+   813→
+   814→        {nextAwakening ? (
+   815→          <>
+   816→            <div className="bg-black/30 rounded-lg p-2 mb-2">
+   817→              <div className="text-[10px] text-amber-300 font-bold mb-0.5">
+   818→                Next: {nextAwakening.name} (Lv.{awakeningLevel + 1})
+   819→              </div>
+   820→              <div className="text-[10px] text-gray-400 mb-1">{nextAwakening.description}</div>
+   821→              <div className="text-[10px] text-purple-300">✦ {nextAwakening.effect}</div>
+   822→            </div>
+   823→
+   824→            <div className="flex items-center justify-between text-[10px] mb-2">
+   825→              <span className="flex items-center gap-1">
+   826→                <span className="text-lg">{element.icon}</span>
+   827→                <span className={materialOwned >= nextAwakening.materialCost ? 'text-green-400' : 'text-red-400'}>
+   828→                  {materialOwned}/{nextAwakening.materialCost} {materialName}
+   829→                </span>
+   830→              </span>
+   831→              <span className={gold >= nextAwakening.goldCost ? 'text-amber-300' : 'text-red-400'}>
+   832→                🪙 {nextAwakening.goldCost.toLocaleString()}
+   833→              </span>
+   834→            </div>
+   835→
+   836→            <button
+   837→              onClick={() => awakenHero(hero.id)}
+   838→              disabled={materialOwned < nextAwakening.materialCost || gold < nextAwakening.goldCost}
+   839→              className="w-full py-2 rounded-lg font-bold text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-purple-500/30"
+   840→            >
+   841→              <Sparkles className="w-3.5 h-3.5" />
+   842→              Awaken to Level {awakeningLevel + 1}
+   843→            </button>
+   844→            {materialOwned < nextAwakening.materialCost && (
+   845→              <div className="text-center text-[9px] text-cyan-400/70 mt-1">
+   846→                💡 Collect {materialName} from Daily Dungeons ({element.label} day)
+   847→              </div>
+   848→            )}
+   849→          </>
+   850→        ) : (
+   851→          <div className="text-center text-xs text-amber-300 font-bold py-2 bg-amber-900/20 rounded-lg border border-amber-500/30">
+   852→            ✦ MAX AWAKENING REACHED ✦
+   853→          </div>
+   854→        )}
+   855→      </div>
+   856→    </div>
+   857→  );
+   858→}
+   859→
+   860→function StatBlock({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+   861→  return (
+   862→    <div className="bg-black/30 rounded-lg p-2.5 flex items-center gap-2 border border-white/5">
+   863→      <span className={color}>{icon}</span>
+   864→      <div className="min-w-0">
+   865→        <div className="text-[9px] text-gray-500 uppercase tracking-wide">{label}</div>
+   866→        <div className={`text-sm font-bold ${color} truncate`}>{value.toLocaleString()}</div>
+   867→      </div>
+   868→    </div>
+   869→  );
+   870→}
+   871→
+   872→function SkillDisplay({ name, desc, stars }: { name: string; desc: string; stars: number }) {
+   873→  return (
+   874→    <div className="bg-black/20 rounded-lg p-2 border border-white/5 hover:border-amber-500/20 transition-colors">
+   875→      <div className="flex items-center gap-1 text-xs font-medium text-amber-300">
+   876→        {Array.from({ length: stars }, (_, i) => (
+   877→          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+   878→        ))}
+   879→        <span className="ml-1">{name}</span>
+   880→      </div>
+   881→      <div className="text-[11px] text-gray-400 mt-0.5">{desc}</div>
+   882→    </div>
+   883→  );
+   884→}
+   885→
+   886→function FilterChip({ label, active, onClick, color }: { label: string; active: boolean; onClick: () => void; color?: string }) {
+   887→  return (
+   888→    <button
+   889→      onClick={onClick}
+   890→      className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+   891→        active
+   892→          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+   893→          : 'bg-gray-800/50 text-gray-400 border border-gray-700/30 hover:bg-gray-700/50'
+   894→      }`}
+   895→    >
+   896→      {label}
+   897→    </button>
+   898→  );
+   899→}
+   900→

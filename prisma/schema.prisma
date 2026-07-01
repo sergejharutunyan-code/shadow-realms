@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  name          String   @default("Champion")
+  level         Int      @default(1)
+  experience    Int      @default(0)
+  gold          Int      @default(5000)
+  gems          Int      @default(100)
+  energy        Int      @default(100)
+  maxEnergy     Int      @default(100)
+  energyRefillAt DateTime @default(now())
+  vipLevel      Int      @default(0)
+  vipPoints     Int      @default(0)
+  totalSpent    Int      @default(0)
+  campaignStage Int      @default(1)
+  lastLoginAt   DateTime @default(now())
+  dailyRewardDay Int     @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  heroes        Hero[]
+  purchases     Purchase[]
+}
+
+model Hero {
+  id          String   @id @default(cuid())
+  playerId    String
+  templateId  String
+  name        String
+  rarity      String
+  faction     String
+  element     String
+  level       Int      @default(1)
+  experience  Int      @default(0)
+  attack      Int
+  defense     Int
+  health      Int
+  speed       Int
+  critRate    Float    @default(0.15)
+  critDamage  Float    @default(1.5)
+  skill1Name  String
+  skill1Desc  String
+  skill2Name  String?
+  skill2Desc  String?
+  skill3Name  String?
+  skill3Desc  String?
+  imageUrl    String?
+  stars       Int      @default(1)
+  ascended    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  player      Player   @relation(fields: [playerId], references: [id])
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  playerId    String
+  itemType    String
+  itemId      String?
+  amount      Int
+  currency    String
+  price       Int
+  createdAt   DateTime @default(now())
+
+  player      Player   @relation(fields: [playerId], references: [id])
+}

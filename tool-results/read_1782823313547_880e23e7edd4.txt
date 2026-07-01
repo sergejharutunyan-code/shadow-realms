@@ -1,0 +1,1387 @@
+     1→// Shadow Realms: Champions of Darkness - Game Data Definitions
+     2→
+     3→export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
+     4→export type Faction = 'knight' | 'undead' | 'demon' | 'elf' | 'barbarian' | 'darkelf';
+     5→export type Element = 'fire' | 'water' | 'earth' | 'dark' | 'light' | 'void';
+     6→
+     7→export interface HeroTemplate {
+     8→  id: string;
+     9→  name: string;
+    10→  rarity: Rarity;
+    11→  faction: Faction;
+    12→  element: Element;
+    13→  baseAttack: number;
+    14→  baseDefense: number;
+    15→  baseHealth: number;
+    16→  baseSpeed: number;
+    17→  critRate: number;
+    18→  critDamage: number;
+    19→  skill1Name: string;
+    20→  skill1Desc: string;
+    21→  skill2Name: string;
+    22→  skill2Desc: string;
+    23→  skill3Name: string;
+    24→  skill3Desc: string;
+    25→  lore: string;
+    26→}
+    27→
+    28→export interface HeroInstance {
+    29→  id: string;
+    30→  templateId: string;
+    31→  name: string;
+    32→  rarity: Rarity;
+    33→  faction: Faction;
+    34→  element: Element;
+    35→  level: number;
+    36→  experience: number;
+    37→  attack: number;
+    38→  defense: number;
+    39→  health: number;
+    40→  speed: number;
+    41→  critRate: number;
+    42→  critDamage: number;
+    43→  skill1Name: string;
+    44→  skill1Desc: string;
+    45→  skill2Name: string;
+    46→  skill2Desc: string;
+    47→  skill3Name: string;
+    48→  skill3Desc: string;
+    49→  stars: number;
+    50→  ascended: boolean;
+    51→  awakened: boolean;
+    52→  awakeningLevel: number; // 0-5
+    53→  inTeam: boolean;
+    54→}
+    55→
+    56→export interface PlayerState {
+    57→  id: string;
+    58→  name: string;
+    59→  level: number;
+    60→  experience: number;
+    61→  gold: number;
+    62→  gems: number;
+    63→  energy: number;
+    64→  maxEnergy: number;
+    65→  vipLevel: number;
+    66→  vipPoints: number;
+    67→  totalSpent: number;
+    68→  campaignStage: number;
+    69→  dailyRewardDay: number;
+    70→  lastLoginAt: number;
+    71→}
+    72→
+    73→export interface BattleHero extends HeroInstance {
+    74→  currentHealth: number;
+    75→  maxHealth: number;
+    76→  isAlive: boolean;
+    77→  turnMeter: number;
+    78→}
+    79→
+    80→export interface BattleState {
+    81→  isActive: boolean;
+    82→  playerTeam: BattleHero[];
+    83→  enemyTeam: BattleHero[];
+    84→  currentTurn: 'player' | 'enemy';
+    85→  turnIndex: number;
+    86→  turnNumber: number;
+    87→  log: string[];
+    88→  result: 'victory' | 'defeat' | null;
+    89→  rewards: { gold: number; experience: number; gems: number } | null;
+    90→  autoPlay: boolean;
+    91→  speed: 1 | 2;
+    92→}
+    93→
+    94→export interface ShopItem {
+    95→  id: string;
+    96→  name: string;
+    97→  description: string;
+    98→  price: number;
+    99→  currency: 'gems' | 'gold' | 'usd';
+   100→  type: 'gems' | 'gold' | 'energy' | 'hero_shard' | 'scroll' | 'vip_points';
+   101→  amount: number;
+   102→  icon: string;
+   103→  limited: boolean;
+   104→  limitedCount: number;
+   105→  originalPrice?: number;
+   106→  discount?: number;
+   107→  featured?: boolean;
+   108→}
+   109→
+   110→export interface CampaignStage {
+   111→  id: number;
+   112→  name: string;
+   113→  description: string;
+   114→  enemyLevel: number;
+   115→  enemyFaction: Faction;
+   116→  energyCost: number;
+   117→  rewards: { gold: number; experience: number; gems: number };
+   118→  bossName: string;
+   119→  bossRarity: Rarity;
+   120→}
+   121→
+   122→export const RARITY_CONFIG: Record<Rarity, { label: string; color: string; bgColor: string; borderColor: string; glowColor: string; summonRate: number; stars: number }> = {
+   123→  common: { label: 'Common', color: 'text-gray-400', bgColor: 'bg-gray-800', borderColor: 'border-gray-500', glowColor: 'shadow-gray-500/30', summonRate: 0.45, stars: 1 },
+   124→  uncommon: { label: 'Uncommon', color: 'text-green-400', bgColor: 'bg-green-900/30', borderColor: 'border-green-500', glowColor: 'shadow-green-500/30', summonRate: 0.25, stars: 2 },
+   125→  rare: { label: 'Rare', color: 'text-blue-400', bgColor: 'bg-blue-900/30', borderColor: 'border-blue-500', glowColor: 'shadow-blue-500/40', summonRate: 0.18, stars: 3 },
+   126→  epic: { label: 'Epic', color: 'text-purple-400', bgColor: 'bg-purple-900/30', borderColor: 'border-purple-500', glowColor: 'shadow-purple-500/40', summonRate: 0.08, stars: 4 },
+   127→  legendary: { label: 'Legendary', color: 'text-yellow-400', bgColor: 'bg-yellow-900/30', borderColor: 'border-yellow-500', glowColor: 'shadow-yellow-500/50', summonRate: 0.035, stars: 5 },
+   128→  mythic: { label: 'Mythic', color: 'text-red-400', bgColor: 'bg-red-900/30', borderColor: 'border-red-500', glowColor: 'shadow-red-500/50', summonRate: 0.005, stars: 6 },
+   129→};
+   130→
+   131→export const FACTION_CONFIG: Record<Faction, { label: string; color: string; icon: string }> = {
+   132→  knight: { label: 'Sacred Order', color: 'text-amber-300', icon: '⚔️' },
+   133→  undead: { label: 'Undead Hordes', color: 'text-gray-300', icon: '💀' },
+   134→  demon: { label: 'Demonspawn', color: 'text-red-400', icon: '👹' },
+   135→  elf: { label: 'Elven Court', color: 'text-emerald-300', icon: '🧝' },
+   136→  barbarian: { label: 'Barbarian Tribe', color: 'text-orange-400', icon: '🪓' },
+   137→  darkelf: { label: 'Dark Elves', color: 'text-violet-300', icon: '🌙' },
+   138→};
+   139→
+   140→export const ELEMENT_CONFIG: Record<Element, { label: string; color: string; bgColor: string; icon: string; awakeningMaterial: string }> = {
+   141→  fire: { label: 'Fire', color: 'text-red-400', bgColor: 'bg-red-500/20', icon: '🔥', awakeningMaterial: 'Inferno Ember' },
+   142→  water: { label: 'Water', color: 'text-cyan-400', bgColor: 'bg-cyan-500/20', icon: '💧', awakeningMaterial: 'Tidal Pearl' },
+   143→  earth: { label: 'Earth', color: 'text-amber-400', bgColor: 'bg-amber-500/20', icon: '🌍', awakeningMaterial: 'Gaia Stone' },
+   144→  dark: { label: 'Dark', color: 'text-purple-400', bgColor: 'bg-purple-500/20', icon: '🌑', awakeningMaterial: 'Shadow Essence' },
+   145→  light: { label: 'Light', color: 'text-yellow-300', bgColor: 'bg-yellow-500/20', icon: '☀️', awakeningMaterial: 'Light Crystal' },
+   146→  void: { label: 'Void', color: 'text-pink-400', bgColor: 'bg-pink-500/20', icon: '✨', awakeningMaterial: 'Void Fragment' },
+   147→};
+   148→
+   149→// ============= HERO AWAKENING SYSTEM =============
+   150→export const AWAKENING_LEVELS = [
+   151→  {
+   152→    level: 1,
+   153→    name: 'Initial Awakening',
+   154→    materialCost: 10,
+   155→    goldCost: 50000,
+   156→    statBoost: 0.10, // +10% all stats
+   157→    description: 'Unlocks the hero\'s dormant power. +10% to all stats.',
+   158→    effect: 'Unlock passive: +5% crit rate in battle',
+   159→  },
+   160→  {
+   161→    level: 2,
+   162→    name: 'Power Surge',
+   163→    materialCost: 25,
+   164→    goldCost: 150000,
+   165→    statBoost: 0.15,
+   166→    description: 'Power surges through the hero. +15% additional stats.',
+   167→    effect: 'Skill 1 damage +20%',
+   168→  },
+   169→  {
+   170→    level: 3,
+   171→    name: 'Soul Resonance',
+   172→    materialCost: 50,
+   173→    goldCost: 500000,
+   174→    statBoost: 0.20,
+   175→    description: 'The hero\'s soul resonates with elemental energy. +20% stats.',
+   176→    effect: 'Skill 2 cooldown -1 turn',
+   177→  },
+   178→  {
+   179→    level: 4,
+   180→    name: 'Transcendence',
+   181→    materialCost: 100,
+   182→    goldCost: 1500000,
+   183→    statBoost: 0.25,
+   184→    description: 'The hero transcends mortal limits. +25% stats.',
+   185→    effect: 'Immune to stun and freeze',
+   186→  },
+   187→  {
+   188→    level: 5,
+   189→    name: 'Divine Ascension',
+   190→    materialCost: 200,
+   191→    goldCost: 5000000,
+   192→    statBoost: 0.35,
+   193→    description: 'The hero achieves divine power. +35% stats.',
+   194→    effect: 'Ultimate ability unlocked: Massive AoE damage',
+   195→  },
+   196→];
+   197→
+   198→export const VIP_LEVELS = [
+   199→  { level: 0, requiredPoints: 0, rewards: '', perks: ['Basic gameplay'] },
+   200→  { level: 1, requiredPoints: 100, rewards: '500 Gems', perks: ['+10% Gold from battles', 'Daily login bonus +50 Gold'] },
+   201→  { level: 2, requiredPoints: 500, rewards: '1,500 Gems', perks: ['+20% Gold from battles', '+5% Hero XP', 'Energy cap +20'] },
+   202→  { level: 3, requiredPoints: 1500, rewards: '3,000 Gems', perks: ['+30% Gold from battles', '+10% Hero XP', 'Energy cap +40', 'Auto-battle speed x2'] },
+   203→  { level: 4, requiredPoints: 5000, rewards: '7,500 Gems', perks: ['+50% Gold from battles', '+15% Hero XP', 'Energy cap +60', 'Extra daily summon'] },
+   204→  { level: 5, requiredPoints: 15000, rewards: '15,000 Gems', perks: ['+75% Gold from battles', '+25% Hero XP', 'Energy cap +80', 'Extra daily summon', '+10% summon rates'] },
+   205→  { level: 6, requiredPoints: 50000, rewards: '30,000 Gems + Mythic Hero', perks: ['+100% Gold from battles', '+50% Hero XP', 'Energy cap +100', '2 extra daily summons', '+20% summon rates', 'Exclusive Mythic Hero'] },
+   206→  { level: 7, requiredPoints: 100000, rewards: '50,000 Gems + Exclusive Skin', perks: ['All previous perks doubled', 'Exclusive cosmetics', 'Priority matchmaking', 'VIP chat badge'] },
+   207→];
+   208→
+   209→// Hero Templates - 40+ unique heroes
+   210→export const HERO_TEMPLATES: HeroTemplate[] = [
+   211→  // KNIGHTS
+   212→  { id: 'knight_01', name: 'Sir Galahad', rarity: 'rare', faction: 'knight', element: 'light', baseAttack: 850, baseDefense: 720, baseHealth: 12000, baseSpeed: 95, critRate: 0.15, critDamage: 1.5, skill1Name: 'Holy Strike', skill1Desc: 'Deals 200% ATK damage to one enemy', skill2Name: 'Divine Shield', skill2Desc: 'Grants shield equal to 30% HP for 2 turns', skill3Name: 'Judgement', skill3Desc: 'Attacks all enemies for 150% ATK with 50% stun chance', lore: 'A noble paladin sworn to protect the realm from darkness.' },
+   213→  { id: 'knight_02', name: 'Aethelgard', rarity: 'legendary', faction: 'knight', element: 'light', baseAttack: 1450, baseDefense: 1100, baseHealth: 18000, baseSpeed: 105, critRate: 0.20, critDamage: 1.6, skill1Name: 'Radiant Slash', skill1Desc: 'Deals 250% ATK damage ignoring 30% DEF', skill2Name: 'Celestial Ward', skill2Desc: 'Heals all allies by 25% HP and grants immunity', skill3Name: 'Divine Retribution', skill3Desc: 'Deals 300% ATK to all enemies and stuns for 1 turn', lore: 'The legendary grandmaster of the Sacred Order.' },
+   214→  { id: 'knight_03', name: 'Squire Timmons', rarity: 'common', faction: 'knight', element: 'fire', baseAttack: 420, baseDefense: 350, baseHealth: 5500, baseSpeed: 85, critRate: 0.10, critDamage: 1.4, skill1Name: 'Swift Slash', skill1Desc: 'Deals 150% ATK damage', skill2Name: 'Block', skill2Desc: 'Reduces incoming damage by 30% for 1 turn', skill3Name: '', skill3Desc: '', lore: 'A young squire eager to prove his worth.' },
+   215→  { id: 'knight_04', name: 'Dame Valeria', rarity: 'epic', faction: 'knight', element: 'water', baseAttack: 1100, baseDefense: 950, baseHealth: 15000, baseSpeed: 100, critRate: 0.18, critDamage: 1.55, skill1Name: 'Tidal Smite', skill1Desc: 'Deals 220% ATK damage with lifesteal', skill2Name: 'Oath of Protection', skill2Desc: 'Takes damage meant for an ally for 2 turns', skill3Name: 'Wrath of the Deep', skill3Desc: 'Deals 250% ATK to all enemies and heals team by 15%', lore: 'A sea-faring knight who commands both sword and tide.' },
+   216→  { id: 'knight_05', name: 'Crusader Roland', rarity: 'uncommon', faction: 'knight', element: 'fire', baseAttack: 620, baseDefense: 540, baseHealth: 8000, baseSpeed: 90, critRate: 0.12, critDamage: 1.45, skill1Name: 'Flame Cleave', skill1Desc: 'Deals 170% ATK damage', skill2Name: 'Burning Zeal', skill2Desc: 'Increases ATK by 20% for 2 turns', skill3Name: '', skill3Desc: '', lore: 'A zealous warrior whose faith burns like fire.' },
+   217→
+   218→  // UNDEAD
+   219→  { id: 'undead_01', name: 'Necrolord Xar', rarity: 'legendary', faction: 'undead', element: 'dark', baseAttack: 1500, baseDefense: 900, baseHealth: 16500, baseSpeed: 110, critRate: 0.22, critDamage: 1.7, skill1Name: 'Soul Rend', skill1Desc: 'Deals 280% ATK damage and heals 30% of damage dealt', skill2Name: 'Raise Dead', skill2Desc: 'Revives a fallen ally with 50% HP', skill3Name: 'Plague of Souls', skill3Desc: 'Deals 250% ATK to all enemies and poisons for 3 turns', lore: 'The supreme lord of the Undead Hordes, feared across all realms.' },
+   220→  { id: 'undead_02', name: 'Bone Collector', rarity: 'rare', faction: 'undead', element: 'dark', baseAttack: 880, baseDefense: 600, baseHealth: 10500, baseSpeed: 98, critRate: 0.16, critDamage: 1.5, skill1Name: 'Grave Strike', skill1Desc: 'Deals 200% ATK damage', skill2Name: 'Bone Armor', skill2Desc: 'Increases DEF by 40% for 2 turns', skill3Name: 'Cemetery Call', skill3Desc: 'Deals 160% ATK to all enemies', lore: 'A skeletal warrior animated by dark magic.' },
+   221→  { id: 'undead_03', name: 'Shambling Horror', rarity: 'common', faction: 'undead', element: 'earth', baseAttack: 380, baseDefense: 400, baseHealth: 7000, baseSpeed: 75, critRate: 0.08, critDamage: 1.35, skill1Name: 'Rotten Slam', skill1Desc: 'Deals 140% ATK damage', skill2Name: 'Putrid Aura', skill2Desc: 'Poisons attacker when hit for 10% max HP', skill3Name: '', skill3Desc: '', lore: 'A reanimated corpse that spreads disease.' },
+   222→  { id: 'undead_04', name: 'Spectral Wraith', rarity: 'epic', faction: 'undead', element: 'void', baseAttack: 1200, baseDefense: 550, baseHealth: 11000, baseSpeed: 115, critRate: 0.25, critDamage: 1.65, skill1Name: 'Phase Strike', skill1Desc: 'Deals 230% ATK damage ignoring shields', skill2Name: 'Soul Drain', skill2Desc: 'Steals 20% of target ATK for 3 turns', skill3Name: 'Void Walk', skill3Desc: 'Becomes untargetable for 1 turn and heals 30% HP', lore: 'A ghostly assassin that phases between dimensions.' },
+   223→  { id: 'undead_05', name: 'Ghoul Scratcher', rarity: 'uncommon', faction: 'undead', element: 'dark', baseAttack: 580, baseDefense: 420, baseHealth: 7500, baseSpeed: 92, critRate: 0.12, critDamage: 1.4, skill1Name: 'Festering Claw', skill1Desc: 'Deals 160% ATK damage and poisons', skill2Name: 'Cannibalize', skill2Desc: 'Heals 15% HP when defeating an enemy', skill3Name: '', skill3Desc: '', lore: 'A ravenous ghoul that feeds on the living.' },
+   224→
+   225→  // DEMONS
+   226→  { id: 'demon_01', name: 'Archdemon Malachar', rarity: 'mythic', faction: 'demon', element: 'fire', baseAttack: 1800, baseDefense: 1050, baseHealth: 20000, baseSpeed: 120, critRate: 0.25, critDamage: 1.8, skill1Name: 'Hellfire Blast', skill1Desc: 'Deals 320% ATK damage with guaranteed critical', skill2Name: 'Demonic Pact', skill2Desc: 'Sacrifices 20% HP to boost ATK by 60% for 3 turns', skill3Name: 'Apocalypse', skill3Desc: 'Deals 400% ATK to all enemies, ignores DEF, applies burn', lore: 'The supreme Archdemon, ruler of the burning hells. Only the worthy may wield his power.' },
+   227→  { id: 'demon_02', name: 'Succubus Lyra', rarity: 'epic', faction: 'demon', element: 'dark', baseAttack: 1150, baseDefense: 650, baseHealth: 12000, baseSpeed: 108, critRate: 0.20, critDamage: 1.6, skill1Name: 'Kiss of Death', skill1Desc: 'Deals 220% ATK damage and charms target', skill2Name: 'Drain Life', skill2Desc: 'Steals 25% HP from target', skill3Name: 'Dark Seduction', skill3Desc: 'Charms all enemies for 1 turn with 40% chance', lore: 'A temptress who bends the wills of mortals.' },
+   228→  { id: 'demon_03', name: 'Imp Scorch', rarity: 'common', faction: 'demon', element: 'fire', baseAttack: 450, baseDefense: 280, baseHealth: 5000, baseSpeed: 100, critRate: 0.12, critDamage: 1.4, skill1Name: 'Fireball', skill1Desc: 'Deals 160% ATK damage', skill2Name: 'Mischievous Dodge', skill2Desc: '20% chance to dodge attacks for 2 turns', skill3Name: '', skill3Desc: '', lore: 'A small but annoying fire demon.' },
+   229→  { id: 'demon_04', name: 'Hellhound Cerberus', rarity: 'rare', faction: 'demon', element: 'fire', baseAttack: 920, baseDefense: 680, baseHealth: 13000, baseSpeed: 95, critRate: 0.15, critDamage: 1.5, skill1Name: 'Triple Bite', skill1Desc: 'Attacks 3 times for 100% ATK each', skill2Name: 'Hellfire Breath', skill2Desc: 'Deals 170% ATK to all enemies with burn', skill3Name: 'Unholy Howl', skill3Desc: 'Increases team ATK by 25% for 2 turns', lore: 'A three-headed beast from the depths of hell.' },
+   230→  { id: 'demon_05', name: 'Corruptor Vex', rarity: 'uncommon', faction: 'demon', element: 'void', baseAttack: 650, baseDefense: 480, baseHealth: 8500, baseSpeed: 93, critRate: 0.14, critDamage: 1.45, skill1Name: 'Corrupt Touch', skill1Desc: 'Deals 170% ATK and reduces target DEF', skill2Name: 'Shadow Step', skill2Desc: 'Attacks with 180% ATK with 30% bonus crit', skill3Name: '', skill3Desc: '', lore: 'A demon that corrupts everything it touches.' },
+   231→
+   232→  // ELVES
+   233→  { id: 'elf_01', name: 'Queen Arwenya', rarity: 'legendary', faction: 'elf', element: 'earth', baseAttack: 1350, baseDefense: 850, baseHealth: 15500, baseSpeed: 115, critRate: 0.22, critDamage: 1.65, skill1Name: 'Natures Wrath', skill1Desc: 'Deals 260% ATK damage and heals lowest HP ally', skill2Name: 'Forest Blessing', skill2Desc: 'Heals all allies by 30% HP and cleanses debuffs', skill3Name: 'Elven Fury', skill3Desc: 'Deals 280% ATK to all enemies and reduces their ATK', lore: 'The immortal queen of the Elven Court, wielder of nature magic.' },
+   234→  { id: 'elf_02', name: 'Ranger Sylvana', rarity: 'rare', faction: 'elf', element: 'earth', baseAttack: 950, baseDefense: 520, baseHealth: 9500, baseSpeed: 112, critRate: 0.20, critDamage: 1.55, skill1Name: 'Precise Shot', skill1Desc: 'Deals 220% ATK damage with guaranteed hit', skill2Name: 'Volley', skill2Desc: 'Attacks all enemies for 150% ATK', skill3Name: 'Eagle Eye', skill3Desc: 'Increases crit rate by 30% for 2 turns', lore: 'An elite elven archer with unerring aim.' },
+   235→  { id: 'elf_03', name: 'Elfling Piper', rarity: 'common', faction: 'elf', element: 'water', baseAttack: 400, baseDefense: 320, baseHealth: 5200, baseSpeed: 98, critRate: 0.10, critDamage: 1.4, skill1Name: 'Water Arrow', skill1Desc: 'Deals 150% ATK damage', skill2Name: 'Soothing Song', skill2Desc: 'Heals ally by 15% HP', skill3Name: '', skill3Desc: '', lore: 'A young elf who uses music and water magic.' },
+   236→  { id: 'elf_04', name: 'Archmage Elowen', rarity: 'epic', faction: 'elf', element: 'light', baseAttack: 1250, baseDefense: 580, baseHealth: 10500, baseSpeed: 105, critRate: 0.18, critDamage: 1.6, skill1Name: 'Arcane Bolt', skill1Desc: 'Deals 240% ATK damage', skill2Name: 'Mana Shield', skill2Desc: 'Grants shield to all allies equal to 25% max HP', skill3Name: 'Starfall', skill3Desc: 'Deals 200% ATK to all enemies with 40% stun', lore: 'A powerful elven mage who channels starlight.' },
+   237→  { id: 'elf_05', name: 'Druid Thalion', rarity: 'uncommon', faction: 'elf', element: 'earth', baseAttack: 560, baseDefense: 500, baseHealth: 9000, baseSpeed: 88, critRate: 0.10, critDamage: 1.4, skill1Name: 'Root Strike', skill1Desc: 'Deals 160% ATK and slows target', skill2Name: 'Natures Touch', skill2Desc: 'Heals ally by 20% HP', skill3Name: '', skill3Desc: '', lore: 'A forest druid who speaks to the trees.' },
+   238→
+   239→  // BARBARIANS
+   240→  { id: 'barbarian_01', name: 'Warchief Krong', rarity: 'legendary', faction: 'barbarian', element: 'fire', baseAttack: 1600, baseDefense: 950, baseHealth: 19000, baseSpeed: 95, critRate: 0.20, critDamage: 1.75, skill1Name: 'Skull Crusher', skill1Desc: 'Deals 300% ATK damage with 50% DEF ignore', skill2Name: 'War Cry', skill2Desc: 'Increases team ATK by 40% and Speed by 20%', skill3Name: 'Berserker Rage', skill3Desc: 'Deals 350% ATK and gains extra turn if kill', lore: 'The fearsome warchief who united the barbarian tribes.' },
+   241→  { id: 'barbarian_02', name: 'Berserker Ursa', rarity: 'rare', faction: 'barbarian', element: 'earth', baseAttack: 980, baseDefense: 650, baseHealth: 13500, baseSpeed: 88, critRate: 0.18, critDamage: 1.55, skill1Name: 'Furious Smash', skill1Desc: 'Deals 210% ATK damage', skill2Name: 'Blood Rage', skill2Desc: 'Increases ATK by 35% but reduces DEF by 15%', skill3Name: 'Earthquake', skill3Desc: 'Deals 180% ATK to all enemies', lore: 'A berserker who grows stronger with each wound.' },
+   242→  { id: 'barbarian_03', name: 'Tribal Scout', rarity: 'common', faction: 'barbarian', element: 'earth', baseAttack: 430, baseDefense: 380, baseHealth: 6500, baseSpeed: 95, critRate: 0.12, critDamage: 1.4, skill1Name: 'Spear Thrust', skill1Desc: 'Deals 155% ATK damage', skill2Name: 'Track', skill2Desc: 'Increases team speed by 15% for 2 turns', skill3Name: '', skill3Desc: '', lore: 'A swift scout who knows every trail.' },
+   243→  { id: 'barbarian_04', name: 'Shaman Zula', rarity: 'epic', faction: 'barbarian', element: 'water', baseAttack: 1000, baseDefense: 700, baseHealth: 14000, baseSpeed: 92, critRate: 0.15, critDamage: 1.5, skill1Name: 'Spirit Strike', skill1Desc: 'Deals 200% ATK damage', skill2Name: 'Healing Rain', skill2Desc: 'Heals all allies by 25% HP', skill3Name: 'Ancestral Ward', skill3Desc: 'Grants all allies immunity to debuffs for 1 turn', lore: 'A powerful shaman who communes with ancestral spirits.' },
+   244→  { id: 'barbarian_05', name: 'Axe Thrower Grok', rarity: 'uncommon', faction: 'barbarian', element: 'fire', baseAttack: 670, baseDefense: 420, baseHealth: 7800, baseSpeed: 90, critRate: 0.14, critDamage: 1.45, skill1Name: 'Throwing Axe', skill1Desc: 'Deals 175% ATK damage', skill2Name: 'Double Throw', skill2Desc: 'Attacks twice for 120% ATK each', skill3Name: '', skill3Desc: '', lore: 'A barbarian with deadly axe-throwing precision.' },
+   245→
+   246→  // DARK ELVES
+   247→  { id: 'darkelf_01', name: 'Shadow Queen Nyx', rarity: 'mythic', faction: 'darkelf', element: 'dark', baseAttack: 1700, baseDefense: 800, baseHealth: 17500, baseSpeed: 125, critRate: 0.28, critDamage: 1.85, skill1Name: 'Shadow Strike', skill1Desc: 'Deals 350% ATK with guaranteed crit and DEF ignore', skill2Name: 'Veil of Darkness', skill2Desc: 'Becomes untargetable and gains extra turn', skill3Name: 'Eclipse', skill3Desc: 'Deals 380% ATK to all enemies, steals 30% of their ATK', lore: 'The mythical Shadow Queen, ruler of the Dark Elves. Her power is absolute.' },
+   248→  { id: 'darkelf_02', name: 'Assassin Vexil', rarity: 'rare', faction: 'darkelf', element: 'dark', baseAttack: 920, baseDefense: 480, baseHealth: 9000, baseSpeed: 118, critRate: 0.22, critDamage: 1.6, skill1Name: 'Backstab', skill1Desc: 'Deals 240% ATK with bonus crit damage', skill2Name: 'Vanish', skill2Desc: 'Becomes invisible for 1 turn, next attack deals +50%', skill3Name: 'Death Mark', skill3Desc: 'Marks target for death, takes 30% more damage for 2 turns', lore: 'A deadly assassin who strikes from the shadows.' },
+   249→  { id: 'darkelf_03', name: 'Dark Initiate', rarity: 'common', faction: 'darkelf', element: 'dark', baseAttack: 440, baseDefense: 350, baseHealth: 5800, baseSpeed: 96, critRate: 0.12, critDamage: 1.4, skill1Name: 'Dark Bolt', skill1Desc: 'Deals 155% ATK damage', skill2Name: 'Shadow Step', skill2Desc: 'Increases speed by 20% for 2 turns', skill3Name: '', skill3Desc: '', lore: 'A novice in the dark arts.' },
+   250→  { id: 'darkelf_04', name: 'Warlock Zaros', rarity: 'epic', faction: 'darkelf', element: 'void', baseAttack: 1180, baseDefense: 600, baseHealth: 11500, baseSpeed: 102, critRate: 0.18, critDamage: 1.6, skill1Name: 'Chaos Bolt', skill1Desc: 'Deals 230% ATK damage with random debuff', skill2Name: 'Curse of Weakness', skill2Desc: 'Reduces all enemy ATK by 30% for 2 turns', skill3Name: 'Void Rift', skill3Desc: 'Deals 200% ATK to all enemies and applies 2 random debuffs', lore: 'A master of chaos magic and forbidden rituals.' },
+   251→  { id: 'darkelf_05', name: 'Nightblade Sira', rarity: 'uncommon', faction: 'darkelf', element: 'water', baseAttack: 640, baseDefense: 450, baseHealth: 7200, baseSpeed: 110, critRate: 0.16, critDamage: 1.5, skill1Name: 'Frost Dagger', skill1Desc: 'Deals 165% ATK and slows target', skill2Name: 'Ice Clone', skill2Desc: 'Creates a clone that absorbs one hit', skill3Name: '', skill3Desc: '', lore: 'A swift assassin who uses ice magic.' },
+   252→
+   253→  // Additional LEGENDARY and MYTHIC
+   254→  { id: 'special_01', name: 'Dragon Lord Ignis', rarity: 'mythic', faction: 'demon', element: 'fire', baseAttack: 1750, baseDefense: 1100, baseHealth: 22000, baseSpeed: 105, critRate: 0.24, critDamage: 1.8, skill1Name: 'Dragon Breath', skill1Desc: 'Deals 300% ATK to all enemies with burn', skill2Name: 'Dragon Scales', skill2Desc: 'Increases DEF by 80% and reflects 30% damage', skill3Name: 'Inferno Cataclysm', skill3Desc: 'Deals 450% ATK to target, 200% to all others', lore: 'An ancient dragon lord who takes human form. The rarest of all champions.' },
+   255→  { id: 'special_02', name: 'Valkyrie Astrid', rarity: 'legendary', faction: 'knight', element: 'light', baseAttack: 1400, baseDefense: 1000, baseHealth: 17000, baseSpeed: 110, critRate: 0.22, critDamage: 1.65, skill1Name: 'Heavenly Strike', skill1Desc: 'Deals 270% ATK with holy damage', skill2Name: 'Valkyrie Blessing', skill2Desc: 'Revives fallen ally with 50% HP and grants immunity', skill3Name: 'Wrath of Valhalla', skill3Desc: 'Deals 250% ATK to all enemies, heals team by 20%', lore: 'A divine warrior maiden chosen by the gods.' },
+   256→  { id: 'special_03', name: 'Lich King Mordeus', rarity: 'legendary', faction: 'undead', element: 'void', baseAttack: 1380, baseDefense: 950, baseHealth: 16000, baseSpeed: 100, critRate: 0.20, critDamage: 1.7, skill1Name: 'Soul Harvest', skill1Desc: 'Deals 260% ATK and gains extra turn on kill', skill2Name: 'Army of the Dead', skill2Desc: 'Summons skeleton minions that attack all enemies', skill3Name: 'Eternal Torment', skill3Desc: 'Deals 200% ATK to all, poisons for 5 turns, freezes for 1', lore: 'The supreme ruler of the undead, an eternal lich of immense power.' },
+   257→  { id: 'special_04', name: 'World Tree Yggdra', rarity: 'legendary', faction: 'elf', element: 'earth', baseAttack: 1100, baseDefense: 1200, baseHealth: 25000, baseSpeed: 85, critRate: 0.12, critDamage: 1.5, skill1Name: 'Root Bind', skill1Desc: 'Deals 180% ATK and freezes target for 1 turn', skill2Name: 'Natures Embrace', skill2Desc: 'Heals all allies by 40% HP and grants regen', skill3Name: 'World Tree Awakening', skill3Desc: 'Heals team to full HP, grants shield equal to 30% max HP', lore: 'The ancient spirit of the World Tree, guardian of all life.' },
+   258→  { id: 'special_05', name: 'Void Emperor Zarkon', rarity: 'mythic', faction: 'darkelf', element: 'void', baseAttack: 1650, baseDefense: 950, baseHealth: 18500, baseSpeed: 118, critRate: 0.26, critDamage: 1.8, skill1Name: 'Void Crush', skill1Desc: 'Deals 330% ATK ignoring all shields and DEF', skill2Name: 'Dimensional Rift', skill2Desc: 'Removes all buffs from enemies and transfers to allies', skill3Name: 'Oblivion', skill3Desc: 'Instantly kills one enemy below 30% HP, deals 250% to others', lore: 'The Void Emperor, a being from beyond reality. His power defies all laws.' },
+   259→];
+   260→
+   261→export const CAMPAIGN_STAGES: CampaignStage[] = Array.from({ length: 50 }, (_, i) => ({
+   262→  id: i + 1,
+   263→  name: i < 10 ? `Chapter ${Math.floor(i / 5) + 1} - ${['The Dark Forest', 'Cursed Ruins', 'Goblin Camp', 'Haunted Graveyard', 'Ancient Temple'][i % 5]}`
+   264→    : i < 20 ? `Chapter ${Math.floor(i / 5) + 1} - ${['Demon Gateway', 'Fire Pits', 'Shadow Keep', 'Burning Citadel', 'Infernal Throne'][i % 5]}`
+   265→    : i < 30 ? `Chapter ${Math.floor(i / 5) + 1} - ${['Elven Glade', 'Crystal Lake', 'Moonlit Spire', 'Starfall Peak', 'Eternal Garden'][i % 5]}`
+   266→    : i < 40 ? `Chapter ${Math.floor(i / 5) + 1} - ${['Frozen Wastes', 'Blood Plains', 'War Camp', 'Skull Ridge', 'Chieftain Hall'][i % 5]}`
+   267→    : `Chapter ${Math.floor(i / 5) + 1} - ${['Shadow Realm', 'Void Nexus', 'Dark Portal', 'Chaos Heart', 'Final Throne'][i % 5]}`,
+   268→  description: `Defeat the enemies in stage ${i + 1}`,
+   269→  enemyLevel: Math.floor((i + 1) * 2.5),
+   270→  enemyFaction: (['undead', 'demon', 'elf', 'barbarian', 'darkelf', 'knight'] as Faction[])[i % 6],
+   271→  energyCost: 5 + Math.floor(i / 10),
+   272→  rewards: {
+   273→    gold: 100 + i * 50,
+   274→    experience: 50 + i * 25,
+   275→    gems: i % 5 === 4 ? 10 + Math.floor(i / 5) * 5 : 5,
+   276→  },
+   277→  bossName: ['Wraith Lord', 'Infernal Duke', 'Elven Outcast', 'War Mammoth', 'Shadow Sage', 'Dark Paladin'][i % 6],
+   278→  bossRarity: (['rare', 'epic', 'legendary'] as Rarity[])[Math.min(Math.floor(i / 15), 2)],
+   279→}));
+   280→
+   281→export const SHOP_ITEMS: ShopItem[] = [
+   282→  // Gem packs (premium currency)
+   283→  { id: 'gems_small', name: 'Pouch of Gems', description: 'A small pouch containing 100 precious gems', price: 0, currency: 'usd', type: 'gems', amount: 100, icon: '💎', limited: false, limitedCount: 0, featured: false },
+   284→  { id: 'gems_medium', name: 'Chest of Gems', description: 'A treasure chest with 600 gems + 50 bonus!', price: 0, currency: 'usd', type: 'gems', amount: 650, icon: '💎', limited: false, limitedCount: 0, featured: true, originalPrice: 0, discount: 20 },
+   285→  { id: 'gems_large', name: 'Vault of Gems', description: 'A massive vault containing 1,500 gems + 300 bonus!', price: 0, currency: 'usd', type: 'gems', amount: 1800, icon: '💎', limited: false, limitedCount: 0, featured: true, originalPrice: 0, discount: 35 },
+   286→  { id: 'gems_mega', name: 'Dragon Hoard', description: 'Legendary dragon hoard: 5,000 gems + 2,000 bonus!', price: 0, currency: 'usd', type: 'gems', amount: 7000, icon: '🐉', limited: false, limitedCount: 0, featured: true, originalPrice: 0, discount: 45 },
+   287→
+   288→  // Daily deals
+   289→  { id: 'daily_gems_1', name: 'Daily Gem Pack', description: '150 gems at a special daily price', price: 150, currency: 'gems', type: 'gems', amount: 150, icon: '💎', limited: true, limitedCount: 1 },
+   290→  { id: 'daily_energy', name: 'Energy Refill', description: 'Fully refills your energy', price: 50, currency: 'gems', type: 'energy', amount: 100, icon: '⚡', limited: true, limitedCount: 3 },
+   291→  { id: 'daily_gold', name: 'Gold Sack', description: '10,000 gold coins', price: 100, currency: 'gems', type: 'gold', amount: 10000, icon: '🪙', limited: true, limitedCount: 2 },
+   292→
+   293→  // Summoning
+   294→  { id: 'scroll_basic', name: 'Mystic Scroll', description: 'Summon 1 champion (Rare or above guaranteed)', price: 150, currency: 'gems', type: 'scroll', amount: 1, icon: '📜', limited: false, limitedCount: 0 },
+   295→  { id: 'scroll_10', name: '10x Mystic Scroll', description: 'Summon 10 champions (Epic guaranteed!)', price: 1200, currency: 'gems', type: 'scroll', amount: 10, icon: '📜', limited: false, limitedCount: 0, originalPrice: 1500, discount: 20 },
+   296→  { id: 'scroll_ancient', name: 'Ancient Scroll', description: 'Summon 1 Legendary or Mythic champion!', price: 3000, currency: 'gems', type: 'scroll', amount: 1, icon: '📜', limited: true, limitedCount: 1, featured: true },
+   297→
+   298→  // Special offers
+   299→  { id: 'starter_pack', name: 'Starter Pack', description: '1,000 gems + 1 Epic Hero + 50,000 Gold', price: 0, currency: 'usd', type: 'gems', amount: 1000, icon: '🎁', limited: true, limitedCount: 1, featured: true },
+   300→  { id: 'vip_pack', name: 'VIP Pack', description: '500 VIP Points + 2,000 Gems', price: 0, currency: 'usd', type: 'vip_points', amount: 500, icon: '👑', limited: true, limitedCount: 1, featured: true },
+   301→
+   302→  // Gold shop
+   303→  { id: 'gold_exp_small', name: 'XP Brew (Small)', description: 'Grants 5,000 hero XP', price: 2000, currency: 'gold', type: 'hero_shard', amount: 5000, icon: '🧪', limited: false, limitedCount: 0 },
+   304→  { id: 'gold_exp_large', name: 'XP Brew (Large)', description: 'Grants 25,000 hero XP', price: 8000, currency: 'gold', type: 'hero_shard', amount: 25000, icon: '🧪', limited: false, limitedCount: 0 },
+   305→];
+   306→
+   307→export const DAILY_REWARDS = [
+   308→  { day: 1, gold: 500, gems: 10, item: '1x Mystic Scroll' },
+   309→  { day: 2, gold: 1000, gems: 15, item: '5,000 XP Brew' },
+   310→  { day: 3, gold: 1500, gems: 20, item: 'Energy Refill' },
+   311→  { day: 4, gold: 2000, gems: 25, item: '1x Ancient Shard' },
+   312→  { day: 5, gold: 3000, gems: 30, item: '1x Rare Hero' },
+   313→  { day: 6, gold: 4000, gems: 40, item: '1x Epic Hero' },
+   314→  { day: 7, gold: 5000, gems: 100, item: '1x Legendary Hero' },
+   315→];
+   316→
+   317→export function getHeroStats(hero: HeroTemplate, level: number, stars: number): { attack: number; defense: number; health: number; speed: number } {
+   318→  const levelMultiplier = 1 + (level - 1) * 0.08;
+   319→  const starMultiplier = 1 + (stars - 1) * 0.15;
+   320→  return {
+   321→    attack: Math.floor(hero.baseAttack * levelMultiplier * starMultiplier),
+   322→    defense: Math.floor(hero.baseDefense * levelMultiplier * starMultiplier),
+   323→    health: Math.floor(hero.baseHealth * levelMultiplier * starMultiplier),
+   324→    speed: Math.floor(hero.baseSpeed * (1 + (stars - 1) * 0.05)),
+   325→  };
+   326→}
+   327→
+   328→export function getExperienceForLevel(level: number): number {
+   329→  return Math.floor(100 * Math.pow(1.5, level - 1));
+   330→}
+   331→
+   332→export function getSummonResult(vipLevel: number): HeroTemplate {
+   333→  const vipBonus = vipLevel * 0.01;
+   334→  const roll = Math.random();
+   335→
+   336→  const rates = {
+   337→    mythic: 0.005 + vipBonus * 0.5,
+   338→    legendary: 0.035 + vipBonus,
+   339→    epic: 0.08 + vipBonus * 1.5,
+   340→    rare: 0.18 + vipBonus * 2,
+   341→    uncommon: 0.25,
+   342→    common: 0,
+   343→  };
+   344→  rates.common = 1 - rates.mythic - rates.legendary - rates.epic - rates.rare - rates.uncommon;
+   345→
+   346→  let rarity: Rarity;
+   347→  if (roll < rates.mythic) rarity = 'mythic';
+   348→  else if (roll < rates.mythic + rates.legendary) rarity = 'legendary';
+   349→  else if (roll < rates.mythic + rates.legendary + rates.epic) rarity = 'epic';
+   350→  else if (roll < rates.mythic + rates.legendary + rates.epic + rates.rare) rarity = 'rare';
+   351→  else if (roll < rates.mythic + rates.legendary + rates.epic + rates.rare + rates.uncommon) rarity = 'uncommon';
+   352→  else rarity = 'common';
+   353→
+   354→  const eligibleHeroes = HERO_TEMPLATES.filter(h => h.rarity === rarity);
+   355→  return eligibleHeroes[Math.floor(Math.random() * eligibleHeroes.length)];
+   356→}
+   357→
+   358→export function createHeroInstance(template: HeroTemplate, stars?: number): HeroInstance {
+   359→  const heroStars = stars || RARITY_CONFIG[template.rarity].stars;
+   360→  const stats = getHeroStats(template, 1, heroStars);
+   361→  return {
+   362→    id: `${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+   363→    templateId: template.id,
+   364→    name: template.name,
+   365→    rarity: template.rarity,
+   366→    faction: template.faction,
+   367→    element: template.element,
+   368→    level: 1,
+   369→    experience: 0,
+   370→    attack: stats.attack,
+   371→    defense: stats.defense,
+   372→    health: stats.health,
+   373→    speed: stats.speed,
+   374→    critRate: template.critRate,
+   375→    critDamage: template.critDamage,
+   376→    skill1Name: template.skill1Name,
+   377→    skill1Desc: template.skill1Desc,
+   378→    skill2Name: template.skill2Name,
+   379→    skill2Desc: template.skill2Desc,
+   380→    skill3Name: template.skill3Name,
+   381→    skill3Desc: template.skill3Desc,
+   382→    stars: heroStars,
+   383→    ascended: false,
+   384→    awakened: false,
+   385→    awakeningLevel: 0,
+   386→    inTeam: false,
+   387→  };
+   388→}
+   389→
+   390→export function createBattleHero(hero: HeroInstance): BattleHero {
+   391→  return {
+   392→    ...hero,
+   393→    currentHealth: hero.health,
+   394→    maxHealth: hero.health,
+   395→    isAlive: true,
+   396→    turnMeter: 0,
+   397→  };
+   398→}
+   399→
+   400→export function generateEnemyTeam(stage: number, faction: Faction): BattleHero[] {
+   401→  const enemyLevel = Math.max(1, Math.floor(stage * 1.5));
+   402→  const templates = HERO_TEMPLATES.filter(h => h.faction === faction);
+   403→  const count = Math.min(3 + Math.floor(stage / 15), 5);
+   404→
+   405→  return Array.from({ length: count }, (_, i) => {
+   406→    const template = templates[i % templates.length];
+   407→    // Scale enemy rarity with stage - easier early game
+   408→    let rarity: Rarity;
+   409→    if (i === 0) {
+   410→      // Boss
+   411→      rarity = stage > 25 ? 'epic' : stage > 10 ? 'rare' : 'uncommon';
+   412→    } else {
+   413→      // Minions
+   414→      rarity = stage > 30 ? 'rare' : stage > 15 ? 'uncommon' : 'common';
+   415→    }
+   416→    const actualTemplate = templates.find(t => t.rarity === rarity) || template;
+   417→    const stars = RARITY_CONFIG[actualTemplate.rarity].stars;
+   418→    const stats = getHeroStats(actualTemplate, enemyLevel, stars);
+   419→    const heroInstance: HeroInstance = {
+   420→      id: `enemy_${i}_${Date.now()}`,
+   421→      templateId: actualTemplate.id,
+   422→      name: actualTemplate.name,
+   423→      rarity: actualTemplate.rarity,
+   424→      faction: actualTemplate.faction,
+   425→      element: actualTemplate.element,
+   426→      level: enemyLevel,
+   427→      experience: 0,
+   428→      attack: stats.attack,
+   429→      defense: stats.defense,
+   430→      health: stats.health,
+   431→      speed: stats.speed,
+   432→      critRate: actualTemplate.critRate,
+   433→      critDamage: actualTemplate.critDamage,
+   434→      skill1Name: actualTemplate.skill1Name,
+   435→      skill1Desc: actualTemplate.skill1Desc,
+   436→      skill2Name: actualTemplate.skill2Name,
+   437→      skill2Desc: actualTemplate.skill2Desc,
+   438→      skill3Name: actualTemplate.skill3Name,
+   439→      skill3Desc: actualTemplate.skill3Desc,
+   440→      stars,
+   441→      ascended: false,
+   442→      inTeam: false,
+   443→    };
+   444→    return createBattleHero(heroInstance);
+   445→  });
+   446→}
+   447→
+   448→// ============= EQUIPMENT SYSTEM =============
+   449→
+   450→export type EquipmentSlot = 'weapon' | 'armor' | 'helmet' | 'boots' | 'ring' | 'amulet';
+   451→
+   452→export interface EquipmentTemplate {
+   453→  id: string;
+   454→  name: string;
+   455→  slot: EquipmentSlot;
+   456→  rarity: Rarity;
+   457→  icon: string;
+   458→  attackBonus?: number;
+   459→  defenseBonus?: number;
+   460→  healthBonus?: number;
+   461→  speedBonus?: number;
+   462→  critRateBonus?: number;
+   463→  critDamageBonus?: number;
+   464→  description: string;
+   465→  setBonus?: string;
+   466→  setId?: string;
+   467→}
+   468→
+   469→export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
+   470→  // Common
+   471→  { id: 'wpn_c1', name: 'Rusty Sword', slot: 'weapon', rarity: 'common', icon: '🗡️', attackBonus: 50, description: 'A worn but reliable blade.' },
+   472→  { id: 'arm_c1', name: 'Leather Tunic', slot: 'armor', rarity: 'common', icon: '🥋', defenseBonus: 40, healthBonus: 300, description: 'Simple leather protection.' },
+   473→  { id: 'helm_c1', name: 'Iron Cap', slot: 'helmet', rarity: 'common', icon: '⛑️', defenseBonus: 25, healthBonus: 200, description: 'Basic head protection.' },
+   474→  { id: 'boot_c1', name: 'Worn Boots', slot: 'boots', rarity: 'common', icon: '🥾', speedBonus: 8, description: 'Travel-worn footwear.' },
+   475→  // Uncommon
+   476→  { id: 'wpn_u1', name: 'Steel Longsword', slot: 'weapon', rarity: 'uncommon', icon: '⚔️', attackBonus: 120, critRateBonus: 0.03, description: 'A well-forged steel blade.' },
+   477→  { id: 'arm_u1', name: 'Chainmail Armor', slot: 'armor', rarity: 'uncommon', icon: '🦺', defenseBonus: 90, healthBonus: 700, description: 'Interlocking iron rings.' },
+   478→  { id: 'helm_u1', name: 'Knight Helm', slot: 'helmet', rarity: 'uncommon', icon: '🪖', defenseBonus: 60, healthBonus: 500, description: 'A knight\'s proud helm.' },
+   479→  { id: 'boot_u1', name: 'Swift Boots', slot: 'boots', rarity: 'uncommon', icon: '👟', speedBonus: 18, description: 'Boots enchanted with haste.' },
+   480→  { id: 'ring_u1', name: 'Copper Ring', slot: 'ring', rarity: 'uncommon', icon: '💍', attackBonus: 60, critDamageBonus: 0.1, description: 'A simple magical ring.' },
+   481→  // Rare
+   482→  { id: 'wpn_r1', name: 'Flame Tongue', slot: 'weapon', rarity: 'rare', icon: '🔥', attackBonus: 250, critRateBonus: 0.05, description: 'A blade wreathed in eternal flame.', setId: 'inferno' },
+   483→  { id: 'arm_r1', name: 'Magma Plate', slot: 'armor', rarity: 'rare', icon: '🌋', defenseBonus: 180, healthBonus: 1500, description: 'Forged from cooled magma.', setId: 'inferno' },
+   484→  { id: 'helm_r1', name: 'Dragon Skull Helm', slot: 'helmet', rarity: 'rare', icon: '🐉', defenseBonus: 120, healthBonus: 1000, description: 'Helm carved from a dragon\'s skull.' },
+   485→  { id: 'boot_r1', name: 'Wind Walker Boots', slot: 'boots', rarity: 'rare', icon: '🌪️', speedBonus: 35, description: 'Boots that harness the wind.' },
+   486→  { id: 'ring_r1', name: 'Ring of Valor', slot: 'ring', rarity: 'rare', icon: '💍', attackBonus: 150, defenseBonus: 80, description: 'Grants courage in battle.' },
+   487→  { id: 'amul_r1', name: 'Amulet of Warding', slot: 'amulet', rarity: 'rare', icon: '📿', healthBonus: 2000, defenseBonus: 100, description: 'Protects the wearer from harm.' },
+   488→  // Epic
+   489→  { id: 'wpn_e1', name: 'Soulreaper Scythe', slot: 'weapon', rarity: 'epic', icon: '☠️', attackBonus: 450, critRateBonus: 0.08, critDamageBonus: 0.2, description: 'Harvests the souls of the fallen.', setId: 'soul' },
+   490→  { id: 'arm_e1', name: 'Soulbound Armor', slot: 'armor', rarity: 'epic', icon: '👻', defenseBonus: 320, healthBonus: 2800, description: 'Armor bound to your very soul.', setId: 'soul' },
+   491→  { id: 'helm_e1', name: 'Crown of Thorns', slot: 'helmet', rarity: 'epic', icon: '👑', defenseBonus: 200, healthBonus: 1800, attackBonus: 100, description: 'A painful but powerful crown.' },
+   492→  { id: 'boot_e1', name: 'Boots of Leaping', slot: 'boots', rarity: 'epic', icon: '🦘', speedBonus: 60, attackBonus: 80, description: 'Allows impossible leaps.' },
+   493→  { id: 'ring_e1', name: 'Bloodstone Ring', slot: 'ring', rarity: 'epic', icon: '💍', attackBonus: 300, critDamageBonus: 0.3, description: 'Pulses with dark power.' },
+   494→  { id: 'amul_e1', name: 'Phoenix Amulet', slot: 'amulet', rarity: 'epic', icon: '📿', healthBonus: 4000, defenseBonus: 200, description: 'Grants a second chance at life.' },
+   495→  // Legendary
+   496→  { id: 'wpn_l1', name: 'Excalibur', slot: 'weapon', rarity: 'legendary', icon: '⚔️', attackBonus: 800, critRateBonus: 0.12, critDamageBonus: 0.4, description: 'The legendary sword of kings.', setId: 'king' },
+   497→  { id: 'arm_l1', name: 'Aegis Plate', slot: 'armor', rarity: 'legendary', icon: '🛡️', defenseBonus: 600, healthBonus: 5000, description: 'The shield of the gods.', setId: 'king' },
+   498→  { id: 'helm_l1', name: 'Crown of Light', slot: 'helmet', rarity: 'legendary', icon: '👑', defenseBonus: 400, healthBonus: 3500, attackBonus: 200, description: 'Radiates divine power.', setId: 'king' },
+   499→  { id: 'boot_l1', name: 'Hermes Sandals', slot: 'boots', rarity: 'legendary', icon: '👡', speedBonus: 100, attackBonus: 150, description: 'Grants godlike speed.' },
+   500→  { id: 'ring_l1', name: 'Ring of Infinity', slot: 'ring', rarity: 'legendary', icon: '💍', attackBonus: 500, critRateBonus: 0.1, critDamageBonus: 0.5, description: 'Contains infinite power.' },
+   501→  { id: 'amul_l1', name: 'Amulet of Eternity', slot: 'amulet', rarity: 'legendary', icon: '📿', healthBonus: 8000, defenseBonus: 400, speedBonus: 30, description: 'Time itself bends to its will.' },
+   502→  // Mythic
+   503→  { id: 'wpn_m1', name: 'Worldender', slot: 'weapon', rarity: 'mythic', icon: '🌟', attackBonus: 1500, critRateBonus: 0.15, critDamageBonus: 0.6, description: 'A blade capable of ending worlds.', setId: 'apocalypse' },
+   504→  { id: 'arm_m1', name: 'Godslayer Armor', slot: 'armor', rarity: 'mythic', icon: '🌌', defenseBonus: 1000, healthBonus: 10000, description: 'Forged to slay divine beings.', setId: 'apocalypse' },
+   505→  { id: 'amul_m1', name: 'Heart of the Cosmos', slot: 'amulet', rarity: 'mythic', icon: '💠', healthBonus: 15000, attackBonus: 500, defenseBonus: 600, speedBonus: 50, description: 'The heart of a dying universe.' },
+   506→];
+   507→
+   508→export const SET_BONUSES: Record<string, { name: string; pieces: number; bonus: string; stat?: Partial<Pick<EquipmentTemplate, 'attackBonus' | 'defenseBonus' | 'healthBonus' | 'speedBonus' | 'critRateBonus' | 'critDamageBonus'>> }> = {
+   509→  inferno: { name: 'Inferno Set', pieces: 2, bonus: '+15% Attack', stat: { attackBonus: 200 } },
+   510→  soul: { name: 'Soul Bound Set', pieces: 2, bonus: '+20% Health, Lifesteal', stat: { healthBonus: 2000 } },
+   511→  king: { name: 'Kings Set', pieces: 3, bonus: '+25% All Stats', stat: { attackBonus: 500, defenseBonus: 300, healthBonus: 3000 } },
+   512→  apocalypse: { name: 'Apocalypse Set', pieces: 2, bonus: '+50% Attack, +30% Crit Damage', stat: { attackBonus: 1000, critDamageBonus: 0.3 } },
+   513→};
+   514→
+   515→// ============= ACHIEVEMENTS SYSTEM =============
+   516→
+   517→export interface Achievement {
+   518→  id: string;
+   519→  name: string;
+   520→  description: string;
+   521→  icon: string;
+   522→  category: 'progression' | 'collection' | 'combat' | 'social' | 'special';
+   523→  requirement: number;
+   524→  reward: { gold?: number; gems?: number; vipPoints?: number };
+   525→  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+   526→}
+   527→
+   528→export const ACHIEVEMENTS: Achievement[] = [
+   529→  // Progression
+   530→  { id: 'first_battle', name: 'First Blood', description: 'Complete your first battle', icon: '⚔️', category: 'progression', requirement: 1, reward: { gold: 500, gems: 10 }, tier: 'bronze' },
+   531→  { id: 'battles_10', name: 'Veteran Warrior', description: 'Complete 10 battles', icon: '⚔️', category: 'progression', requirement: 10, reward: { gold: 2000, gems: 25 }, tier: 'bronze' },
+   532→  { id: 'battles_50', name: 'Battle Master', description: 'Complete 50 battles', icon: '⚔️', category: 'progression', requirement: 50, reward: { gold: 10000, gems: 100 }, tier: 'silver' },
+   533→  { id: 'battles_100', name: 'Warlord', description: 'Complete 100 battles', icon: '⚔️', category: 'progression', requirement: 100, reward: { gold: 50000, gems: 500 }, tier: 'gold' },
+   534→  { id: 'stage_10', name: 'Explorer', description: 'Reach campaign stage 10', icon: '🗺️', category: 'progression', requirement: 10, reward: { gold: 3000, gems: 30 }, tier: 'bronze' },
+   535→  { id: 'stage_25', name: 'Adventurer', description: 'Reach campaign stage 25', icon: '🗺️', category: 'progression', requirement: 25, reward: { gold: 15000, gems: 150 }, tier: 'silver' },
+   536→  { id: 'stage_50', name: 'Conqueror', description: 'Complete all 50 campaign stages', icon: '🗺️', category: 'progression', requirement: 50, reward: { gold: 100000, gems: 1000 }, tier: 'gold' },
+   537→
+   538→  // Collection
+   539→  { id: 'heroes_5', name: 'Recruiter', description: 'Own 5 heroes', icon: '👥', category: 'collection', requirement: 5, reward: { gold: 1000, gems: 20 }, tier: 'bronze' },
+   540→  { id: 'heroes_15', name: 'Commander', description: 'Own 15 heroes', icon: '👥', category: 'collection', requirement: 15, reward: { gold: 5000, gems: 75 }, tier: 'silver' },
+   541→  { id: 'heroes_30', name: 'Collector', description: 'Own 30 heroes', icon: '👥', category: 'collection', requirement: 30, reward: { gold: 20000, gems: 200 }, tier: 'gold' },
+   542→  { id: 'heroes_all', name: 'Completionist', description: 'Collect all hero templates', icon: '🏆', category: 'collection', requirement: 30, reward: { gold: 500000, gems: 5000, vipPoints: 1000 }, tier: 'platinum' },
+   543→  { id: 'legendary_pull', name: 'Lucky Summon', description: 'Summon a Legendary hero', icon: '✨', category: 'collection', requirement: 1, reward: { gems: 50 }, tier: 'silver' },
+   544→  { id: 'mythic_pull', name: 'Mythic Fortune', description: 'Summon a Mythic hero', icon: '🌟', category: 'collection', requirement: 1, reward: { gems: 500, vipPoints: 100 }, tier: 'gold' },
+   545→
+   546→  // Combat
+   547→  { id: 'crit_2000', name: 'Critical Strike', description: 'Deal 2000+ damage in one hit', icon: '💥', category: 'combat', requirement: 2000, reward: { gold: 2000, gems: 25 }, tier: 'silver' },
+   548→  { id: 'crit_5000', name: 'Devastating Blow', description: 'Deal 5000+ damage in one hit', icon: '💥', category: 'combat', requirement: 5000, reward: { gold: 10000, gems: 100 }, tier: 'gold' },
+   549→  { id: 'flawless_victory', name: 'Flawless Victory', description: 'Win a battle without losing any heroes', icon: '🎯', category: 'combat', requirement: 1, reward: { gold: 3000, gems: 50 }, tier: 'silver' },
+   550→  { id: 'speedrun', name: 'Speed Demon', description: 'Win a battle in under 3 turns', icon: '⚡', category: 'combat', requirement: 1, reward: { gold: 2000, gems: 30 }, tier: 'silver' },
+   551→
+   552→  // Special
+   553→  { id: 'vip_1', name: 'VIP Supporter', description: 'Reach VIP Level 1', icon: '👑', category: 'special', requirement: 1, reward: { gems: 100 }, tier: 'bronze' },
+   554→  { id: 'vip_3', name: 'VIP Elite', description: 'Reach VIP Level 3', icon: '👑', category: 'special', requirement: 3, reward: { gems: 500 }, tier: 'silver' },
+   555→  { id: 'vip_5', name: 'VIP Legend', description: 'Reach VIP Level 5', icon: '👑', category: 'special', requirement: 5, reward: { gems: 2000 }, tier: 'gold' },
+   556→  { id: 'vip_7', name: 'VIP God', description: 'Reach maximum VIP Level 7', icon: '👑', category: 'special', requirement: 7, reward: { gems: 10000, vipPoints: 5000 }, tier: 'platinum' },
+   557→  { id: 'rich_100k', name: 'Treasure Hunter', description: 'Accumulate 100,000 gold', icon: '💰', category: 'special', requirement: 100000, reward: { gems: 100 }, tier: 'silver' },
+   558→  { id: 'rich_1m', name: 'Gold Tycoon', description: 'Accumulate 1,000,000 gold', icon: '💰', category: 'special', requirement: 1000000, reward: { gems: 1000 }, tier: 'gold' },
+   559→];
+   560→
+   561→// ============= LEADERBOARD (NPC) =============
+   562→
+   563→export interface LeaderboardEntry {
+   564→  rank: number;
+   565→  name: string;
+   566→  level: number;
+   567→  power: number;
+   568→  vipLevel: number;
+   569→  isPlayer?: boolean;
+   570→}
+   571→
+   572→export const NPC_LEADERBOARD: Omit<LeaderboardEntry, 'isPlayer'>[] = [
+   573→  { rank: 1, name: 'DragonSlayer99', level: 60, power: 1850000, vipLevel: 7 },
+   574→  { rank: 2, name: 'ShadowKing', level: 58, power: 1720000, vipLevel: 7 },
+   575→  { rank: 3, name: 'MythicLord', level: 57, power: 1650000, vipLevel: 6 },
+   576→  { rank: 4, name: 'VoidWalker', level: 55, power: 1480000, vipLevel: 6 },
+   577→  { rank: 5, name: 'ChaosBringer', level: 54, power: 1350000, vipLevel: 5 },
+   578→  { rank: 6, name: 'PaladinPrime', level: 52, power: 1280000, vipLevel: 5 },
+   579→  { rank: 7, name: 'NecroMaster', level: 50, power: 1150000, vipLevel: 4 },
+   580→  { rank: 8, name: 'ElvenQueen', level: 48, power: 980000, vipLevel: 4 },
+   581→  { rank: 9, name: 'DemonHunter', level: 45, power: 850000, vipLevel: 3 },
+   582→  { rank: 10, name: 'BattleMage', level: 42, power: 720000, vipLevel: 3 },
+   583→  { rank: 11, name: 'FrostKing', level: 40, power: 650000, vipLevel: 2 },
+   584→  { rank: 12, name: 'StormBringer', level: 38, power: 580000, vipLevel: 2 },
+   585→  { rank: 13, name: 'IronWill', level: 35, power: 450000, vipLevel: 1 },
+   586→  { rank: 14, name: 'SwiftBlade', level: 32, power: 380000, vipLevel: 1 },
+   587→  { rank: 15, name: 'MysticSage', level: 30, power: 320000, vipLevel: 1 },
+   588→  { rank: 16, name: 'BloodThirst', level: 28, power: 280000, vipLevel: 0 },
+   589→  { rank: 17, name: 'DarkProphet', level: 25, power: 220000, vipLevel: 0 },
+   590→  { rank: 18, name: 'WolfHunter', level: 22, power: 180000, vipLevel: 0 },
+   591→  { rank: 19, name: 'SilverArrow', level: 20, power: 150000, vipLevel: 0 },
+   592→  { rank: 20, name: 'NewChampion', level: 15, power: 100000, vipLevel: 0 },
+   593→];
+   594→
+   595→// ============= TOWER OF ETERNITY =============
+   596→
+   597→export interface TowerFloor {
+   598→  floor: number;
+   599→  name: string;
+   600→  difficulty: number; // multiplier for enemy stats
+   601→  enemyFaction: Faction;
+   602→  rewardGold: number;
+   603→  rewardGems: number;
+   604→  rewardItem?: string;
+   605→  bossFloor: boolean;
+   606→  description: string;
+   607→}
+   608→
+   609→export const TOWER_FLOOR_THEMES = [
+   610→  { name: 'Whispering Halls', faction: 'undead' as Faction, desc: 'Echoes of fallen warriors linger here' },
+   611→  { name: 'Burning Rift', faction: 'demon' as Faction, desc: 'Lava bubbles beneath cracked stone' },
+   612→  { name: 'Twilight Grove', faction: 'elf' as Faction, desc: 'Ancient trees watch your every step' },
+   613→  { name: 'Blood Fields', faction: 'barbarian' as Faction, desc: 'The ground is stained crimson' },
+   614→  { name: 'Shadow Sanctum', faction: 'darkelf' as Faction, desc: 'Darkness devours all light' },
+   615→  { name: 'Hall of Champions', faction: 'knight' as Faction, desc: 'Fallen paladins guard the path' },
+   616→];
+   617→
+   618→export const TOWER_BOSS_NAMES = [
+   619→  'The Warden',
+   620→  'Soul Conductor',
+   621→  'Infernal Sovereign',
+   622→  'Eternal Sentinel',
+   623→  'Void Reaper',
+   624→  'Crimson Tyrant',
+   625→  'Shadow Sovereign',
+   626→  'Ancient Devourer',
+   627→  'Twilight Queen',
+   628→  'Eternity Itself',
+   629→];
+   630→
+   631→// Generate 100 tower floors with scaling difficulty
+   632→export const TOWER_FLOORS: TowerFloor[] = Array.from({ length: 100 }, (_, i) => {
+   633→  const floor = i + 1;
+   634→  const isBoss = floor % 10 === 0;
+   635→  const theme = TOWER_FLOOR_THEMES[Math.floor(i / 5) % TOWER_FLOOR_THEMES.length];
+   636→  const bossName = TOWER_BOSS_NAMES[Math.floor((floor - 1) / 10) % TOWER_BOSS_NAMES.length];
+   637→
+   638→  return {
+   639→    floor,
+   640→    name: isBoss ? `${bossName} (Floor ${floor})` : `${theme.name} ${floor}`,
+   641→    difficulty: 1 + floor * 0.15,
+   642→    enemyFaction: theme.faction,
+   643→    rewardGold: 200 + floor * 80,
+   644→    rewardGems: isBoss ? 50 + floor * 2 : Math.floor(floor / 5) * 5,
+   645→    rewardItem: isBoss ? `Mythic Shard x${Math.floor(floor / 10)}` : floor % 5 === 0 ? 'Equipment Chest' : undefined,
+   646→    bossFloor: isBoss,
+   647→    description: isBoss
+   648→      ? `A mighty boss guards this floor. Defeat ${bossName} to claim legendary rewards!`
+   649→      : theme.desc,
+   650→  };
+   651→});
+   652→
+   653→// ============= PVP ARENA =============
+   654→
+   655→export interface ArenaOpponent {
+   656→  id: string;
+   657→  name: string;
+   658→  level: number;
+   659→  power: number;
+   660→  vipLevel: number;
+   661→  defenseRating: number; // 1-5 stars
+   662→  heroes: { templateId: string; level: number; stars: number }[];
+   663→  rank: number;
+   664→  reward: { gold: number; gems: number; trophies: number };
+   665→}
+   666→
+   667→export const ARENA_OPPONENTS: ArenaOpponent[] = [
+   668→  { id: 'arena_1', name: 'BladeMaster', level: 8, power: 25000, vipLevel: 0, defenseRating: 1, heroes: [{ templateId: 'knight_03', level: 6, stars: 1 }, { templateId: 'undead_03', level: 5, stars: 1 }, { templateId: 'elf_03', level: 5, stars: 1 }], rank: 100, reward: { gold: 200, gems: 5, trophies: 10 } },
+   669→  { id: 'arena_2', name: 'FireWitch', level: 12, power: 55000, vipLevel: 1, defenseRating: 2, heroes: [{ templateId: 'demon_05', level: 10, stars: 2 }, { templateId: 'demon_03', level: 8, stars: 1 }, { templateId: 'demon_04', level: 9, stars: 2 }], rank: 80, reward: { gold: 500, gems: 10, trophies: 20 } },
+   670→  { id: 'arena_3', name: 'IronGuard', level: 18, power: 120000, vipLevel: 1, defenseRating: 3, heroes: [{ templateId: 'knight_01', level: 15, stars: 3 }, { templateId: 'knight_04', level: 14, stars: 3 }, { templateId: 'knight_02', level: 13, stars: 3 }], rank: 50, reward: { gold: 1000, gems: 20, trophies: 35 } },
+   671→  { id: 'arena_4', name: 'ShadowDancer', level: 25, power: 250000, vipLevel: 2, defenseRating: 4, heroes: [{ templateId: 'darkelf_02', level: 22, stars: 4 }, { templateId: 'darkelf_04', level: 20, stars: 3 }, { templateId: 'darkelf_01', level: 21, stars: 4 }], rank: 25, reward: { gold: 2500, gems: 50, trophies: 50 } },
+   672→  { id: 'arena_5', name: 'DragonBorn', level: 35, power: 500000, vipLevel: 3, defenseRating: 5, heroes: [{ templateId: 'special_01', level: 30, stars: 5 }, { templateId: 'special_02', level: 28, stars: 5 }, { templateId: 'special_04', level: 27, stars: 5 }], rank: 10, reward: { gold: 5000, gems: 100, trophies: 75 } },
+   673→  { id: 'arena_6', name: 'VoidEmperor', level: 50, power: 1000000, vipLevel: 5, defenseRating: 5, heroes: [{ templateId: 'special_05', level: 45, stars: 6 }, { templateId: 'demon_01', level: 42, stars: 6 }, { templateId: 'darkelf_01', level: 40, stars: 6 }], rank: 3, reward: { gold: 15000, gems: 250, trophies: 150 } },
+   674→];
+   675→
+   676→export const ARENA_RANKS = [
+   677→  { minTrophies: 0, rank: 'Bronze III', icon: '🥉', rewardMultiplier: 1 },
+   678→  { minTrophies: 50, rank: 'Bronze II', icon: '🥉', rewardMultiplier: 1.2 },
+   679→  { minTrophies: 100, rank: 'Bronze I', icon: '🥉', rewardMultiplier: 1.5 },
+   680→  { minTrophies: 200, rank: 'Silver III', icon: '🥈', rewardMultiplier: 2 },
+   681→  { minTrophies: 350, rank: 'Silver II', icon: '🥈', rewardMultiplier: 2.5 },
+   682→  { minTrophies: 500, rank: 'Silver I', icon: '🥈', rewardMultiplier: 3 },
+   683→  { minTrophies: 750, rank: 'Gold III', icon: '🥇', rewardMultiplier: 4 },
+   684→  { minTrophies: 1000, rank: 'Gold II', icon: '🥇', rewardMultiplier: 5 },
+   685→  { minTrophies: 1500, rank: 'Gold I', icon: '🥇', rewardMultiplier: 6 },
+   686→  { minTrophies: 2000, rank: 'Platinum', icon: '💎', rewardMultiplier: 8 },
+   687→  { minTrophies: 3000, rank: 'Champion', icon: '👑', rewardMultiplier: 10 },
+   688→];
+   689→
+   690→// ============= DAILY MISSIONS =============
+   691→
+   692→export interface DailyMission {
+   693→  id: string;
+   694→  name: string;
+   695→  description: string;
+   696→  icon: string;
+   697→  type: 'battle' | 'summon' | 'levelup' | 'equip' | 'spend_gems' | 'campaign';
+   698→  requirement: number;
+   699→  reward: { gold: number; gems: number; experience: number };
+   700→  refreshesDaily: boolean;
+   701→}
+   702→
+   703→export const DAILY_MISSIONS: DailyMission[] = [
+   704→  { id: 'dm_1', name: 'First Victory', description: 'Win 1 battle', icon: '⚔️', type: 'battle', requirement: 1, reward: { gold: 500, gems: 5, experience: 100 }, refreshesDaily: true },
+   705→  { id: 'dm_2', name: 'Battle Hardened', description: 'Win 3 battles', icon: '🛡️', type: 'battle', requirement: 3, reward: { gold: 1000, gems: 10, experience: 250 }, refreshesDaily: true },
+   706→  { id: 'dm_3', name: 'Summoner', description: 'Summon 1 hero', icon: '✨', type: 'summon', requirement: 1, reward: { gold: 300, gems: 5, experience: 150 }, refreshesDaily: true },
+   707→  { id: 'dm_4', name: 'Power Up', description: 'Level up a hero', icon: '⬆️', type: 'levelup', requirement: 1, reward: { gold: 400, gems: 5, experience: 200 }, refreshesDaily: true },
+   708→  { id: 'dm_5', name: 'Gear Up', description: 'Equip 1 item', icon: '🗡️', type: 'equip', requirement: 1, reward: { gold: 300, gems: 3, experience: 100 }, refreshesDaily: true },
+   709→  { id: 'dm_6', name: 'Campaign Runner', description: 'Complete 2 campaign stages', icon: '🗺️', type: 'campaign', requirement: 2, reward: { gold: 800, gems: 8, experience: 300 }, refreshesDaily: true },
+   710→  { id: 'dm_7', name: 'Big Spender', description: 'Spend 200 gems', icon: '💎', type: 'spend_gems', requirement: 200, reward: { gold: 1500, gems: 20, experience: 500 }, refreshesDaily: true },
+   711→];
+   712→
+   713→// ============= GUILD SYSTEM =============
+   714→
+   715→export interface GuildMember {
+   716→  name: string;
+   717→  level: number;
+   718→  power: number;
+   719→  role: 'leader' | 'officer' | 'member';
+   720→  contributed: number;
+   721→  lastOnline: string;
+   722→}
+   723→
+   724→export interface Guild {
+   725→  id: string;
+   726→  name: string;
+   727→  level: number;
+   728→  members: GuildMember[];
+   729→  experience: number;
+   730→  maxMembers: number;
+   731→  description: string;
+   732→  banner: string;
+   733→  perks: string[];
+   734→}
+   735→
+   736→export const NPC_GUILDS: Guild[] = [
+   737→  { id: 'guild_1', name: 'Shadow Legion', level: 8, members: [
+   738→    { name: 'DarkLord', level: 45, power: 800000, role: 'leader', contributed: 50000, lastOnline: 'Online' },
+   739→    { name: 'NightBlade', level: 38, power: 500000, role: 'officer', contributed: 35000, lastOnline: '2h ago' },
+   740→    { name: 'SoulReaper', level: 35, power: 420000, role: 'member', contributed: 20000, lastOnline: '1h ago' },
+   741→    { name: 'BloodFang', level: 30, power: 300000, role: 'member', contributed: 15000, lastOnline: '3h ago' },
+   742→    { name: 'GhostArrow', level: 25, power: 200000, role: 'member', contributed: 8000, lastOnline: 'Online' },
+   743→  ], experience: 128000, maxMembers: 30, description: 'Top ranked guild. Serious players only.', banner: '🗡️', perks: ['+15% Battle Gold', '+10% Hero XP', 'Guild Shop Access'] },
+   744→  { id: 'guild_2', name: 'Knights of Dawn', level: 6, members: [
+   745→    { name: 'SunBlade', level: 35, power: 550000, role: 'leader', contributed: 35000, lastOnline: 'Online' },
+   746→    { name: 'HolyShield', level: 30, power: 350000, role: 'officer', contributed: 22000, lastOnline: '30m ago' },
+   747→    { name: 'DawnGuard', level: 28, power: 280000, role: 'member', contributed: 12000, lastOnline: '1h ago' },
+   748→    { name: 'LightBearer', level: 22, power: 150000, role: 'member', contributed: 5000, lastOnline: 'Online' },
+   749→  ], experience: 75000, maxMembers: 25, description: 'Friendly guild helping each other grow.', banner: '☀️', perks: ['+10% Battle Gold', '+5% Hero XP'] },
+   750→  { id: 'guild_3', name: 'Dragon Hoard', level: 4, members: [
+   751→    { name: 'GoldScale', level: 25, power: 300000, role: 'leader', contributed: 20000, lastOnline: 'Online' },
+   752→    { name: 'CoinMaster', level: 20, power: 180000, role: 'officer', contributed: 10000, lastOnline: '2h ago' },
+   753→  ], experience: 30000, maxMembers: 20, description: 'We hoard gold and power. Join us!', banner: '🐉', perks: ['+5% Battle Gold'] },
+   754→];
+   755→
+   756→// ============= DAILY DUNGEONS =============
+   757→
+   758→export interface DungeonStage {
+   759→  stage: number; // 1-5
+   760→  name: string;
+   761→  recommendedPower: number;
+   762→  rewards: {
+   763→    gold: number;
+   764→    gems: number;
+   765→    material: string;
+   766→    materialCount: number;
+   767→  };
+   768→}
+   769→
+   770→export interface DailyDungeon {
+   771→  id: string;
+   772→  name: string;
+   773→  description: string;
+   774→  element: Element;
+   775→  dayOfWeek: number; // 0 = Sunday
+   776→  difficulty: number; // base difficulty multiplier for the dungeon
+   777→  stages: DungeonStage[];
+   778→  rewards: { gold: number; gems: number; material: string }; // representative top-tier reward summary
+   779→  bossName: string;
+   780→  bossElement: Element;
+   781→  icon: string; // emoji
+   782→}
+   783→
+   784→// Materials granted by each elemental dungeon
+   785→export const DUNGEON_MATERIALS: Record<
+   786→  string,
+   787→  { description: string; use: string; element: Element; icon: string }
+   788→> = {
+   789→  'Inferno Ember': {
+   790→    description: 'A glowing ember of pure flame that never extinguishes. Warmth pulses through your fingers when held.',
+   791→    use: 'Used to awaken and ascend heroes of fire affinity. Required for forging legendary weapons of flame.',
+   792→    element: 'fire',
+   793→    icon: '🔥',
+   794→  },
+   795→  'Tidal Pearl': {
+   796→    description: 'A pearl formed under crushing ocean depths. Shimmers with the sorrow of drowned kingdoms.',
+   797→    use: 'Used to awaken and ascend heroes of water affinity. Required for forging legendary weapons of the tide.',
+   798→    element: 'water',
+   799→    icon: '💧',
+   800→  },
+   801→  'Gaia Stone': {
+   802→    description: 'A fragment of the world\'s heart, humming with ancient life. The earth whispers through it.',
+   803→    use: 'Used to awaken and ascend heroes of earth affinity. Required for forging legendary armor of the mountain.',
+   804→    element: 'earth',
+   805→    icon: '🌍',
+   806→  },
+   807→  'Shadow Essence': {
+   808→    description: 'Concentrated darkness that writhes in your hand. Stolen from the rifts between worlds.',
+   809→    use: 'Used to awaken and ascend heroes of dark affinity. Required for forging cursed blades of the void.',
+   810→    element: 'dark',
+   811→    icon: '🌑',
+   812→  },
+   813→  'Light Crystal': {
+   814→    description: 'A radiant crystal pulsing with holy energy. Its glow banishes even the deepest despair.',
+   815→    use: 'Used to awaken and ascend heroes of light affinity. Required for forging sacred relics of the dawn.',
+   816→    element: 'light',
+   817→    icon: '☀️',
+   818→  },
+   819→  'Void Fragment': {
+   820→    description: 'A sliver of pure void that defies reality itself. Staring into it reveals impossible geometries.',
+   821→    use: 'Used to awaken and ascend heroes of void affinity. Required for forging reality-bending artifacts.',
+   822→    element: 'void',
+   823→    icon: '✨',
+   824→  },
+   825→};
+   826→
+   827→// Helper to generate 5 escalating stages for a dungeon
+   828→function buildDungeonStages(
+   829→  basePower: number,
+   830→  baseGold: number,
+   831→  baseGems: number,
+   832→  material: string,
+   833→  baseMaterial: number
+   834→): DungeonStage[] {
+   835→  const stageNames = [
+   836→    'Outer Gate',
+   837→    'Forgotten Halls',
+   838→    'Cursed Sanctum',
+   839→    'Inner Veil',
+   840→    'Throne of Ruin',
+   841→  ];
+   842→  return Array.from({ length: 5 }, (_, i) => {
+   843→    const stage = i + 1;
+   844→    return {
+   845→      stage,
+   846→      name: stageNames[i],
+   847→      recommendedPower: Math.floor(basePower * Math.pow(1.65, i)),
+   848→      rewards: {
+   849→        gold: baseGold * stage,
+   850→        gems: baseGems * stage,
+   851→        material,
+   852→        materialCount: baseMaterial * stage,
+   853→      },
+   854→    } as DungeonStage;
+   855→  });
+   856→}
+   857→
+   858→export const DAILY_DUNGEONS: DailyDungeon[] = [
+   859→  {
+   860→    id: 'dungeon_sunday_light',
+   861→    name: 'Sunwell Sanctum',
+   862→    description: 'A radiant cathedral bathed in eternal dawn. Holy guardians stand watch over the Light Crystal hoard.',
+   863→    element: 'light',
+   864→    dayOfWeek: 0, // Sunday
+   865→    difficulty: 1.0,
+   866→    stages: buildDungeonStages(8000, 600, 8, 'Light Crystal', 1),
+   867→    rewards: { gold: 3000, gems: 40, material: 'Light Crystal' },
+   868→    bossName: 'Seraphiel the Dawnbringer',
+   869→    bossElement: 'light',
+   870→    icon: '☀️',
+   871→  },
+   872→  {
+   873→    id: 'dungeon_monday_fire',
+   874→    name: 'Emberfall Caverns',
+   875→    description: 'Molten rivers carve through obsidian halls. Inferno Embers burn brightest in the deepest forges.',
+   876→    element: 'fire',
+   877→    dayOfWeek: 1, // Monday
+   878→    difficulty: 1.05,
+   879→    stages: buildDungeonStages(9000, 650, 9, 'Inferno Ember', 1),
+   880→    rewards: { gold: 3250, gems: 45, material: 'Inferno Ember' },
+   881→    bossName: 'Pyroclast the Eternal Flame',
+   882→    bossElement: 'fire',
+   883→    icon: '🔥',
+   884→  },
+   885→  {
+   886→    id: 'dungeon_tuesday_water',
+   887→    name: 'Abyssal Trench',
+   888→    description: 'Beneath the crushing dark of the endless sea, the Tidal Pearls gleam like drowned stars.',
+   889→    element: 'water',
+   890→    dayOfWeek: 2, // Tuesday
+   891→    difficulty: 1.05,
+   892→    stages: buildDungeonStages(9500, 700, 9, 'Tidal Pearl', 1),
+   893→    rewards: { gold: 3500, gems: 45, material: 'Tidal Pearl' },
+   894→    bossName: 'Leviathan Tidecaller',
+   895→    bossElement: 'water',
+   896→    icon: '💧',
+   897→  },
+   898→  {
+   899→    id: 'dungeon_wednesday_earth',
+   900→    name: "Gaia's Heart",
+   901→    description: 'A living cavern of crystal roots and ancient stone. The world itself guards the Gaia Stones.',
+   902→    element: 'earth',
+   903→    dayOfWeek: 3, // Wednesday
+   904→    difficulty: 1.1,
+   905→    stages: buildDungeonStages(10000, 750, 10, 'Gaia Stone', 1),
+   906→    rewards: { gold: 3750, gems: 50, material: 'Gaia Stone' },
+   907→    bossName: 'Terraxis World-Shaper',
+   908→    bossElement: 'earth',
+   909→    icon: '🌍',
+   910→  },
+   911→  {
+   912→    id: 'dungeon_thursday_dark',
+   913→    name: 'Twilight Catacombs',
+   914→    description: 'Endless tombs where the shadows breathe. Shadow Essence drips from the weeping walls.',
+   915→    element: 'dark',
+   916→    dayOfWeek: 4, // Thursday
+   917→    difficulty: 1.15,
+   918→    stages: buildDungeonStages(11000, 800, 11, 'Shadow Essence', 1),
+   919→    rewards: { gold: 4000, gems: 55, material: 'Shadow Essence' },
+   920→    bossName: 'Nyxalia Soulreaver',
+   921→    bossElement: 'dark',
+   922→    icon: '🌑',
+   923→  },
+   924→  {
+   925→    id: 'dungeon_friday_void',
+   926→    name: 'Voidstorm Rift',
+   927→    description: 'A tear in reality where time runs sideways. Void Fragments crystallize from nothing itself.',
+   928→    element: 'void',
+   929→    dayOfWeek: 5, // Friday
+   930→    difficulty: 1.2,
+   931→    stages: buildDungeonStages(13000, 900, 13, 'Void Fragment', 1),
+   932→    rewards: { gold: 4500, gems: 65, material: 'Void Fragment' },
+   933→    bossName: 'Nullshroud the Devourer',
+   934→    bossElement: 'void',
+   935→    icon: '✨',
+   936→  },
+   937→  {
+   938→    id: 'dungeon_saturday_phoenix',
+   939→    name: 'Phoenix Caldera',
+   940→    description: 'The weekend trial — a volcanic throne where the Phoenix reborn guards a bounty of Inferno Embers and gems.',
+   941→    element: 'fire',
+   942→    dayOfWeek: 6, // Saturday
+   943→    difficulty: 1.25,
+   944→    stages: buildDungeonStages(15000, 1100, 15, 'Inferno Ember', 2),
+   945→    rewards: { gold: 5500, gems: 75, material: 'Inferno Ember' },
+   946→    bossName: 'Cinderwing the Reborn',
+   947→    bossElement: 'fire',
+   948→    icon: '🦅',
+   949→  },
+   950→];
+   951→
+   952→// Quick lookup helpers
+   953→export function getTodayDungeon(date: Date = new Date()): DailyDungeon | undefined {
+   954→  const day = date.getDay(); // 0-6, 0 = Sunday
+   955→  return DAILY_DUNGEONS.find((d) => d.dayOfWeek === day);
+   956→}
+   957→
+   958→export function getDungeonById(id: string): DailyDungeon | undefined {
+   959→  return DAILY_DUNGEONS.find((d) => d.id === id);
+   960→}
+   961→
+   962→// ============= WANDERING MERCHANT =============
+   963→// The Wandering Merchant appears periodically with rotating limited-time deals
+   964→// on rare resources at discounted prices. Refreshes every 8 hours.
+   965→
+   966→export interface MerchantDeal {
+   967→  id: string;
+   968→  name: string;
+   969→  description: string;
+   970→  icon: string;
+   971→  originalPrice: number; // in gems
+   972→  discountedPrice: number; // in gems
+   973→  currency: 'gems' | 'gold';
+   974→  type: 'gems' | 'gold' | 'energy' | 'scroll' | 'equipment' | 'material' | 'hero_shard';
+   975→  amount: number;
+   976→  rarity?: Rarity;
+   977→  stock: number; // available to buy
+   978→  tag?: 'BEST_VALUE' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'NEW' | 'HOT';
+   979→}
+   980→
+   981→// Pool of possible merchant deals — merchant picks 6 random deals per visit
+   982→export const MERCHANT_DEAL_POOL: MerchantDeal[] = [
+   983→  // Equipment deals
+   984→  {
+   985→    id: 'merch_eq_legendary',
+   986→    name: 'Legendary Equipment Chest',
+   987→    description: 'Guaranteed Legendary or Mythic equipment piece',
+   988→    icon: '🎁',
+   989→    originalPrice: 2500,
+   990→    discountedPrice: 1200,
+   991→    currency: 'gems',
+   992→    type: 'equipment',
+   993→    amount: 1,
+   994→    rarity: 'legendary',
+   995→    stock: 1,
+   996→    tag: 'LEGENDARY',
+   997→  },
+   998→  {
+   999→    id: 'merch_eq_epic_chest',
+  1000→    name: 'Epic Equipment Bundle',
+  1001→    description: '3 Epic equipment pieces for the price of 2',
+  1002→    icon: '📦',
+  1003→    originalPrice: 1500,
+  1004→    discountedPrice: 900,
+  1005→    currency: 'gems',
+  1006→    type: 'equipment',
+  1007→    amount: 3,
+  1008→    rarity: 'epic',
+  1009→    stock: 2,
+  1010→    tag: 'BEST_VALUE',
+  1011→  },
+  1012→  {
+  1013→    id: 'merch_eq_rare_5',
+  1014→    name: 'Rare Equipment Pack',
+  1015→    description: '5 Rare equipment pieces — perfect for early progression',
+  1016→    icon: '🎒',
+  1017→    originalPrice: 600,
+  1018→    discountedPrice: 300,
+  1019→    currency: 'gems',
+  1020→    type: 'equipment',
+  1021→    amount: 5,
+  1022→    rarity: 'rare',
+  1023→    stock: 3,
+  1024→    tag: 'HOT',
+  1025→  },
+  1026→  // Material bundles
+  1027→  {
+  1028→    id: 'merch_mats_inferno',
+  1029→    name: 'Inferno Ember Cache',
+  1030→    description: '30 Inferno Embers — awaken your Fire heroes',
+  1031→    icon: '🔥',
+  1032→    originalPrice: 800,
+  1033→    discountedPrice: 450,
+  1034→    currency: 'gems',
+  1035→    type: 'material',
+  1036→    amount: 30,
+  1037→    stock: 2,
+  1038→    tag: 'RARE',
+  1039→  },
+  1040→  {
+  1041→    id: 'merch_mats_tidal',
+  1042→    name: 'Tidal Pearl Cache',
+  1043→    description: '30 Tidal Pearls — awaken your Water heroes',
+  1044→    icon: '💧',
+  1045→    originalPrice: 800,
+  1046→    discountedPrice: 450,
+  1047→    currency: 'gems',
+  1048→    type: 'material',
+  1049→    amount: 30,
+  1050→    stock: 2,
+  1051→    tag: 'RARE',
+  1052→  },
+  1053→  {
+  1054→    id: 'merch_mats_gaia',
+  1055→    name: 'Gaia Stone Cache',
+  1056→    description: '30 Gaia Stones — awaken your Earth heroes',
+  1057→    icon: '🌍',
+  1058→    originalPrice: 800,
+  1059→    discountedPrice: 450,
+  1060→    currency: 'gems',
+  1061→    type: 'material',
+  1062→    amount: 30,
+  1063→    stock: 2,
+  1064→    tag: 'RARE',
+  1065→  },
+  1066→  {
+  1067→    id: 'merch_mats_shadow',
+  1068→    name: 'Shadow Essence Cache',
+  1069→    description: '30 Shadow Essences — awaken your Dark heroes',
+  1070→    icon: '🌑',
+  1071→    originalPrice: 1000,
+  1072→    discountedPrice: 600,
+  1073→    currency: 'gems',
+  1074→    type: 'material',
+  1075→    amount: 30,
+  1076→    stock: 1,
+  1077→    tag: 'EPIC',
+  1078→  },
+  1079→  {
+  1080→    id: 'merch_mats_light',
+  1081→    name: 'Light Crystal Cache',
+  1082→    description: '30 Light Crystals — awaken your Light heroes',
+  1083→    icon: '☀️',
+  1084→    originalPrice: 1000,
+  1085→    discountedPrice: 600,
+  1086→    currency: 'gems',
+  1087→    type: 'material',
+  1088→    amount: 30,
+  1089→    stock: 1,
+  1090→    tag: 'EPIC',
+  1091→  },
+  1092→  // Scroll deals
+  1093→  {
+  1094→    id: 'merch_scroll_10_discount',
+  1095→    name: '10x Mystic Scroll Bundle',
+  1096→    description: 'Summon 10 champions — Epic guaranteed',
+  1097→    icon: '📜',
+  1098→    originalPrice: 1200,
+  1099→    discountedPrice: 900,
+  1100→    currency: 'gems',
+  1101→    type: 'scroll',
+  1102→    amount: 10,
+  1103→    stock: 2,
+  1104→    tag: 'BEST_VALUE',
+  1105→  },
+  1106→  {
+  1107→    id: 'merch_scroll_ancient',
+  1108→    name: 'Ancient Shard',
+  1109→    description: 'Summon 1 Legendary or Mythic champion!',
+  1110→    icon: '🔮',
+  1111→    originalPrice: 3000,
+  1112→    discountedPrice: 2200,
+  1113→    currency: 'gems',
+  1114→    type: 'scroll',
+  1115→    amount: 1,
+  1116→    stock: 1,
+  1117→    tag: 'LEGENDARY',
+  1118→  },
+  1119→  // Currency exchanges
+  1120→  {
+  1121→    id: 'merch_gold_50k',
+  1122→    name: 'Treasure Chest (50K Gold)',
+  1123→    description: 'A chest overflowing with 50,000 gold coins',
+  1124→    icon: '🪙',
+  1125→    originalPrice: 200,
+  1126→    discountedPrice: 120,
+  1127→    currency: 'gems',
+  1128→    type: 'gold',
+  1129→    amount: 50000,
+  1130→    stock: 5,
+  1131→    tag: 'HOT',
+  1132→  },
+  1133→  {
+  1134→    id: 'merch_gold_100k',
+  1135→    name: 'Royal Vault (100K Gold)',
+  1136→    description: 'A royal vault containing 100,000 gold coins',
+  1137→    icon: '💰',
+  1138→    originalPrice: 400,
+  1139→    discountedPrice: 240,
+  1140→    currency: 'gems',
+  1141→    type: 'gold',
+  1142→    amount: 100000,
+  1143→    stock: 3,
+  1144→    tag: 'BEST_VALUE',
+  1145→  },
+  1146→  {
+  1147→    id: 'merch_energy_refill',
+  1148→    name: 'Energy Keg',
+  1149→    description: 'Refills your energy to maximum',
+  1150→    icon: '⚡',
+  1151→    originalPrice: 80,
+  1152→    discountedPrice: 40,
+  1153→    currency: 'gems',
+  1154→    type: 'energy',
+  1155→    amount: 100,
+  1156→    stock: 5,
+  1157→    tag: 'NEW',
+  1158→  },
+  1159→  {
+  1160→    id: 'merch_xp_brew_xl',
+  1161→    name: 'Mega XP Brew (100K XP)',
+  1162→    description: 'Grants 100,000 hero XP — level up instantly',
+  1163→    icon: '🧪',
+  1164→    originalPrice: 500,
+  1165→    discountedPrice: 300,
+  1166→    currency: 'gems',
+  1167→    type: 'hero_shard',
+  1168→    amount: 100000,
+  1169→    stock: 2,
+  1170→    tag: 'EPIC',
+  1171→  },
+  1172→];
+  1173→
+  1174→export const MERCHANT_REFRESH_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours in ms
+  1175→export const MERCHANT_DEALS_PER_VISIT = 6;
+  1176→
+  1177→// Pick N random deals from the pool (deterministic given a seed)
+  1178→export function rollMerchantDeals(seed: number, count: number = MERCHANT_DEALS_PER_VISIT): MerchantDeal[] {
+  1179→  const pool = [...MERCHANT_DEAL_POOL];
+  1180→  const result: MerchantDeal[] = [];
+  1181→  // simple seeded PRNG (mulberry32)
+  1182→  let s = seed >>> 0;
+  1183→  const rand = () => {
+  1184→    s = (s + 0x6D2B79F5) >>> 0;
+  1185→    let t = s;
+  1186→    t = Math.imul(t ^ (t >>> 15), t | 1);
+  1187→    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  1188→    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  1189→  };
+  1190→  for (let i = 0; i < count && pool.length > 0; i++) {
+  1191→    const idx = Math.floor(rand() * pool.length);
+  1192→    const deal = pool.splice(idx, 1)[0];
+  1193→    // Reset stock to fresh value on each roll (clone)
+  1194→    result.push({ ...deal });
+  1195→  }
+  1196→  return result;
+  1197→}
+  1198→
+  1199→// Compute the merchant "visit window" for a given timestamp.
+  1200→// Returns the seed and the start time so deals stay stable within a window.
+  1201→export function getMerchantWindow(now: number = Date.now()): { seed: number; windowStart: number; windowEnd: number } {
+  1202→  const windowStart = Math.floor(now / MERCHANT_REFRESH_INTERVAL) * MERCHANT_REFRESH_INTERVAL;
+  1203→  const windowEnd = windowStart + MERCHANT_REFRESH_INTERVAL;
+  1204→  // Seed from window start so deals are stable for the entire 8-hour window
+  1205→  const seed = Math.floor(windowStart / 1000);
+  1206→  return { seed, windowStart, windowEnd };
+  1207→}
+  1208→
+  1209→// ============= DAILY LOGIN STREAK MILESTONES =============
+  1210→// Tracks a 30-day cumulative login streak with milestone bonuses
+  1211→// (separate from the existing 7-day DAILY_REWARDS cycle which stays).
+  1212→
+  1213→export interface LoginStreakMilestone {
+  1214→  day: number;
+  1215→  name: string;
+  1216→  description: string;
+  1217→  reward: {
+  1218→    gold: number;
+  1219→    gems: number;
+  1220→    energy?: number;
+  1221→    vipPoints?: number;
+  1222→    item?: string;
+  1223→    itemIcon?: string;
+  1224→  };
+  1225→  icon: string;
+  1226→  tier: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  1227→}
+  1228→
+  1229→export const LOGIN_STREAK_MILESTONES: LoginStreakMilestone[] = [
+  1230→  { day: 3,  name: '三日 Devotion',  description: 'Three days of dedication earns a small reward.', reward: { gold: 2000,  gems: 30,  energy: 30 }, icon: '🌟', tier: 'common' },
+  1231→  { day: 7,  name: 'Week\'s Resolve', description: 'A full week of loyalty unlocks an Epic reward.', reward: { gold: 5000,  gems: 75,  energy: 50, item: '1x Epic Hero', itemIcon: '💜' }, icon: '✨', tier: 'epic' },
+  1232→  { day: 14, name: 'Fortnight Crown', description: 'Two weeks of devotion earns royal treasure.', reward: { gold: 12000, gems: 150, energy: 80, vipPoints: 25 }, icon: '👑', tier: 'legendary' },
+  1233→  { day: 21, name: 'Three Weeks Awe',  description: 'A sacred milestone — a Legendary champion joins you.', reward: { gold: 25000, gems: 250, item: '1x Legendary Hero', itemIcon: '⭐' }, icon: '🌟', tier: 'legendary' },
+  1234→  { day: 30, name: 'Eternal Vow',     description: 'A full month of devotion — the realm rewards its champion with a Mythic champion!', reward: { gold: 100000, gems: 1000, vipPoints: 100, item: '1x Mythic Hero', itemIcon: '🔥' }, icon: '🔥', tier: 'mythic' },
+  1235→];
+  1236→
+  1237→// ============= HERO SKIN SYSTEM =============
+  1238→// Cosmetic skins that change a hero's visual appearance (gradient + accent).
+  1239→// Pure cosmetic — does not affect stats. Acquired via shop / events.
+  1240→
+  1241→export interface HeroSkin {
+  1242→  id: string;
+  1243→  heroTemplateId: string; // which hero this skin is for
+  1244→  name: string;
+  1245→  description: string;
+  1246→  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  1247→  // Tailwind gradient classes for portrait background
+  1248→  gradient: string;
+  1249→  // Accent color hex for borders/glows
+  1250→  accentColor: string;
+  1251→  // Particle/effect overlay
+  1252→  effect: 'none' | 'embers' | 'frost' | 'shadow' | 'lightning' | 'arcane' | 'golden';
+  1253→  // Aura ring color (Tailwind text color class)
+  1254→  auraRing: string;
+  1255→  cost: number; // in gems (0 = default/free)
+  1256→  icon: string;
+  1257→}
+  1258→
+  1259→export const HERO_SKINS: HeroSkin[] = [
+  1260→  // Default skins (free, always available)
+  1261→  {
+  1262→    id: 'skin_default_galahad',
+  1263→    heroTemplateId: 'knight_01',
+  1264→    name: 'Default',
+  1265→    description: 'Sir Galahad\'s classic silver armor.',
+  1266→    rarity: 'common',
+  1267→    gradient: 'from-blue-700 to-blue-900',
+  1268→    accentColor: '#3b82f6',
+  1269→    effect: 'none',
+  1270→    auraRing: 'text-blue-400',
+  1271→    cost: 0,
+  1272→    icon: '⚔️',
+  1273→  },
+  1274→  {
+  1275→    id: 'skin_inferno_galahad',
+  1276→    heroTemplateId: 'knight_01',
+  1277→    name: 'Inferno Paladin',
+  1278→    description: 'Burning armor wreathed in hellfire. Embers dance around the holy knight.',
+  1279→    rarity: 'legendary',
+  1280→    gradient: 'from-red-600 via-orange-600 to-amber-700',
+  1281→    accentColor: '#ef4444',
+  1282→    effect: 'embers',
+  1283→    auraRing: 'text-red-400',
+  1284→    cost: 800,
+  1285→    icon: '🔥',
+  1286→  },
+  1287→  {
+  1288→    id: 'skin_divine_galahad',
+  1289→    heroTemplateId: 'knight_01',
+  1290→    name: 'Divine Archon',
+  1291→    description: 'Radiant golden armor blessed by the heavens themselves.',
+  1292→    rarity: 'mythic',
+  1293→    gradient: 'from-amber-300 via-yellow-500 to-amber-700',
+  1294→    accentColor: '#f59e0b',
+  1295→    effect: 'golden',
+  1296→    auraRing: 'text-amber-300',
+  1297→    cost: 2000,
+  1298→    icon: '☀️',
+  1299→  },
+  1300→  // Ranger Sylvana skins
+  1301→  {
+  1302→    id: 'skin_default_sylvana',
+  1303→    heroTemplateId: 'elf_02',
+  1304→    name: 'Default',
+  1305→    description: 'Ranger Sylvana\'s forest-green cloak.',
+  1306→    rarity: 'common',
+  1307→    gradient: 'from-green-700 to-green-900',
+  1308→    accentColor: '#22c55e',
+  1309→    effect: 'none',
+  1310→    auraRing: 'text-green-400',
+  1311→    cost: 0,
+  1312→    icon: '🏹',
+  1313→  },
+  1314→  {
+  1315→    id: 'skin_frost_sylvana',
+  1316→    heroTemplateId: 'elf_02',
+  1317→    name: 'Frostbite Sentinel',
+  1318→    description: 'Glacial armor that freezes the air around her. A frost mist trails her steps.',
+  1319→    rarity: 'epic',
+  1320→    gradient: 'from-cyan-400 via-blue-500 to-indigo-800',
+  1321→    accentColor: '#06b6d4',
+  1322→    effect: 'frost',
+  1323→    auraRing: 'text-cyan-300',
+  1324→    cost: 600,
+  1325→    icon: '❄️',
+  1326→  },
+  1327→  {
+  1328→    id: 'skin_void_sylvana',
+  1329→    heroTemplateId: 'elf_02',
+  1330→    name: 'Voidwalker Ranger',
+  1331→    description: 'Cloaked in shadow essence, Sylvana becomes one with the void.',
+  1332→    rarity: 'legendary',
+  1333→    gradient: 'from-violet-600 via-purple-800 to-slate-900',
+  1334→    accentColor: '#a855f7',
+  1335→    effect: 'arcane',
+  1336→    auraRing: 'text-violet-300',
+  1337→    cost: 1200,
+  1338→    icon: '🌌',
+  1339→  },
+  1340→  // Bone Collector skins
+  1341→  {
+  1342→    id: 'skin_default_bone',
+  1343→    heroTemplateId: 'undead_02',
+  1344→    name: 'Default',
+  1345→    description: 'Bone Collector\'s macabre skeletal form.',
+  1346→    rarity: 'common',
+  1347→    gradient: 'from-gray-700 to-gray-900',
+  1348→    accentColor: '#6b7280',
+  1349→    effect: 'none',
+  1350→    auraRing: 'text-gray-300',
+  1351→    cost: 0,
+  1352→    icon: '💀',
+  1353→  },
+  1354→  {
+  1355→    id: 'skin_shadow_bone',
+  1356→    heroTemplateId: 'undead_02',
+  1357→    name: 'Shadow Reaper',
+  1358→    description: 'A spectral form wreathed in living shadow. Lightning crackles within its ribs.',
+  1359→    rarity: 'epic',
+  1360→    gradient: 'from-violet-700 via-purple-900 to-black',
+  1361→    accentColor: '#7c3aed',
+  1362→    effect: 'lightning',
+  1363→    auraRing: 'text-violet-400',
+  1364→    cost: 700,
+  1365→    icon: '⚡',
+  1366→  },
+  1367→  {
+  1368→    id: 'skin_blood_bone',
+  1369→    heroTemplateId: 'undead_02',
+  1370→    name: 'Bloodlord Wight',
+  1371→    description: 'Drenched in the blood of a thousand foes. Mythic-tier menace.',
+  1372→    rarity: 'mythic',
+  1373→    gradient: 'from-red-700 via-rose-900 to-black',
+  1374→    accentColor: '#dc2626',
+  1375→    effect: 'shadow',
+  1376→    auraRing: 'text-red-400',
+  1377→    cost: 1800,
+  1378→    icon: '🩸',
+  1379→  },
+  1380→];
+  1381→
+  1382→export function getSkinsForHero(templateId: string): HeroSkin[] {
+  1383→  return HERO_SKINS.filter(s => s.heroTemplateId === templateId);
+  1384→}
+  1385→
+  1386→
+  1387→

@@ -1,0 +1,947 @@
+     1→'use client';
+     2→
+     3→import { useGameStore } from '@/lib/game-store';
+     4→import { RARITY_CONFIG, ELEMENT_CONFIG, FACTION_CONFIG, BattleHero } from '@/lib/game-data';
+     5→import { motion, AnimatePresence } from 'framer-motion';
+     6→import { useState, useEffect, useRef, useCallback } from 'react';
+     7→import {
+     8→  Swords, Shield, Heart, Zap, Star, Play, FastForward,
+     9→  RotateCcw, Trophy, Skull, Sparkles, Flame, ChevronRight,
+    10→  Volume2, VolumeX, Clock, Users, Crown, AlertTriangle
+    11→} from 'lucide-react';
+    12→
+    13→// ─── Floating Damage Type ────────────────────────────────────────
+    14→interface FloatingDamage {
+    15→  id: string;
+    16→  targetId: string;
+    17→  damage: number;
+    18→  crit: boolean;
+    19→  healed?: boolean;
+    20→}
+    21→
+    22→// ─── Skill Flash Type ────────────────────────────────────────────
+    23→interface SkillFlash {
+    24→  id: string;
+    25→  heroId: string;
+    26→  skillName: string;
+    27→  isEnemy: boolean;
+    28→}
+    29→
+    30→// ─── Kill Effect Type ────────────────────────────────────────────
+    31→interface KillEffect {
+    32→  id: string;
+    33→  heroId: string;
+    34→  name: string;
+    35→}
+    36→
+    37→// ─── Main Component ──────────────────────────────────────────────
+    38→export function BattleArena() {
+    39→  const battle = useGameStore(s => s.battle);
+    40→  const executeBattleTurn = useGameStore(s => s.executeBattleTurn);
+    41→  const toggleAutoPlay = useGameStore(s => s.toggleAutoPlay);
+    42→  const toggleBattleSpeed = useGameStore(s => s.toggleBattleSpeed);
+    43→  const endBattle = useGameStore(s => s.endBattle);
+    44→  const setScreen = useGameStore(s => s.setScreen);
+    45→
+    46→  const logRef = useRef<HTMLDivElement>(null);
+    47→  const lastLogLengthRef = useRef<number>(0);
+    48→  const [floatingDamage, setFloatingDamage] = useState<FloatingDamage[]>([]);
+    49→  const [skillFlash, setSkillFlash] = useState<SkillFlash[]>([]);
+    50→  const [killEffects, setKillEffects] = useState<KillEffect[]>([]);
+    51→  const [screenShake, setScreenShake] = useState(false);
+    52→  const turnCount = battle?.turnNumber ?? 0;
+    53→
+    54→  // ─── Auto-scroll battle log ────────────────────────────────
+    55→  useEffect(() => {
+    56→    if (logRef.current) {
+    57→      logRef.current.scrollTop = logRef.current.scrollHeight;
+    58→    }
+    59→  }, [battle?.log]);
+    60→
+    61→  // ─── Track battle events from log changes ──────────────────
+    62→  useEffect(() => {
+    63→    if (!battle || battle.log.length === 0) return;
+    64→
+    65→    const newEntries = battle.log.slice(lastLogLengthRef.current);
+    66→    lastLogLengthRef.current = battle.log.length;
+    67→
+    68→    for (const entry of newEntries) {
+    69→      // Track damage events
+    70→      const damageMatch = entry.match(/(.+) attacks (.+) for (\d+)( CRIT!)?/);
+    71→      if (damageMatch) {
+    72→        const [, attacker, target, dmg, crit] = damageMatch;
+    73→        const allHeroes = [...battle.playerTeam, ...battle.enemyTeam];
+    74→        const targetHero = allHeroes.find(h => h.name === target.trim());
+    75→        const attackerHero = allHeroes.find(h => h.name === attacker.trim());
+    76→        const isPlayerAttack = battle.playerTeam.some(h => h.name === attacker.trim());
+    77→
+    78→        if (targetHero) {
+    79→          const id = `dmg_${Date.now()}_${Math.random()}`;
+    80→          setTimeout(() => {
+    81→            setFloatingDamage(prev => [...prev, {
+    82→              id, targetId: targetHero.id,
+    83→              damage: parseInt(dmg), crit: !!crit
+    84→            }]);
+    85→            setTimeout(() => {
+    86→              setFloatingDamage(prev => prev.filter(d => d.id !== id));
+    87→            }, 1500);
+    88→          }, 0);
+    89→        }
+    90→
+    91→        // Skill flash on attacker
+    92→        if (attackerHero) {
+    93→          const flashId = `flash_${Date.now()}_${Math.random()}`;
+    94→          setTimeout(() => {
+    95→            setSkillFlash(prev => [...prev, {
+    96→              id: flashId, heroId: attackerHero.id,
+    97→              skillName: attackerHero.skill1Name,
+    98→              isEnemy: !isPlayerAttack,
+    99→            }]);
+   100→            setTimeout(() => {
+   101→              setSkillFlash(prev => prev.filter(f => f.id !== flashId));
+   102→            }, 800);
+   103→          }, 0);
+   104→        }
+   105→      }
+   106→
+   107→      // Track kill events
+   108→      const killMatch = entry.match(/💀 (.+) has fallen/);
+   109→      if (killMatch) {
+   110→        const heroName = killMatch[1].trim();
+   111→        const allHeroes = [...battle.playerTeam, ...battle.enemyTeam];
+   112→        const deadHero = allHeroes.find(h => h.name === heroName);
+   113→        if (deadHero) {
+   114→          const killId = `kill_${Date.now()}_${Math.random()}`;
+   115→          setTimeout(() => {
+   116→            setKillEffects(prev => [...prev, {
+   117→              id: killId, heroId: deadHero.id, name: heroName
+   118→            }]);
+   119→            setTimeout(() => {
+   120→              setKillEffects(prev => prev.filter(k => k.id !== killId));
+   121→            }, 2000);
+   122→          }, 0);
+   123→
+   124→          // Screen shake on kill
+   125→          setTimeout(() => {
+   126→            setScreenShake(true);
+   127→            setTimeout(() => setScreenShake(false), 400);
+   128→          }, 100);
+   129→        }
+   130→      }
+   131→
+   132→      // Track defeat - big shake
+   133→      if (entry.includes('DEFEAT')) {
+   134→        setTimeout(() => {
+   135→          setScreenShake(true);
+   136→          setTimeout(() => setScreenShake(false), 800);
+   137→        }, 0);
+   138→      }
+   139→    }
+   140→  }, [battle?.log]);
+   141→
+   142→  // ─── No Battle State ──────────────────────────────────────
+   143→  if (!battle) {
+   144→    return (
+   145→      <div className="p-4 max-w-4xl mx-auto text-center">
+   146→        <motion.div
+   147→          animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+   148→          transition={{ duration: 3, repeat: Infinity }}
+   149→          className="inline-block mb-6"
+   150→        >
+   151→          <Swords className="w-20 h-20 text-amber-400 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
+   152→        </motion.div>
+   153→        <h2 className="text-2xl font-bold gold-text mb-3">No Active Battle</h2>
+   154→        <p className="text-sm text-gray-400 mb-6">Enter the campaign to begin combat!</p>
+   155→        <motion.button
+   156→          whileHover={{ scale: 1.05 }}
+   157→          whileTap={{ scale: 0.95 }}
+   158→          onClick={() => setScreen('campaign')}
+   159→          className="bg-gradient-to-r from-red-600 to-red-700 text-white font-bold px-8 py-3 rounded-xl hover:from-red-500 hover:to-red-600 transition-all shadow-lg shadow-red-600/30"
+   160→        >
+   161→          <Swords className="w-5 h-5 inline mr-2" />
+   162→          Go to Campaign
+   163→        </motion.button>
+   164→      </div>
+   165→    );
+   166→  }
+   167→
+   168→  // ─── Determine currently acting hero ──────────────────────
+   169→  const activeHero = battle.currentTurn === 'player'
+   170→    ? battle.playerTeam[battle.turnIndex]
+   171→    : battle.enemyTeam[battle.turnIndex];
+   172→
+   173→  return (
+   174→    <motion.div
+   175→      animate={screenShake ? {
+   176→        x: [0, -6, 6, -4, 4, -2, 2, 0],
+   177→        y: [0, 3, -3, 2, -2, 1, -1, 0]
+   178→      } : { x: 0, y: 0 }}
+   179→      transition={{ duration: 0.4 }}
+   180→      className="p-2 sm:p-3 max-w-4xl mx-auto"
+   181→    >
+   182→      {/* ─── Battle Result Banner ─────────────────────────── */}
+   183→      <AnimatePresence>
+   184→        {battle.result && (
+   185→          <BattleResultOverlay
+   186→            result={battle.result}
+   187→            rewards={battle.rewards}
+   188→            onContinue={endBattle}
+   189→          />
+   190→        )}
+   191→      </AnimatePresence>
+   192→
+   193→      {/* ─── Turn Counter & Status Bar ────────────────────── */}
+   194→      <div className="mb-3 flex items-center justify-between gap-2">
+   195→        <div className="flex items-center gap-2">
+   196→          <motion.div
+   197→            key={turnCount}
+   198→            initial={{ scale: 1.4, color: '#fbbf24' }}
+   199→            animate={{ scale: 1, color: '#a1a1aa' }}
+   200→            className="flex items-center gap-1.5 bg-black/50 border border-amber-500/30 rounded-lg px-3 py-1.5"
+   201→          >
+   202→            <Clock className="w-3.5 h-3.5 text-amber-400" />
+   203→            <span className="text-xs font-bold text-amber-300">Turn {turnCount}</span>
+   204→          </motion.div>
+   205→        </div>
+   206→
+   207→        <div className="flex items-center gap-1.5">
+   208→          {battle.autoPlay && (
+   209→            <motion.div
+   210→              animate={{ opacity: [0.5, 1, 0.5] }}
+   211→              transition={{ duration: 1.5, repeat: Infinity }}
+   212→              className="flex items-center gap-1 bg-green-600/20 border border-green-500/30 rounded-lg px-2 py-1"
+   213→            >
+   214→              <Play className="w-3 h-3 text-green-400 fill-green-400" />
+   215→              <span className="text-[10px] font-bold text-green-400">AUTO</span>
+   216→            </motion.div>
+   217→          )}
+   218→          <div className="flex items-center gap-1 bg-black/50 border border-purple-500/30 rounded-lg px-2 py-1">
+   219→            <FastForward className="w-3 h-3 text-purple-400" />
+   220→            <span className="text-[10px] font-bold text-purple-300">{battle.speed}x</span>
+   221→          </div>
+   222→        </div>
+   223→      </div>
+   224→
+   225→      {/* ─── Battle Arena Visual ──────────────────────────── */}
+   226→      <div className="relative bg-gradient-to-b from-[#050210] via-[#0f0525] to-[#050210] rounded-2xl border border-purple-500/30 overflow-hidden mb-3 shadow-2xl shadow-purple-900/30">
+   227→        {/* ─── Animated Background Effects ──────────────── */}
+   228→        <div className="absolute inset-0 pointer-events-none">
+   229→          {/* Fog layers */}
+   230→          <motion.div
+   231→            animate={{ x: ['-20%', '120%'] }}
+   232→            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+   233→            className="absolute top-1/4 -left-1/3 w-2/3 h-32 bg-purple-900/8 rounded-full blur-3xl"
+   234→          />
+   235→          <motion.div
+   236→            animate={{ x: ['120%', '-20%'] }}
+   237→            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+   238→            className="absolute top-2/3 -left-1/3 w-2/3 h-32 bg-red-900/8 rounded-full blur-3xl"
+   239→          />
+   240→          <motion.div
+   241→            animate={{ x: ['-10%', '110%'] }}
+   242→            transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+   243→            className="absolute top-1/2 -left-1/4 w-1/2 h-24 bg-amber-900/5 rounded-full blur-3xl"
+   244→          />
+   245→
+   246→          {/* Floating embers/particles */}
+   247→          {[...Array(12)].map((_, i) => (
+   248→            <motion.div
+   249→              key={i}
+   250→              className="absolute w-1 h-1 rounded-full"
+   251→              style={{
+   252→                left: `${10 + (i * 8) % 80}%`,
+   253→                bottom: '-5%',
+   254→                background: i % 3 === 0 ? '#f59e0b' : i % 3 === 1 ? '#ef4444' : '#a855f7',
+   255→                boxShadow: `0 0 6px ${i % 3 === 0 ? '#f59e0b' : i % 3 === 1 ? '#ef4444' : '#a855f7'}`,
+   256→              }}
+   257→              animate={{
+   258→                y: [0, -300 - Math.random() * 200],
+   259→                x: [0, (Math.random() - 0.5) * 100],
+   260→                opacity: [0, 0.8, 0.6, 0],
+   261→                scale: [0.5, 1, 0.5],
+   262→              }}
+   263→              transition={{
+   264→                duration: 4 + Math.random() * 4,
+   265→                repeat: Infinity,
+   266→                delay: i * 0.5,
+   267→                ease: 'easeOut',
+   268→              }}
+   269→            />
+   270→          ))}
+   271→
+   272→          {/* Rune circle at center */}
+   273→          <motion.div
+   274→            animate={{ rotate: 360, opacity: [0.03, 0.08, 0.03] }}
+   275→            transition={{ rotate: { duration: 30, repeat: Infinity, ease: 'linear' }, opacity: { duration: 5, repeat: Infinity } }}
+   276→            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 rounded-full border border-purple-500/10"
+   277→          />
+   278→          <motion.div
+   279→            animate={{ rotate: -360 }}
+   280→            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+   281→            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 sm:w-48 sm:h-48 rounded-full border border-red-500/8"
+   282→          />
+   283→        </div>
+   284→
+   285→        {/* ─── Enemy Team Section ────────────────────────── */}
+   286→        <div className="relative z-10 p-3 sm:p-4">
+   287→          <div className="flex items-center justify-center gap-2 mb-3">
+   288→            <motion.div
+   289→              animate={{ scale: [1, 1.2, 1] }}
+   290→              transition={{ duration: 2, repeat: Infinity }}
+   291→            >
+   292→              <Skull className="w-4 h-4 text-red-400" />
+   293→            </motion.div>
+   294→            <div className="text-xs text-red-400 font-bold tracking-widest uppercase">Enemies</div>
+   295→            <div className="h-px flex-1 bg-gradient-to-r from-red-500/40 to-transparent" />
+   296→          </div>
+   297→          <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
+   298→            {battle.enemyTeam.map(hero => (
+   299→              <BattleHeroCard
+   300→                key={hero.id}
+   301→                hero={hero}
+   302→                isEnemy
+   303→                floatingDamage={floatingDamage}
+   304→                skillFlash={skillFlash}
+   305→                killEffects={killEffects}
+   306→                isActive={activeHero?.id === hero.id}
+   307→                isPlayerTurn={battle.currentTurn === 'enemy'}
+   308→              />
+   309→            ))}
+   310→          </div>
+   311→        </div>
+   312→
+   313→        {/* ─── VS Divider ────────────────────────────────── */}
+   314→        <div className="relative z-10 py-4 text-center">
+   315→          <div className="flex items-center justify-center gap-3 px-4">
+   316→            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-red-500/30 to-red-500/50" />
+   317→            <motion.div
+   318→              animate={{
+   319→                scale: [1, 1.15, 1],
+   320→                boxShadow: [
+   321→                  '0 0 15px rgba(239,68,68,0.1), 0 0 15px rgba(168,85,247,0.1)',
+   322→                  '0 0 25px rgba(239,68,68,0.3), 0 0 25px rgba(168,85,247,0.3)',
+   323→                  '0 0 15px rgba(239,68,68,0.1), 0 0 15px rgba(168,85,247,0.1)',
+   324→                ],
+   325→              }}
+   326→              transition={{ duration: 1.5, repeat: Infinity }}
+   327→              className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-red-900/40 via-purple-900/40 to-red-900/40 border border-white/10"
+   328→            >
+   329→              <motion.div
+   330→                animate={{ x: [-3, 3, -3], rotate: [-15, 15, -15] }}
+   331→                transition={{ duration: 1.5, repeat: Infinity }}
+   332→              >
+   333→                <Swords className="w-5 h-5 text-red-400 drop-shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+   334→              </motion.div>
+   335→              <span className="text-sm font-black text-white tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+   336→                VS
+   337→              </span>
+   338→              <motion.div
+   339→                animate={{ x: [3, -3, 3], rotate: [15, -15, 15] }}
+   340→                transition={{ duration: 1.5, repeat: Infinity }}
+   341→              >
+   342→                <Swords className="w-5 h-5 text-purple-400 scale-x-[-1] drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
+   343→              </motion.div>
+   344→            </motion.div>
+   345→            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-purple-500/30 to-purple-500/50" />
+   346→          </div>
+   347→        </div>
+   348→
+   349→        {/* ─── Player Team Section ───────────────────────── */}
+   350→        <div className="relative z-10 p-3 sm:p-4">
+   351→          <div className="flex items-center justify-center gap-2 mb-3">
+   352→            <div className="h-px flex-1 bg-gradient-to-l from-blue-500/40 to-transparent" />
+   353→            <div className="text-xs text-blue-400 font-bold tracking-widest uppercase">Your Team</div>
+   354→            <motion.div
+   355→              animate={{ scale: [1, 1.2, 1] }}
+   356→              transition={{ duration: 2, repeat: Infinity }}
+   357→            >
+   358→              <Shield className="w-4 h-4 text-blue-400" />
+   359→            </motion.div>
+   360→          </div>
+   361→          <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
+   362→            {battle.playerTeam.map(hero => (
+   363→              <BattleHeroCard
+   364→                key={hero.id}
+   365→                hero={hero}
+   366→                floatingDamage={floatingDamage}
+   367→                skillFlash={skillFlash}
+   368→                killEffects={killEffects}
+   369→                isActive={activeHero?.id === hero.id}
+   370→                isPlayerTurn={battle.currentTurn === 'player'}
+   371→              />
+   372→            ))}
+   373→          </div>
+   374→        </div>
+   375→      </div>
+   376→
+   377→      {/* ─── Battle Controls ──────────────────────────────── */}
+   378→      {!battle.result && (
+   379→        <div className="flex gap-2 mb-3">
+   380→          <motion.button
+   381→            whileHover={{ scale: 1.02 }}
+   382→            whileTap={{ scale: 0.95 }}
+   383→            onClick={executeBattleTurn}
+   384→            className="flex-1 bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:from-red-500 hover:via-red-600 hover:to-red-700 transition-all shadow-lg shadow-red-600/30 border border-red-500/30"
+   385→          >
+   386→            <motion.div
+   387→              animate={{ rotate: [0, 10, -10, 0] }}
+   388→              transition={{ duration: 1.5, repeat: Infinity }}
+   389→            >
+   390→              <Swords className="w-5 h-5" />
+   391→            </motion.div>
+   392→            Attack!
+   393→          </motion.button>
+   394→          <motion.button
+   395→            whileTap={{ scale: 0.9 }}
+   396→            onClick={toggleAutoPlay}
+   397→            className={`px-4 py-3 rounded-xl font-medium text-sm transition-all border ${
+   398→              battle.autoPlay
+   399→                ? 'bg-green-600/20 text-green-400 border-green-500/40 shadow-lg shadow-green-600/20'
+   400→                : 'bg-gray-800/50 text-gray-400 border-gray-700/50'
+   401→            }`}
+   402→            title="Auto-play"
+   403→          >
+   404→            <FastForward className={`w-5 h-5 ${battle.autoPlay ? 'text-green-400' : ''}`} />
+   405→          </motion.button>
+   406→          <motion.button
+   407→            whileTap={{ scale: 0.9 }}
+   408→            onClick={toggleBattleSpeed}
+   409→            className={`px-4 py-3 rounded-xl font-bold text-sm transition-all border ${
+   410→              battle.speed === 2
+   411→                ? 'bg-yellow-600/20 text-yellow-400 border-yellow-500/40 shadow-lg shadow-yellow-600/20'
+   412→                : 'bg-gray-800/50 text-gray-400 border-gray-700/50'
+   413→            }`}
+   414→            title="Battle Speed"
+   415→          >
+   416→            {battle.speed}x
+   417→          </motion.button>
+   418→        </div>
+   419→      )}
+   420→
+   421→      {/* ─── Battle Log ───────────────────────────────────── */}
+   422→      <div className="bg-black/60 border border-purple-900/30 rounded-xl overflow-hidden shadow-lg">
+   423→        <div className="bg-gradient-to-r from-purple-900/30 via-red-900/20 to-purple-900/30 px-4 py-2 border-b border-purple-900/30">
+   424→          <div className="text-xs text-purple-300 font-bold flex items-center gap-2 tracking-wider uppercase">
+   425→            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+   426→            Battle Log
+   427→          </div>
+   428→        </div>
+   429→        <div
+   430→          ref={logRef}
+   431→          className="p-3 max-h-40 overflow-y-auto game-scrollbar space-y-0.5"
+   432→        >
+   433→          {battle.log.length === 0 && (
+   434→            <div className="text-xs text-gray-600 italic text-center py-2">Battle begins...</div>
+   435→          )}
+   436→          {battle.log.map((entry, i) => (
+   437→            <motion.div
+   438→              key={`${i}-${entry}`}
+   439→              initial={{ opacity: 0, x: -15, scale: 0.95 }}
+   440→              animate={{ opacity: 1, x: 0, scale: 1 }}
+   441→              transition={{ duration: 0.2 }}
+   442→              className={`text-xs py-1 px-2 rounded ${
+   443→                entry.includes('VICTORY') ? 'text-amber-300 font-bold bg-amber-500/10' :
+   444→                entry.includes('DEFEAT') ? 'text-red-300 font-bold bg-red-500/10' :
+   445→                entry.includes('CRIT') ? 'text-yellow-300 font-semibold bg-yellow-500/5' :
+   446→                entry.includes('fallen') ? 'text-red-300 bg-red-500/5' :
+   447→                entry.includes('Equipment Drop') ? 'text-purple-300 font-bold bg-purple-500/10' :
+   448→                entry.includes('attacks') ? 'text-gray-300' :
+   449→                'text-gray-500'
+   450→              }`}
+   451→            >
+   452→              <span className="inline-flex items-center gap-1.5">
+   453→                {getLogIcon(entry)}
+   454→                {entry}
+   455→              </span>
+   456→            </motion.div>
+   457→          ))}
+   458→        </div>
+   459→      </div>
+   460→    </motion.div>
+   461→  );
+   462→}
+   463→
+   464→// ─── Battle Hero Card Component ──────────────────────────────────
+   465→function BattleHeroCard({
+   466→  hero,
+   467→  isEnemy,
+   468→  floatingDamage,
+   469→  skillFlash,
+   470→  killEffects,
+   471→  isActive,
+   472→  isPlayerTurn,
+   473→}: {
+   474→  hero: BattleHero;
+   475→  isEnemy?: boolean;
+   476→  floatingDamage: FloatingDamage[];
+   477→  skillFlash: SkillFlash[];
+   478→  killEffects: KillEffect[];
+   479→  isActive: boolean;
+   480→  isPlayerTurn: boolean;
+   481→}) {
+   482→  const rarity = RARITY_CONFIG[hero.rarity];
+   483→  const element = ELEMENT_CONFIG[hero.element];
+   484→  const faction = FACTION_CONFIG[hero.faction];
+   485→  const healthPercent = hero.isAlive ? (hero.currentHealth / hero.maxHealth) * 100 : 0;
+   486→  const damages = floatingDamage.filter(d => d.targetId === hero.id);
+   487→  const currentSkillFlash = skillFlash.find(f => f.heroId === hero.id);
+   488→  const killEffect = killEffects.find(k => k.heroId === hero.id);
+   489→
+   490→  const healthColor = healthPercent > 60
+   491→    ? 'from-green-500 to-emerald-600'
+   492→    : healthPercent > 30
+   493→    ? 'from-yellow-500 to-amber-600'
+   494→    : 'from-red-500 to-red-700';
+   495→
+   496→  const healthGlow = healthPercent > 60
+   497→    ? 'shadow-green-500/40'
+   498→    : healthPercent > 30
+   499→    ? 'shadow-yellow-500/40'
+   500→    : 'shadow-red-500/50';
+   501→
+   502→  return (
+   503→    <motion.div
+   504→      layout
+   505→      animate={
+   506→        !hero.isAlive
+   507→          ? { opacity: 0.35, scale: 0.85, filter: 'grayscale(1)' }
+   508→          : isActive
+   509→          ? { opacity: 1, scale: 1.05 }
+   510→          : { opacity: 1, scale: 1 }
+   511→      }
+   512→      transition={{ duration: 0.4 }}
+   513→      className={`relative w-20 sm:w-24 md:w-28 rounded-xl overflow-hidden border-2 transition-all ${
+   514→        isActive && hero.isAlive
+   515→          ? `border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.4),0_0_40px_rgba(245,158,11,0.15)] ${rarity.borderColor}`
+   516→          : `${rarity.borderColor} ${hero.rarity === 'legendary' || hero.rarity === 'mythic' ? rarity.glowColor : ''}`
+   517→      }`}
+   518→    >
+   519→      {/* ─── Active Turn Indicator ─────────────────────── */}
+   520→      {isActive && hero.isAlive && (
+   521→        <motion.div
+   522→          className="absolute -top-1 left-1/2 -translate-x-1/2 z-30 bg-amber-500 text-black text-[8px] font-black px-2 py-0.5 rounded-b shadow-lg shadow-amber-500/30 tracking-wider"
+   523→          initial={{ y: -10, opacity: 0 }}
+   524→          animate={{ y: 0, opacity: 1 }}
+   525→        >
+   526→          {isPlayerTurn ? '▶ YOUR TURN' : '◀ ENEMY'}
+   527→        </motion.div>
+   528→      )}
+   529→
+   530→      {/* ─── Skill Flash Overlay ───────────────────────── */}
+   531→      <AnimatePresence>
+   532→        {currentSkillFlash && hero.isAlive && (
+   533→          <motion.div
+   534→            initial={{ opacity: 0 }}
+   535→            animate={{ opacity: [0, 1, 0.8, 0] }}
+   536→            exit={{ opacity: 0 }}
+   537→            transition={{ duration: 0.7 }}
+   538→            className={`absolute inset-0 z-20 rounded-xl ${
+   539→              currentSkillFlash.isEnemy
+   540→                ? 'bg-gradient-to-t from-red-600/40 to-red-400/20'
+   541→                : 'bg-gradient-to-t from-blue-600/40 to-cyan-400/20'
+   542→            }`}
+   543→          >
+   544→            <motion.div
+   545→              initial={{ scale: 0.5, opacity: 0 }}
+   546→              animate={{ scale: [0.5, 1.3, 1], opacity: [0, 1, 0] }}
+   547→              transition={{ duration: 0.6 }}
+   548→              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[9px] font-black text-white whitespace-nowrap drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+   549→            >
+   550→              {currentSkillFlash.skillName}!
+   551→            </motion.div>
+   552→          </motion.div>
+   553→        )}
+   554→      </AnimatePresence>
+   555→
+   556→      {/* ─── Floating Damage Numbers ────────────────────── */}
+   557→      <AnimatePresence>
+   558→        {damages.map(d => (
+   559→          <motion.div
+   560→            key={d.id}
+   561→            initial={{ opacity: 1, y: 0, scale: 0.3, x: (Math.random() - 0.5) * 20 }}
+   562→            animate={{
+   563→              opacity: 0,
+   564→              y: -70,
+   565→              scale: d.crit ? 2.2 : 1.4,
+   566→              x: (Math.random() - 0.5) * 30,
+   567→            }}
+   568→            exit={{ opacity: 0 }}
+   569→            transition={{ duration: 1.4, ease: 'easeOut' }}
+   570→            className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 font-black pointer-events-none ${
+   571→              d.crit
+   572→                ? 'text-yellow-300 text-xl sm:text-2xl'
+   573→                : d.healed
+   574→                ? 'text-green-400 text-base'
+   575→                : 'text-red-400 text-lg'
+   576→            }`}
+   577→            style={{
+   578→              textShadow: d.crit
+   579→                ? '0 0 12px rgba(253,224,71,0.8), 0 0 24px rgba(253,224,71,0.4), 0 2px 4px black'
+   580→                : '0 0 8px currentColor, 0 2px 4px black',
+   581→            }}
+   582→          >
+   583→            {d.crit && '💥 '}
+   584→            {d.healed ? '+' : '-'}
+   585→            {d.damage.toLocaleString()}
+   586→          </motion.div>
+   587→        ))}
+   588→      </AnimatePresence>
+   589→
+   590→      {/* ─── Kill Effect ────────────────────────────────── */}
+   591→      <AnimatePresence>
+   592→        {killEffect && !hero.isAlive && (
+   593→          <motion.div
+   594→            initial={{ opacity: 1, scale: 1 }}
+   595→            animate={{ opacity: 0, scale: 2.5 }}
+   596→            exit={{ opacity: 0 }}
+   597→            transition={{ duration: 1.5 }}
+   598→            className="absolute inset-0 z-25 flex items-center justify-center pointer-events-none"
+   599→          >
+   600→            <span className="text-4xl" style={{ filter: 'drop-shadow(0 0 10px rgba(239,68,68,0.8))' }}>
+   601→              💀
+   602→            </span>
+   603→          </motion.div>
+   604→        )}
+   605→      </AnimatePresence>
+   606→
+   607→      {/* ─── Hero Portrait Area ─────────────────────────── */}
+   608→      <div className={`relative h-20 sm:h-24 md:h-28 bg-gradient-to-b ${getHeroGradient(hero.rarity)} flex items-center justify-center overflow-hidden`}>
+   609→        {/* Animated idle bob */}
+   610→        <motion.div
+   611→          animate={hero.isAlive ? { y: [0, -3, 0] } : {}}
+   612→          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+   613→          className={`text-4xl sm:text-5xl select-none ${!hero.isAlive ? 'grayscale opacity-40' : ''}`}
+   614→          style={{ filter: hero.isAlive ? `drop-shadow(0 0 8px ${getElementGlow(hero.element)})` : 'none' }}
+   615→        >
+   616→          {faction.icon}
+   617→        </motion.div>
+   618→
+   619→        {/* Element badge */}
+   620→        <div className="absolute top-1.5 right-1.5 text-sm backdrop-blur-sm bg-black/40 rounded-md px-1 py-0.5 border border-white/10">
+   621→          {element.icon}
+   622→        </div>
+   623→
+   624→        {/* Rarity stars */}
+   625→        <div className="absolute top-1.5 left-1.5 flex gap-0.5">
+   626→          {Array.from({ length: Math.min(hero.stars, 5) }, (_, i) => (
+   627→            <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.6)]" />
+   628→          ))}
+   629→        </div>
+   630→
+   631→        {/* Level badge */}
+   632→        <div className="absolute bottom-1 right-1.5 text-[8px] bg-black/50 text-gray-300 font-bold rounded px-1 border border-white/5">
+   633→          {hero.level}
+   634→        </div>
+   635→
+   636→        {/* Death overlay */}
+   637→        <AnimatePresence>
+   638→          {!hero.isAlive && (
+   639→            <motion.div
+   640→              initial={{ opacity: 0 }}
+   641→              animate={{ opacity: 1 }}
+   642→              exit={{ opacity: 0 }}
+   643→              className="absolute inset-0 bg-black/70 flex items-center justify-center"
+   644→            >
+   645→              <motion.div
+   646→                animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+   647→                transition={{ duration: 2, repeat: Infinity }}
+   648→              >
+   649→                <Skull className="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+   650→              </motion.div>
+   651→            </motion.div>
+   652→          )}
+   653→        </AnimatePresence>
+   654→
+   655→        {/* Active hero glow pulse */}
+   656→        {isActive && hero.isAlive && (
+   657→          <motion.div
+   658→            className="absolute inset-0 border-2 border-amber-400/50 rounded-t-xl"
+   659→            animate={{ opacity: [0.3, 0.8, 0.3] }}
+   660→            transition={{ duration: 1, repeat: Infinity }}
+   661→          />
+   662→        )}
+   663→      </div>
+   664→
+   665→      {/* ─── Hero Info Section ──────────────────────────── */}
+   666→      <div className="p-2 bg-gradient-to-b from-[#0a0a1a] to-[#050510]">
+   667→        {/* Name */}
+   668→        <div className="text-[10px] sm:text-xs font-bold text-white truncate mb-0.5">
+   669→          {hero.name.split(' ')[0]}
+   670→        </div>
+   671→
+   672→        {/* Health Bar */}
+   673→        <div className="relative w-full h-3 sm:h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700/50">
+   674→          <motion.div
+   675→            animate={{ width: `${healthPercent}%` }}
+   676→            transition={{ duration: 0.5, ease: 'easeOut' }}
+   677→            className={`h-full rounded-full bg-gradient-to-r ${healthColor} shadow-sm ${healthGlow} relative`}
+   678→          >
+   679→            {/* Health bar shimmer */}
+   680→            <motion.div
+   681→              animate={{ x: ['-100%', '200%'] }}
+   682→              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+   683→              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+   684→            />
+   685→          </motion.div>
+   686→
+   687→          {/* Low health pulse */}
+   688→          {healthPercent <= 30 && healthPercent > 0 && (
+   689→            <motion.div
+   690→              animate={{ opacity: [0, 0.4, 0] }}
+   691→              transition={{ duration: 0.8, repeat: Infinity }}
+   692→              className="absolute inset-0 bg-red-500/30 rounded-full"
+   693→            />
+   694→          )}
+   695→        </div>
+   696→
+   697→        {/* HP Numbers */}
+   698→        <div className="flex items-center justify-between mt-0.5">
+   699→          <div className="flex items-center gap-0.5">
+   700→            <Heart className={`w-2.5 h-2.5 ${healthPercent > 60 ? 'text-green-400' : healthPercent > 30 ? 'text-yellow-400' : 'text-red-400'}`} />
+   701→          </div>
+   702→          <span className={`text-[8px] sm:text-[9px] font-bold ${
+   703→            !hero.isAlive ? 'text-red-500' :
+   704→            healthPercent <= 30 ? 'text-red-400 animate-pulse' :
+   705→            healthPercent <= 60 ? 'text-yellow-400' :
+   706→            'text-green-400'
+   707→          }`}>
+   708→            {hero.isAlive
+   709→              ? `${formatHP(hero.currentHealth)} / ${formatHP(hero.maxHealth)}`
+   710→              : 'KO'}
+   711→          </span>
+   712→        </div>
+   713→
+   714→        {/* Turn Meter Bar */}
+   715→        {hero.isAlive && (
+   716→          <div className="mt-1 relative w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+   717→            <motion.div
+   718→              animate={{ width: `${hero.turnMeter}%` }}
+   719→              transition={{ duration: 0.3 }}
+   720→              className={`h-full rounded-full ${hero.turnMeter >= 100 ? 'bg-amber-400 shadow-sm shadow-amber-400/50' : 'bg-purple-500/60'}`}
+   721→            />
+   722→          </div>
+   723→        )}
+   724→      </div>
+   725→    </motion.div>
+   726→  );
+   727→}
+   728→
+   729→// ─── Battle Result Overlay ───────────────────────────────────────
+   730→function BattleResultOverlay({
+   731→  result,
+   732→  rewards,
+   733→  onContinue,
+   734→}: {
+   735→  result: 'victory' | 'defeat';
+   736→  rewards: { gold: number; experience: number; gems: number } | null;
+   737→  onContinue: () => void;
+   738→}) {
+   739→  const isVictory = result === 'victory';
+   740→
+   741→  return (
+   742→    <motion.div
+   743→      initial={{ opacity: 0 }}
+   744→      animate={{ opacity: 1 }}
+   745→      exit={{ opacity: 0 }}
+   746→      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+   747→    >
+   748→      <motion.div
+   749→        initial={{ scale: 0.3, opacity: 0, rotate: isVictory ? 0 : -5 }}
+   750→        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+   751→        exit={{ scale: 0.3, opacity: 0 }}
+   752→        transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+   753→        className={`relative max-w-sm w-full mx-4 rounded-2xl p-6 text-center overflow-hidden ${
+   754→          isVictory
+   755→            ? 'bg-gradient-to-b from-amber-900/80 via-amber-950/90 to-black/95 border-2 border-amber-500/50 shadow-[0_0_60px_rgba(245,158,11,0.3)]'
+   756→            : 'bg-gradient-to-b from-red-900/80 via-red-950/90 to-black/95 border-2 border-red-500/50 shadow-[0_0_60px_rgba(239,68,68,0.3)]'
+   757→        }`}
+   758→      >
+   759→        {/* Background radial glow */}
+   760→        <motion.div
+   761→          animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.2, 0.1] }}
+   762→          transition={{ duration: 3, repeat: Infinity }}
+   763→          className={`absolute inset-0 rounded-full blur-3xl ${
+   764→            isVictory ? 'bg-amber-500/20' : 'bg-red-500/20'
+   765→          }`}
+   766→        />
+   767→
+   768→        {/* Victory sparkles */}
+   769→        {isVictory && (
+   770→          <>
+   771→            {[...Array(8)].map((_, i) => (
+   772→              <motion.div
+   773→                key={i}
+   774→                className="absolute text-xl"
+   775→                initial={{ x: 0, y: 0, opacity: 0 }}
+   776→                animate={{
+   777→                  x: Math.cos((i * 45) * Math.PI / 180) * 120,
+   778→                  y: Math.sin((i * 45) * Math.PI / 180) * 120,
+   779→                  opacity: [0, 1, 0],
+   780→                  scale: [0, 1.5, 0],
+   781→                }}
+   782→                transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.15 }}
+   783→                style={{ top: '50%', left: '50%' }}
+   784→              >
+   785→                ✨
+   786→              </motion.div>
+   787→            ))}
+   788→            {/* Rotating halo */}
+   789→            <motion.div
+   790→              animate={{ rotate: 360 }}
+   791→              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+   792→              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border-2 border-amber-400/20"
+   793→            />
+   794→          </>
+   795→        )}
+   796→
+   797→        {/* Defeat fire effect */}
+   798→        {!isVictory && (
+   799→          <>
+   800→            {[...Array(6)].map((_, i) => (
+   801→              <motion.div
+   802→                key={i}
+   803→                className="absolute text-lg"
+   804→                initial={{ y: 50, opacity: 0 }}
+   805→                animate={{
+   806→                  y: -80,
+   807→                  opacity: [0, 1, 0],
+   808→                  scale: [0.5, 1.2, 0],
+   809→                }}
+   810→                transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+   811→                style={{ left: `${15 + i * 15}%`, bottom: '10%' }}
+   812→              >
+   813→                🔥
+   814→              </motion.div>
+   815→            ))}
+   816→          </>
+   817→        )}
+   818→
+   819→        <div className="relative z-10">
+   820→          {/* Icon */}
+   821→          <motion.div
+   822→            initial={{ scale: 0, rotate: -180 }}
+   823→            animate={{ scale: [0, 1.5, 1], rotate: 0 }}
+   824→            transition={{ duration: 0.6, times: [0, 0.6, 1] }}
+   825→            className="text-6xl mb-3"
+   826→          >
+   827→            {isVictory ? '🏆' : '💀'}
+   828→          </motion.div>
+   829→
+   830→          {/* Title */}
+   831→          <motion.h2
+   832→            initial={{ opacity: 0, y: 20 }}
+   833→            animate={{ opacity: 1, y: 0 }}
+   834→            transition={{ delay: 0.2 }}
+   835→            className={`text-3xl font-black mb-2 ${
+   836→              isVictory
+   837→                ? 'gold-text drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+   838→                : 'text-red-400 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]'
+   839→            }`}
+   840→          >
+   841→            {isVictory ? 'VICTORY!' : 'DEFEAT'}
+   842→          </motion.h2>
+   843→
+   844→          {/* Subtitle */}
+   845→          <motion.p
+   846→            initial={{ opacity: 0 }}
+   847→            animate={{ opacity: 1 }}
+   848→            transition={{ delay: 0.4 }}
+   849→            className={`text-sm mb-4 ${isVictory ? 'text-amber-300/80' : 'text-red-300/80'}`}
+   850→          >
+   851→            {isVictory ? 'Your enemies have been vanquished!' : 'Your forces have been overwhelmed...'}
+   852→          </motion.p>
+   853→
+   854→          {/* Rewards */}
+   855→          {rewards && isVictory && (
+   856→            <motion.div
+   857→              initial={{ opacity: 0, y: 10 }}
+   858→              animate={{ opacity: 1, y: 0 }}
+   859→              transition={{ delay: 0.5 }}
+   860→              className="flex justify-center gap-4 mb-5"
+   861→            >
+   862→              <RewardItem icon="🪙" value={`+${rewards.gold.toLocaleString()}`} color="text-amber-300" />
+   863→              <RewardItem icon="⭐" value={`+${rewards.experience.toLocaleString()} XP`} color="text-green-300" />
+   864→              <RewardItem icon="💎" value={`+${rewards.gems}`} color="text-cyan-300" />
+   865→            </motion.div>
+   866→          )}
+   867→
+   868→          {/* Continue Button */}
+   869→          <motion.button
+   870→            initial={{ opacity: 0, y: 10 }}
+   871→            animate={{ opacity: 1, y: 0 }}
+   872→            transition={{ delay: 0.7 }}
+   873→            whileHover={{ scale: 1.05 }}
+   874→            whileTap={{ scale: 0.95 }}
+   875→            onClick={onContinue}
+   876→            className={`px-10 py-3 rounded-xl font-bold text-lg transition-all shadow-lg ${
+   877→              isVictory
+   878→                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500 shadow-amber-600/30'
+   879→                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-red-600/30'
+   880→            }`}
+   881→          >
+   882→            {isVictory ? 'Continue' : 'Retreat'}
+   883→          </motion.button>
+   884→        </div>
+   885→      </motion.div>
+   886→    </motion.div>
+   887→  );
+   888→}
+   889→
+   890→// ─── Reward Item Sub-component ───────────────────────────────────
+   891→function RewardItem({ icon, value, color }: { icon: string; value: string; color: string }) {
+   892→  return (
+   893→    <motion.div
+   894→      initial={{ scale: 0 }}
+   895→      animate={{ scale: 1 }}
+   896→      className="flex flex-col items-center gap-0.5 bg-black/30 rounded-lg px-3 py-2 border border-white/5"
+   897→    >
+   898→      <span className="text-xl">{icon}</span>
+   899→      <span className={`text-xs font-bold ${color}`}>{value}</span>
+   900→    </motion.div>
+   901→  );
+   902→}
+   903→
+   904→// ─── Helper: Get log icon ────────────────────────────────────────
+   905→function getLogIcon(entry: string): React.ReactNode {
+   906→  if (entry.includes('VICTORY')) return <Trophy className="w-3 h-3 text-amber-400 inline shrink-0" />;
+   907→  if (entry.includes('DEFEAT')) return <Skull className="w-3 h-3 text-red-400 inline shrink-0" />;
+   908→  if (entry.includes('CRIT')) return <Zap className="w-3 h-3 text-yellow-400 inline shrink-0" />;
+   909→  if (entry.includes('fallen')) return <Skull className="w-3 h-3 text-red-400 inline shrink-0" />;
+   910→  if (entry.includes('attacks')) return <Swords className="w-3 h-3 text-gray-500 inline shrink-0" />;
+   911→  if (entry.includes('Equipment Drop')) return <Sparkles className="w-3 h-3 text-purple-400 inline shrink-0" />;
+   912→  return <ChevronRight className="w-3 h-3 text-gray-600 inline shrink-0" />;
+   913→}
+   914→
+   915→// ─── Helper: Get hero gradient by rarity ─────────────────────────
+   916→function getHeroGradient(rarity: string): string {
+   917→  const gradients: Record<string, string> = {
+   918→    common: 'from-gray-700 via-gray-800 to-gray-900',
+   919→    uncommon: 'from-green-800 via-green-900 to-green-950',
+   920→    rare: 'from-blue-800 via-blue-900 to-blue-950',
+   921→    epic: 'from-purple-800 via-purple-900 to-purple-950',
+   922→    legendary: 'from-amber-700 via-amber-800 to-amber-950',
+   923→    mythic: 'from-red-700 via-red-800 to-red-950',
+   924→  };
+   925→  return gradients[rarity] || 'from-gray-700 via-gray-800 to-gray-900';
+   926→}
+   927→
+   928→// ─── Helper: Get element glow color ─────────────────────────────
+   929→function getElementGlow(element: string): string {
+   930→  const glows: Record<string, string> = {
+   931→    fire: 'rgba(239,68,68,0.6)',
+   932→    water: 'rgba(34,211,238,0.6)',
+   933→    earth: 'rgba(245,158,11,0.6)',
+   934→    dark: 'rgba(168,85,247,0.6)',
+   935→    light: 'rgba(253,224,71,0.6)',
+   936→    void: 'rgba(236,72,153,0.6)',
+   937→  };
+   938→  return glows[element] || 'rgba(168,85,247,0.4)';
+   939→}
+   940→
+   941→// ─── Helper: Format HP values ────────────────────────────────────
+   942→function formatHP(hp: number): string {
+   943→  if (hp >= 10000) return `${(hp / 1000).toFixed(1)}K`;
+   944→  if (hp >= 1000) return `${(hp / 1000).toFixed(2)}K`;
+   945→  return hp.toString();
+   946→}
+   947→

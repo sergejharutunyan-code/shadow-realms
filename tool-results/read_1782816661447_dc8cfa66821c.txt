@@ -1,0 +1,948 @@
+    80→    80→
+    81→    81→.dark {
+    82→    82→  --background: oklch(0.08 0.02 280);
+    83→    83→  --foreground: oklch(0.95 0.02 60);
+    84→    84→  --card: oklch(0.12 0.02 280);
+    85→    85→  --card-foreground: oklch(0.95 0.02 60);
+    86→    86→  --popover: oklch(0.12 0.02 280);
+    87→    87→  --popover-foreground: oklch(0.95 0.02 60);
+    88→    88→  --primary: oklch(0.75 0.18 50);
+    89→    89→  --primary-foreground: oklch(0.1 0.05 280);
+    90→    90→  --secondary: oklch(0.18 0.03 280);
+    91→    91→  --secondary-foreground: oklch(0.95 0.02 60);
+    92→    92→  --muted: oklch(0.18 0.02 280);
+    93→    93→  --muted-foreground: oklch(0.6 0.02 280);
+    94→    94→  --accent: oklch(0.22 0.04 280);
+    95→    95→  --accent-foreground: oklch(0.95 0.02 60);
+    96→    96→  --destructive: oklch(0.704 0.191 22.216);
+    97→    97→  --border: oklch(0.25 0.03 280);
+    98→    98→  --input: oklch(0.2 0.03 280);
+    99→    99→  --ring: oklch(0.75 0.18 50);
+   100→   100→  --chart-1: oklch(0.488 0.243 264.376);
+   101→   101→  --chart-2: oklch(0.696 0.17 162.48);
+   102→   102→  --chart-3: oklch(0.769 0.188 70.08);
+   103→   103→  --chart-4: oklch(0.627 0.265 303.9);
+   104→   104→  --chart-5: oklch(0.645 0.246 16.439);
+   105→   105→  --sidebar: oklch(0.1 0.02 280);
+   106→   106→  --sidebar-foreground: oklch(0.95 0.02 60);
+   107→   107→  --sidebar-primary: oklch(0.488 0.243 264.376);
+   108→   108→  --sidebar-primary-foreground: oklch(0.95 0.02 60);
+   109→   109→  --sidebar-accent: oklch(0.18 0.03 280);
+   110→   110→  --sidebar-accent-foreground: oklch(0.95 0.02 60);
+   111→   111→  --sidebar-border: oklch(0.25 0.03 280);
+   112→   112→  --sidebar-ring: oklch(0.75 0.18 50);
+   113→   113→}
+   114→   114→
+   115→   115→@layer base {
+   116→   116→  * {
+   117→   117→    @apply border-border outline-ring/50;
+   118→   118→  }
+   119→   119→  body {
+   120→   120→    @apply bg-background text-foreground;
+   121→   121→  }
+   122→   122→}
+   123→   123→
+   124→   124→/* Game-specific styles */
+   125→   125→@keyframes float {
+   126→   126→  0%, 100% { transform: translateY(0); }
+   127→   127→  50% { transform: translateY(-6px); }
+   128→   128→}
+   129→   129→
+   130→   130→@keyframes pulse-glow {
+   131→   131→  0%, 100% { filter: brightness(1); }
+   132→   132→  50% { filter: brightness(1.3); }
+   133→   133→}
+   134→   134→
+   135→   135→@keyframes shimmer {
+   136→   136→  0% { background-position: -200% 0; }
+   137→   137→  100% { background-position: 200% 0; }
+   138→   138→}
+   139→   139→
+   140→   140→@keyframes shake {
+   141→   141→  0%, 100% { transform: translateX(0); }
+   142→   142→  25% { transform: translateX(-4px); }
+   143→   143→  75% { transform: translateX(4px); }
+   144→   144→}
+   145→   145→
+   146→   146→@keyframes slideUp {
+   147→   147→  from { transform: translateY(20px); opacity: 0; }
+   148→   148→  to { transform: translateY(0); opacity: 1; }
+   149→   149→}
+   150→   150→
+   151→   151→@keyframes summon-burst {
+   152→   152→  0% { transform: scale(0.3); opacity: 0; filter: brightness(3); }
+   153→   153→  50% { transform: scale(1.1); opacity: 1; filter: brightness(1.5); }
+   154→   154→  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+   155→   155→}
+   156→   156→
+   157→   157→@keyframes damage-flash {
+   158→   158→  0% { filter: brightness(1); }
+   159→   159→  50% { filter: brightness(3) hue-rotate(20deg); }
+   160→   160→  100% { filter: brightness(1); }
+   161→   161→}
+   162→   162→
+   163→   163→@keyframes particle-rise {
+   164→   164→  0% { transform: translateY(0) scale(1); opacity: 1; }
+   165→   165→  100% { transform: translateY(-60px) scale(0); opacity: 0; }
+   166→   166→}
+   167→   167→
+   168→   168→@keyframes rotate-slow {
+   169→   169→  from { transform: rotate(0deg); }
+   170→   170→  to { transform: rotate(360deg); }
+   171→   171→}
+   172→   172→
+   173→   173→.animate-float { animation: float 3s ease-in-out infinite; }
+   174→   174→.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+   175→   175→.animate-shimmer {
+   176→   176→  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+   177→   177→  background-size: 200% 100%;
+   178→   178→  animation: shimmer 2s infinite;
+   179→   179→}
+   180→   180→.animate-shake { animation: shake 0.3s ease-in-out; }
+   181→   181→.animate-slide-up { animation: slideUp 0.4s ease-out; }
+   182→   182→.animate-summon-burst { animation: summon-burst 0.6s ease-out; }
+   183→   183→.animate-damage-flash { animation: damage-flash 0.3s ease-out; }
+   184→   184→.animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
+   185→   185→
+   186→   186→/* Scrollbar styling */
+   187→   187→.game-scrollbar::-webkit-scrollbar {
+   188→   188→  width: 6px;
+   189→   189→}
+   190→   190→.game-scrollbar::-webkit-scrollbar-track {
+   191→   191→  background: rgba(0,0,0,0.3);
+   192→   192→  border-radius: 3px;
+   193→   193→}
+   194→   194→.game-scrollbar::-webkit-scrollbar-thumb {
+   195→   195→  background: rgba(255,200,50,0.3);
+   196→   196→  border-radius: 3px;
+   197→   197→}
+   198→   198→.game-scrollbar::-webkit-scrollbar-thumb:hover {
+   199→   199→  background: rgba(255,200,50,0.5);
+   200→   200→}
+   201→   201→
+   202→   202→/* Hero card rarity borders */
+   203→   203→.rarity-common { border-image: linear-gradient(180deg, #6b7280, #4b5563) 1; }
+   204→   204→.rarity-uncommon { border-image: linear-gradient(180deg, #22c55e, #15803d) 1; }
+   205→   205→.rarity-rare { border-image: linear-gradient(180deg, #3b82f6, #1d4ed8) 1; }
+   206→   206→.rarity-epic { border-image: linear-gradient(180deg, #a855f7, #7c3aed) 1; }
+   207→   207→.rarity-legendary { border-image: linear-gradient(180deg, #eab308, #b45309) 1; }
+   208→   208→.rarity-mythic { border-image: linear-gradient(180deg, #ef4444, #dc2626) 1; }
+   209→   209→
+   210→   210→/* Dark fantasy background */
+   211→   211→.dark-fantasy-bg {
+   212→   212→  background: 
+   213→   213→    radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+   214→   214→    radial-gradient(ellipse at 80% 20%, rgba(220, 38, 38, 0.06) 0%, transparent 50%),
+   215→   215→    radial-gradient(ellipse at 50% 80%, rgba(234, 179, 8, 0.05) 0%, transparent 50%),
+   216→   216→    linear-gradient(180deg, #0a0a1a 0%, #0f0f23 50%, #0a0a1a 100%);
+   217→   217→}
+   218→   218→
+   219→   219→/* Gold gradient text */
+   220→   220→.gold-text {
+   221→   221→  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
+   222→   222→  -webkit-background-clip: text;
+   223→   223→  -webkit-text-fill-color: transparent;
+   224→   224→  background-clip: text;
+   225→   225→}
+   226→   226→
+   227→   227→/* Fire gradient text */
+   228→   228→.fire-text {
+   229→   229→  background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700);
+   230→   230→  -webkit-background-clip: text;
+   231→   231→  -webkit-text-fill-color: transparent;
+   232→   232→  background-clip: text;
+   233→   233→}
+   234→   234→
+   235→   235→/* Gem gradient text */
+   236→   236→.gem-text {
+   237→   237→  background: linear-gradient(135deg, #00bfff, #9370db, #ff69b4);
+   238→   238→  -webkit-background-clip: text;
+   239→   239→  -webkit-text-fill-color: transparent;
+   240→   240→  background-clip: text;
+   241→   241→}
+   242→   242→
+   243→   243→/* Additional animations */
+   244→   244→@keyframes glow-pulse {
+   245→   245→  0%, 100% { box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+   246→   246→  50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+   247→   247→}
+   248→   248→
+   249→   249→@keyframes border-flow {
+   250→   250→  0% { border-image-source: linear-gradient(0deg, #ffd700, #ff6b00); }
+   251→   251→  50% { border-image-source: linear-gradient(180deg, #ff6b00, #ffd700); }
+   252→   252→  100% { border-image-source: linear-gradient(360deg, #ffd700, #ff6b00); }
+   253→   253→}
+   254→   254→
+   255→   255→@keyframes text-glow {
+   256→   256→  0%, 100% { text-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+   257→   257→  50% { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+   258→   258→}
+   259→   259→
+   260→   260→@keyframes slide-in-right {
+   261→   261→  from { transform: translateX(100%); opacity: 0; }
+   262→   262→  to { transform: translateX(0); opacity: 1; }
+   263→   263→}
+   264→   264→
+   265→   265→@keyframes scale-in {
+   266→   266→  from { transform: scale(0); opacity: 0; }
+   267→   267→  to { transform: scale(1); opacity: 1; }
+   268→   268→}
+   269→   269→
+   270→   270→@keyframes fade-in-up {
+   271→   271→  from { transform: translateY(20px); opacity: 0; }
+   272→   272→  to { transform: translateY(0); opacity: 1; }
+   273→   273→}
+   274→   274→
+   275→   275→@keyframes sparkle {
+   276→   276→  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+   277→   277→  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+   278→   278→}
+   279→   279→
+   280→   280→@keyframes health-drain {
+   281→   281→  0% { filter: brightness(1) hue-rotate(0deg); }
+   282→   282→  50% { filter: brightness(2) hue-rotate(-30deg); }
+   283→   283→  100% { filter: brightness(1) hue-rotate(0deg); }
+   284→   284→}
+   285→   285→
+   286→   286→.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+   287→   287→.animate-text-glow { animation: text-glow 2s ease-in-out infinite; }
+   288→   288→.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+   289→   289→.animate-scale-in { animation: scale-in 0.3s ease-out; }
+   290→   290→.animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
+   291→   291→.animate-sparkle { animation: sparkle 1.5s ease-in-out infinite; }
+   292→   292→.animate-health-drain { animation: health-drain 0.5s ease-out; }
+   293→   293→
+   294→   294→/* Card hover effects */
+   295→   295→.card-hover {
+   296→   296→  transition: all 0.2s ease;
+   297→   297→}
+   298→   298→.card-hover:hover {
+   299→   299→  transform: translateY(-2px);
+   300→   300→  filter: brightness(1.1);
+   301→   301→}
+   302→   302→
+   303→   303→/* Glow effects by rarity */
+   304→   304→.glow-common { box-shadow: 0 0 5px rgba(107, 114, 128, 0.3); }
+   305→   305→.glow-uncommon { box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+   306→   306→.glow-rare { box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+   307→   307→.glow-epic { box-shadow: 0 0 12px rgba(168, 85, 247, 0.5); }
+   308→   308→.glow-legendary { box-shadow: 0 0 15px rgba(234, 179, 8, 0.6); }
+   309→   309→.glow-mythic { box-shadow: 0 0 20px rgba(239, 68, 68, 0.7); }
+   310→   310→
+   311→   311→/* Premium button effect */
+   312→   312→.premium-button {
+   313→   313→  position: relative;
+   314→   314→  overflow: hidden;
+   315→   315→}
+   316→   316→.premium-button::before {
+   317→   317→  content: '';
+   318→   318→  position: absolute;
+   319→   319→  top: -50%;
+   320→   320→  left: -50%;
+   321→   321→  width: 200%;
+   322→   322→  height: 200%;
+   323→   323→  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+   324→   324→  animation: shimmer 3s infinite;
+   325→   325→  pointer-events: none;
+   326→   326→}
+   327→   327→
+   328→   328→/* Glow border */
+   329→   329→.glow-border {
+   330→   330→  position: relative;
+   331→   331→}
+   332→   332→.glow-border::after {
+   333→   333→  content: '';
+   334→   334→  position: absolute;
+   335→   335→  inset: -2px;
+   336→   336→  border-radius: inherit;
+   337→   337→  padding: 2px;
+   338→   338→  background: linear-gradient(135deg, #ffd700, #ff6b00, #ffd700);
+   339→   339→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   340→   340→  -webkit-mask-composite: xor;
+   341→   341→  mask-composite: exclude;
+   342→   342→  opacity: 0.6;
+   343→   343→  pointer-events: none;
+   344→   344→}
+   345→   345→
+   346→   346→/* Particle background */
+   347→   347→.particles-bg {
+   348→   348→  position: relative;
+   349→   349→  overflow: hidden;
+   350→   350→}
+   351→   351→.particles-bg::before {
+   352→   352→  content: '';
+   353→   353→  position: absolute;
+   354→   354→  inset: 0;
+   355→   355→  background-image: 
+   356→   356→    radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 2%),
+   357→   357→    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 2%),
+   358→   358→    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 2%);
+   359→   359→  background-size: 100px 100px, 150px 150px, 200px 200px;
+   360→   360→  pointer-events: none;
+   361→   361→}
+   362→   362→
+   363→   363→/* ============ NEW: Enhanced Styling v3 ============ */
+   364→   364→
+   365→   365→/* Animated ember particles rising */
+   366→   366→@keyframes ember-rise {
+   367→   367→  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+   368→   368→  10% { opacity: 0.8; }
+   369→   369→  90% { opacity: 0.6; }
+   370→   370→  100% { transform: translateY(-100vh) translateX(20px) scale(0.3); opacity: 0; }
+   371→   371→}
+   372→   372→.ember-particle {
+   373→   373→  position: fixed;
+   374→   374→  bottom: -10px;
+   375→   375→  width: 3px;
+   376→   376→  height: 3px;
+   377→   377→  background: radial-gradient(circle, #ffaa00, #ff4500);
+   378→   378→  border-radius: 50%;
+   379→   379→  pointer-events: none;
+   380→   380→  animation: ember-rise linear infinite;
+   381→   381→  box-shadow: 0 0 6px #ff6b00, 0 0 12px rgba(255, 107, 0, 0.4);
+   382→   382→  z-index: 1;
+   383→   383→}
+   384→   384→
+   385→   385→/* Decorative corner flourish */
+   386→   386→.corner-flourish {
+   387→   387→  position: absolute;
+   388→   388→  width: 24px;
+   389→   389→  height: 24px;
+   390→   390→  pointer-events: none;
+   391→   391→  opacity: 0.5;
+   392→   392→}
+   393→   393→.corner-flourish::before,
+   394→   394→.corner-flourish::after {
+   395→   395→  content: '';
+   396→   396→  position: absolute;
+   397→   397→  background: linear-gradient(135deg, #ffd700, transparent);
+   398→   398→}
+   399→   399→.corner-flourish::before { top: 0; left: 0; width: 100%; height: 2px; }
+   400→   400→.corner-flourish::after { top: 0; left: 0; width: 2px; height: 100%; }
+   401→   401→.corner-flourish.tl { top: 6px; left: 6px; }
+   402→   402→.corner-flourish.tr { top: 6px; right: 6px; transform: rotate(90deg); }
+   403→   403→.corner-flourish.bl { bottom: 6px; left: 6px; transform: rotate(-90deg); }
+   404→   404→.corner-flourish.br { bottom: 6px; right: 6px; transform: rotate(180deg); }
+   405→   405→
+   406→   406→/* Ornate card frame with gradient border */
+   407→   407→.ornate-card {
+   408→   408→  position: relative;
+   409→   409→  background: linear-gradient(135deg, rgba(20, 10, 40, 0.95) 0%, rgba(10, 5, 25, 0.95) 100%);
+   410→   410→  border-radius: 12px;
+   411→   411→  overflow: hidden;
+   412→   412→}
+   413→   413→.ornate-card::before {
+   414→   414→  content: '';
+   415→   415→  position: absolute;
+   416→   416→  inset: 0;
+   417→   417→  padding: 1px;
+   418→   418→  border-radius: inherit;
+   419→   419→  background: linear-gradient(135deg, rgba(255, 215, 0, 0.5) 0%, rgba(168, 85, 247, 0.3) 50%, rgba(255, 215, 0, 0.5) 100%);
+   420→   420→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   421→   421→  -webkit-mask-composite: xor;
+   422→   422→  mask-composite: exclude;
+   423→   423→  pointer-events: none;
+   424→   424→  z-index: 1;
+   425→   425→}
+   426→   426→
+   427→   427→/* Premium gold button */
+   428→   428→.btn-gold {
+   429→   429→  background: linear-gradient(135deg, #ffd700 0%, #ff9500 50%, #ffd700 100%);
+   430→   430→  background-size: 200% 100%;
+   431→   431→  color: #1a0a2e;
+   432→   432→  font-weight: 700;
+   433→   433→  border: 1px solid #ffaa00;
+   434→   434→  box-shadow: 0 0 12px rgba(255, 170, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+   435→   435→  transition: all 0.2s ease;
+   436→   436→}
+   437→   437→.btn-gold:hover {
+   438→   438→  background-position: 100% 0;
+   439→   439→  box-shadow: 0 0 20px rgba(255, 170, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+   440→   440→  transform: translateY(-1px);
+   441→   441→}
+   442→   442→.btn-gold:active { transform: translateY(0); }
+   443→   443→
+   444→   444→/* Premium red button (attack) */
+   445→   445→.btn-attack {
+   446→   446→  background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #dc2626 100%);
+   447→   447→  background-size: 200% 100%;
+   448→   448→  color: #fff;
+   449→   449→  font-weight: 700;
+   450→   450→  border: 1px solid #ef4444;
+   451→   451→  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+   452→   452→  transition: all 0.2s ease;
+   453→   453→}
+   454→   454→.btn-attack:hover {
+   455→   455→  background-position: 100% 0;
+   456→   456→  box-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+   457→   457→  transform: translateY(-1px);
+   458→   458→}
+   459→   459→
+   460→   460→/* Premium purple button */
+   461→   461→.btn-arcane {
+   462→   462→  background: linear-gradient(135deg, #a855f7 0%, #6b21a8 50%, #a855f7 100%);
+   463→   463→  background-size: 200% 100%;
+   464→   464→  color: #fff;
+   465→   465→  font-weight: 700;
+   466→   466→  border: 1px solid #c084fc;
+   467→   467→  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+   468→   468→  transition: all 0.2s ease;
+   469→   469→}
+   470→   470→.btn-arcane:hover {
+   471→   471→  background-position: 100% 0;
+   472→   472→  box-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+   473→   473→  transform: translateY(-1px);
+   474→   474→}
+   475→   475→
+   476→   476→/* Stat pill */
+   477→   477→.stat-pill {
+   478→   478→  display: inline-flex;
+   479→   479→  align-items: center;
+   480→   480→  gap: 4px;
+   481→   481→  padding: 2px 8px;
+   482→   482→  border-radius: 9999px;
+   483→   483→  font-size: 11px;
+   484→   484→  font-weight: 600;
+   485→   485→  background: rgba(0, 0, 0, 0.4);
+   486→   486→  border: 1px solid rgba(255, 215, 0, 0.2);
+   487→   487→}
+   488→   488→
+   489→   489→/* Rarity frame glow on hover */
+   490→   490→.rarity-frame {
+   491→   491→  position: relative;
+   492→   492→  transition: all 0.3s ease;
+   493→   493→}
+   494→   494→.rarity-frame:hover {
+   495→   495→  transform: translateY(-3px) scale(1.02);
+   496→   496→}
+   497→   497→
+   498→   498→/* Section divider with diamond */
+   499→   499→.section-divider {
+   500→   500→  display: flex;
+   501→   501→  align-items: center;
+   502→   502→  gap: 8px;
+   503→   503→  margin: 12px 0;
+   504→   504→}
+   505→   505→.section-divider::before,
+   506→   506→.section-divider::after {
+   507→   507→  content: '';
+   508→   508→  flex: 1;
+   509→   509→  height: 1px;
+   510→   510→  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+   511→   511→}
+   512→   512→.section-divider::before {
+   513→   513→  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3));
+   514→   514→}
+   515→   515→.section-divider::after {
+   516→   516→  background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), transparent);
+   517→   517→}
+   518→   518→
+   519→   519→/* Banner ribbon */
+   520→   520→.banner-ribbon {
+   521→   521→  background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.15) 50%, transparent 100%);
+   522→   522→  border-top: 1px solid rgba(255, 215, 0, 0.2);
+   523→   523→  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+   524→   524→}
+   525→   525→
+   526→   526→/* Animated gradient border */
+   527→   527→@keyframes gradient-shift {
+   528→   528→  0%, 100% { background-position: 0% 50%; }
+   529→   529→  50% { background-position: 100% 50%; }
+   530→   530→}
+   531→   531→.animated-border {
+   532→   532→  position: relative;
+   533→   533→  background: rgba(10, 5, 25, 0.9);
+   534→   534→  border-radius: 12px;
+   535→   535→}
+   536→   536→.animated-border::before {
+   537→   537→  content: '';
+   538→   538→  position: absolute;
+   539→   539→  inset: -1px;
+   540→   540→  border-radius: inherit;
+   541→   541→  padding: 1px;
+   542→   542→  background: linear-gradient(135deg, #ffd700, #a855f7, #ef4444, #ffd700);
+   543→   543→  background-size: 300% 300%;
+   544→   544→  animation: gradient-shift 4s ease infinite;
+   545→   545→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   546→   546→  -webkit-mask-composite: xor;
+   547→   547→  mask-composite: exclude;
+   548→   548→  pointer-events: none;
+   549→   549→}
+   550→   550→
+   551→   551→/* Glow pulse for important UI */
+   552→   552→@keyframes important-pulse {
+   553→   553→  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+   554→   554→  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4); }
+   555→   555→}
+   556→   556→.important-pulse { animation: important-pulse 2s ease-in-out infinite; }
+   557→   557→
+   558→   558→/* Counter increment animation */
+   559→   559→@keyframes count-up {
+   560→   560→  from { transform: translateY(8px); opacity: 0; }
+   561→   561→  to { transform: translateY(0); opacity: 1; }
+   562→   562→}
+   563→   563→.animate-count-up { animation: count-up 0.3s ease-out; }
+   564→   564→
+   565→   565→/* Reward chip */
+   566→   566→.reward-chip {
+   567→   567→  display: inline-flex;
+   568→   568→  align-items: center;
+   569→   569→  gap: 3px;
+   570→   570→  padding: 2px 6px;
+   571→   571→  border-radius: 6px;
+   572→   572→  font-size: 10px;
+   573→   573→  font-weight: 600;
+   574→   574→  background: rgba(0, 0, 0, 0.5);
+   575→   575→  border: 1px solid rgba(255, 255, 255, 0.1);
+   576→   576→}
+   577→   577→
+   578→   578→/* Locked overlay */
+   579→   579→.locked-overlay {
+   580→   580→  position: relative;
+   581→   581→}
+   582→   582→.locked-overlay::after {
+   583→   583→  content: '🔒';
+   584→   584→  position: absolute;
+   585→   585→  top: 50%;
+   586→   586→  left: 50%;
+   587→   587→  transform: translate(-50%, -50%);
+   588→   588→  font-size: 24px;
+   589→   589→  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.8));
+   590→   590→}
+   591→   591→
+   592→   592→/* Battle log entry */
+   593→   593→.battle-log-entry {
+   594→   594→  padding: 4px 8px;
+   595→   595→  border-left: 2px solid transparent;
+   596→   596→  font-size: 11px;
+   597→   597→  line-height: 1.4;
+   598→   598→  background: rgba(0, 0, 0, 0.3);
+   599→   599→  border-radius: 0 4px 4px 0;
+   600→   600→  margin-bottom: 2px;
+   601→   601→}
+   602→   602→.battle-log-entry.player { border-left-color: #ffd700; color: #fef3c7; }
+   603→   603→.battle-log-entry.enemy { border-left-color: #ef4444; color: #fecaca; }
+   604→   604→.battle-log-entry.crit { border-left-color: #ff6b00; color: #ffedd5; font-weight: 600; }
+   605→   605→.battle-log-entry.system { border-left-color: #a855f7; color: #e9d5ff; font-style: italic; }
+   606→   606→
+   607→   607→/* Victory/defeat text */
+   608→   608→.victory-text {
+   609→   609→  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
+   610→   610→  -webkit-background-clip: text;
+   611→   611→  -webkit-text-fill-color: transparent;
+   612→   612→  background-clip: text;
+   613→   613→  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+   614→   614→  letter-spacing: 0.1em;
+   615→   615→}
+   616→   616→.defeat-text {
+   617→   617→  background: linear-gradient(135deg, #ef4444, #991b1b, #ef4444);
+   618→   618→  -webkit-background-clip: text;
+   619→   619→  -webkit-text-fill-color: transparent;
+   620→   620→  background-clip: text;
+   621→   621→  text-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
+   622→   622→  letter-spacing: 0.1em;
+   623→   623→}
+   624→   624→
+   625→   625→/* Glass panel */
+   626→   626→.glass-panel {
+   627→   627→  background: linear-gradient(135deg, rgba(20, 10, 40, 0.7) 0%, rgba(10, 5, 25, 0.7) 100%);
+   628→   628→  backdrop-filter: blur(8px);
+   629→   629→  -webkit-backdrop-filter: blur(8px);
+   630→   630→  border: 1px solid rgba(255, 215, 0, 0.15);
+   631→   631→}
+   632→   632→
+   633→   633→/* ============= HERO PORTRAIT FRAME ============= */
+   634→   634→.hero-portrait-frame {
+   635→   635→  position: relative;
+   636→   636→  overflow: hidden;
+   637→   637→}
+   638→   638→.hero-portrait-frame::before {
+   639→   639→  content: '';
+   640→   640→  position: absolute;
+   641→   641→  inset: 0;
+   642→   642→  background: linear-gradient(135deg, transparent 0%, rgba(255, 215, 0, 0.15) 50%, transparent 100%);
+   643→   643→  z-index: 2;
+   644→   644→  pointer-events: none;
+   645→   645→}
+   646→   646→.hero-portrait-frame::after {
+   647→   647→  content: '';
+   648→   648→  position: absolute;
+   649→   649→  inset: 0;
+   650→   650→  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 50%);
+   651→   651→  z-index: 2;
+   652→   652→  pointer-events: none;
+   653→   653→}
+   654→   654→
+   655→   655→/* ============= ASCENSION GLOW ============= */
+   656→   656→.ascension-glow {
+   657→   657→  animation: ascension-pulse 2s ease-in-out infinite;
+   658→   658→}
+   659→   659→@keyframes ascension-pulse {
+   660→   660→  0%, 100% {
+   661→   661→    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(255, 215, 0, 0.2);
+   662→   662→  }
+   663→   663→  50% {
+   664→   664→    box-shadow: 0 0 35px rgba(168, 85, 247, 0.7), 0 0 70px rgba(255, 215, 0, 0.4);
+   665→   665→  }
+   666→   666→}
+   667→   667→
+   668→   668→/* ============= TOWER VISUALIZATION ============= */
+   669→   669→.tower-segment {
+   670→   670→  position: relative;
+   671→   671→  transition: all 0.3s ease;
+   672→   672→  overflow: hidden;
+   673→   673→}
+   674→   674→.tower-segment::before {
+   675→   675→  content: '';
+   676→   676→  position: absolute;
+   677→   677→  left: 0;
+   678→   678→  top: 0;
+   679→   679→  bottom: 0;
+   680→   680→  width: 3px;
+   681→   681→  background: linear-gradient(to bottom, transparent, currentColor, transparent);
+   682→   682→  opacity: 0.5;
+   683→   683→}
+   684→   684→.tower-segment-boss {
+   685→   685→  background: linear-gradient(135deg, rgba(127, 29, 29, 0.4) 0%, rgba(69, 10, 10, 0.6) 100%);
+   686→   686→  border: 1px solid rgba(239, 68, 68, 0.5);
+   687→   687→  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(127, 29, 29, 0.3);
+   688→   688→}
+   689→   689→.tower-segment-current {
+   690→   690→  background: linear-gradient(135deg, rgba(120, 53, 15, 0.5) 0%, rgba(180, 83, 9, 0.3) 100%);
+   691→   691→  border: 1px solid rgba(251, 191, 36, 0.7);
+   692→   692→  box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 15px rgba(251, 191, 36, 0.2);
+   693→   693→  animation: tower-current-pulse 2s ease-in-out infinite;
+   694→   694→}
+   695→   695→@keyframes tower-current-pulse {
+   696→   696→  0%, 100% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 15px rgba(251, 191, 36, 0.2); }
+   697→   697→  50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6), inset 0 0 25px rgba(251, 191, 36, 0.35); }
+   698→   698→}
+   699→   699→.tower-segment-cleared {
+   700→   700→  background: linear-gradient(135deg, rgba(20, 83, 45, 0.3) 0%, rgba(34, 197, 94, 0.15) 100%);
+   701→   701→  border: 1px solid rgba(34, 197, 94, 0.3);
+   702→   702→  opacity: 0.7;
+   703→   703→}
+   704→   704→.tower-segment-locked {
+   705→   705→  background: linear-gradient(135deg, rgba(30, 30, 50, 0.4) 0%, rgba(15, 15, 30, 0.6) 100%);
+   706→   706→  border: 1px solid rgba(100, 100, 120, 0.2);
+   707→   707→  filter: blur(0.5px);
+   708→   708→  opacity: 0.5;
+   709→   709→}
+   710→   710→
+   711→   711→/* ============= SOUL/RUNE CIRCLES ============= */
+   712→   712→.rune-circle {
+   713→   713→  position: relative;
+   714→   714→  display: inline-flex;
+   715→   715→  align-items: center;
+   716→   716→  justify-content: center;
+   717→   717→}
+   718→   718→.rune-circle::before {
+   719→   719→  content: '';
+   720→   720→  position: absolute;
+   721→   721→  inset: -4px;
+   722→   722→  border: 1px solid rgba(255, 215, 0, 0.3);
+   723→   723→  border-radius: 50%;
+   724→   724→  animation: rune-rotate 8s linear infinite;
+   725→   725→  border-style: dashed;
+   726→   726→}
+   727→   727→.rune-circle::after {
+   728→   728→  content: '';
+   729→   729→  position: absolute;
+   730→   730→  inset: -8px;
+   731→   731→  border: 1px solid rgba(168, 85, 247, 0.2);
+   732→   732→  border-radius: 50%;
+   733→   733→  animation: rune-rotate-reverse 12s linear infinite;
+   734→   734→}
+   735→   735→@keyframes rune-rotate {
+   736→   736→  from { transform: rotate(0deg); }
+   737→   737→  to { transform: rotate(360deg); }
+   738→   738→}
+   739→   739→@keyframes rune-rotate-reverse {
+   740→   740→  from { transform: rotate(360deg); }
+   741→   741→  to { transform: rotate(0deg); }
+   742→   742→}
+   743→   743→
+   744→   744→/* ============= SHIMMER TEXT ============= */
+   745→   745→.shimmer-text {
+   746→   746→  background: linear-gradient(90deg, #d4d4d4 0%, #fef3c7 25%, #ffd700 50%, #fef3c7 75%, #d4d4d4 100%);
+   747→   747→  background-size: 200% auto;
+   748→   748→  -webkit-background-clip: text;
+   749→   749→  -webkit-text-fill-color: transparent;
+   750→   750→  background-clip: text;
+   751→   751→  animation: shimmer-sweep 3s linear infinite;
+   752→   752→}
+   753→   753→@keyframes shimmer-sweep {
+   754→   754→  to { background-position: 200% center; }
+   755→   755→}
+   756→   756→
+   757→   757→/* ============= EQUIPMENT SLOT ============= */
+   758→   758→.equipment-slot {
+   759→   759→  position: relative;
+   760→   760→  transition: all 0.2s ease;
+   761→   761→  cursor: pointer;
+   762→   762→}
+   763→   763→.equipment-slot:hover {
+   764→   764→  transform: translateY(-2px);
+   765→   765→  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+   766→   766→}
+   767→   767→.equipment-slot-empty {
+   768→   768→  border: 1px dashed rgba(120, 120, 140, 0.4);
+   769→   769→  background: rgba(0, 0, 0, 0.3);
+   770→   770→}
+   771→   771→
+   772→   772→/* ============= POWER BADGE ============= */
+   773→   773→.power-badge {
+   774→   774→  display: inline-flex;
+   775→   775→  align-items: center;
+   776→   776→  gap: 4px;
+   777→   777→  padding: 2px 8px;
+   778→   778→  border-radius: 9999px;
+   779→   779→  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1));
+   780→   780→  border: 1px solid rgba(255, 215, 0, 0.3);
+   781→   781→  color: #fbbf24;
+   782→   782→  font-weight: 700;
+   783→   783→  font-size: 11px;
+   784→   784→  letter-spacing: 0.05em;
+   785→   785→}
+   786→   786→
+   787→   787→/* ============= STAT BAR ============= */
+   788→   788→.stat-bar {
+   789→   789→  position: relative;
+   790→   790→  height: 4px;
+   791→   791→  background: rgba(0, 0, 0, 0.5);
+   792→   792→  border-radius: 2px;
+   793→   793→  overflow: hidden;
+   794→   794→}
+   795→   795→.stat-bar-fill {
+   796→   796→  height: 100%;
+   797→   797→  border-radius: 2px;
+   798→   798→  transition: width 0.5s ease;
+   799→   799→  position: relative;
+   800→   800→}
+   801→   801→.stat-bar-fill::after {
+   802→   802→  content: '';
+   803→   803→  position: absolute;
+   804→   804→  inset: 0;
+   805→   805→  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+   806→   806→  animation: bar-shine 2s linear infinite;
+   807→   807→}
+   808→   808→@keyframes bar-shine {
+   809→   809→  from { transform: translateX(-100%); }
+   810→   810→  to { transform: translateX(100%); }
+   811→   811→}
+   812→   812→
+   813→   813→/* ============= BADGE GLOW ============= */
+   814→   814→.badge-glow-amber {
+   815→   815→  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5), 0 0 16px rgba(251, 191, 36, 0.2);
+   816→   816→}
+   817→   817→.badge-glow-red {
+   818→   818→  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5), 0 0 16px rgba(239, 68, 68, 0.2);
+   819→   819→}
+   820→   820→.badge-glow-purple {
+   821→   821→  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5), 0 0 16px rgba(168, 85, 247, 0.2);
+   822→   822→}
+   823→   823→
+   824→   824→/* ============= MENU ITEM HOVER ============= */
+   825→   825→.menu-item-hover {
+   826→   826→  transition: all 0.2s ease;
+   827→   827→  position: relative;
+   828→   828→}
+   829→   829→.menu-item-hover::before {
+   830→   830→  content: '';
+   831→   831→  position: absolute;
+   832→   832→  inset: 0;
+   833→   833→  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+   834→   834→  opacity: 0;
+   835→   835→  transition: opacity 0.2s ease;
+   836→   836→}
+   837→   837→.menu-item-hover:hover::before {
+   838→   838→  opacity: 1;
+   839→   839→}
+   840→   840→
+   841→   841→/* ============= CARD TILT EFFECT ============= */
+   842→   842→.card-tilt {
+   843→   843→  transition: transform 0.2s ease;
+   844→   844→  transform-style: preserve-3d;
+   845→   845→}
+   846→   846→.card-tilt:hover {
+   847→   847→  transform: perspective(800px) rotateY(-3deg) rotateX(2deg) translateZ(8px);
+   848→   848→}
+   849→   849→
+   850→   850→/* ============= DECORATIVE CORNER ============= */
+   851→   851→.corner-decoration {
+   852→   852→  position: relative;
+   853→   853→}
+   854→   854→.corner-decoration::before,
+   855→   855→.corner-decoration::after {
+   856→   856→  content: '';
+   857→   857→  position: absolute;
+   858→   858→  width: 12px;
+   859→   859→  height: 12px;
+   860→   860→  border: 1px solid rgba(255, 215, 0, 0.4);
+   861→   861→  pointer-events: none;
+   862→   862→}
+   863→   863→.corner-decoration::before {
+   864→   864→  top: 4px;
+   865→   865→  left: 4px;
+   866→   866→  border-right: none;
+   867→   867→  border-bottom: none;
+   868→   868→}
+   869→   869→.corner-decoration::after {
+   870→   870→  bottom: 4px;
+   871→   871→  right: 4px;
+   872→   872→  border-left: none;
+   873→   873→  border-top: none;
+   874→   874→}
+   875→   875→
+   876→   876→/* ============= TOWER FLOOR NUMBER ============= */
+   877→   877→.floor-number {
+   878→   878→  font-family: 'Cinzel', serif;
+   879→   879→  font-weight: 700;
+   880→   880→  background: linear-gradient(180deg, #fef3c7 0%, #f59e0b 50%, #92400e 100%);
+   881→   881→  -webkit-background-clip: text;
+   882→   882→  -webkit-text-fill-color: transparent;
+   883→   883→  background-clip: text;
+   884→   884→  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+   885→   885→  letter-spacing: 0.05em;
+   886→   886→}
+   887→   887→
+   888→   888→/* ============= DIVINE GLOW ============= */
+   889→   889→.divine-glow {
+   890→   890→  position: relative;
+   891→   891→}
+   892→   892→.divine-glow::before {
+   893→   893→  content: '';
+   894→   894→  position: absolute;
+   895→   895→  inset: -2px;
+   896→   896→  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+   897→   897→  z-index: -1;
+   898→   898→  animation: divine-pulse 3s ease-in-out infinite;
+   899→   899→}
+   900→   900→@keyframes divine-pulse {
+   901→   901→  0%, 100% { opacity: 0.4; transform: scale(1); }
+   902→   902→  50% { opacity: 0.7; transform: scale(1.05); }
+   903→   903→}
+   904→   904→
+   905→   905→/* ============= SCROLLABLE LIST ============= */
+   906→   906→.scrollable-list {
+   907→   907→  max-height: 400px;
+   908→   908→  overflow-y: auto;
+   909→   909→  scrollbar-width: thin;
+   910→   910→  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+   911→   911→}
+   912→   912→.scrollable-list::-webkit-scrollbar {
+   913→   913→  width: 6px;
+   914→   914→}
+   915→   915→.scrollable-list::-webkit-scrollbar-track {
+   916→   916→  background: rgba(0, 0, 0, 0.3);
+   917→   917→  border-radius: 3px;
+   918→   918→}
+   919→   919→.scrollable-list::-webkit-scrollbar-thumb {
+   920→   920→  background: linear-gradient(180deg, rgba(255, 215, 0, 0.4), rgba(180, 83, 9, 0.4));
+   921→   921→  border-radius: 3px;
+   922→   922→}
+   923→   923→.scrollable-list::-webkit-scrollbar-thumb:hover {
+   924→   924→  background: linear-gradient(180deg, rgba(255, 215, 0, 0.6), rgba(180, 83, 9, 0.6));
+   925→   925→}
+   926→   926→
+   927→   927→/* ============= SECTION TITLE ============= */
+   928→   928→.section-title {
+   929→   929→  font-family: 'Cinzel', serif;
+   930→   930→  font-weight: 600;
+   931→   931→  letter-spacing: 0.1em;
+   932→   932→  text-transform: uppercase;
+   933→   933→  font-size: 11px;
+   934→   934→  color: rgba(251, 191, 36, 0.7);
+   935→   935→  position: relative;
+   936→   936→  padding-left: 12px;
+   937→   937→}
+   938→   938→.section-title::before {
+   939→   939→  content: '';
+   940→   940→  position: absolute;
+   941→   941→  left: 0;
+   942→   942→  top: 50%;
+   943→   943→  transform: translateY(-50%);
+   944→   944→  width: 3px;
+   945→   945→  height: 12px;
+   946→   946→  background: linear-gradient(180deg, #fbbf24, #92400e);
+   947→   947→  border-radius: 1px;
+   948→   948→}
+   949→   949→
+   950→   950→/* ============= RARITY FRAME ============= */
+   951→   951→.rarity-frame-common { box-shadow: inset 0 0 0 1px rgba(156, 163, 175, 0.3); }
+   952→   952→.rarity-frame-uncommon { box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4), 0 0 8px rgba(34, 197, 94, 0.15); }
+   953→   953→.rarity-frame-rare { box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4), 0 0 10px rgba(59, 130, 246, 0.2); }
+   954→   954→.rarity-frame-epic { box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.5), 0 0 12px rgba(168, 85, 247, 0.25); }
+   955→   955→.rarity-frame-legendary { box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.6), 0 0 16px rgba(251, 191, 36, 0.3); }
+   956→   956→.rarity-frame-mythic {
+   957→   957→  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35);
+   958→   958→  animation: mythic-pulse 2.5s ease-in-out infinite;
+   959→   959→}
+   960→   960→@keyframes mythic-pulse {
+   961→   961→  0%, 100% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35); }
+   962→   962→  50% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.5); }
+   963→   963→}
+   964→   964→
+   965→   965→/* ============= ENERGY BAR ============= */
+   966→   966→.energy-bar {
+   967→   967→  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+   968→   968→  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+   969→   969→}
+   970→   970→
+   971→   971→/* ============= TEXT GLOW EFFECTS ============= */
+   972→   972→.text-glow-amber { text-shadow: 0 0 8px rgba(251, 191, 36, 0.6); }
+   973→   973→.text-glow-red { text-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+   974→   974→.text-glow-purple { text-shadow: 0 0 8px rgba(168, 85, 247, 0.6); }
+   975→   975→.text-glow-cyan { text-shadow: 0 0 8px rgba(34, 211, 238, 0.6); }
+   976→   976→
+   977→   977→/* ============= BORDER GLOW ============= */
+   978→   978→.border-glow-amber {
+   979→   979→  border: 1px solid rgba(251, 191, 36, 0.4);
+   980→   980→  box-shadow: 0 0 12px rgba(251, 191, 36, 0.2), inset 0 0 12px rgba(251, 191, 36, 0.05);
+   981→   981→}
+   982→   982→.border-glow-red {
+   983→   983→  border: 1px solid rgba(239, 68, 68, 0.4);
+   984→   984→  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2), inset 0 0 12px rgba(239, 68, 68, 0.05);
+   985→   985→}
+   986→   986→
+   987→   987→/* ============= SKELETON LOADING ============= */
+   988→   988→.skeleton-shimmer {
+   989→   989→  background: linear-gradient(90deg, rgba(40, 30, 60, 0.4) 0%, rgba(60, 50, 80, 0.6) 50%, rgba(40, 30, 60, 0.4) 100%);
+   990→   990→  background-size: 200% 100%;
+   991→   991→  animation: skeleton-shimmer-anim 1.5s linear infinite;
+   992→   992→}
+   993→   993→@keyframes skeleton-shimmer-anim {
+   994→   994→  from { background-position: 200% 0; }
+   995→   995→  to { background-position: -200% 0; }
+   996→   996→}
+   997→   997→
+   998→   998→/* ============= FLOATING ANIMATION ============= */
+   999→   999→.float-anim {
+  1000→  1000→  animation: float-anim 3s ease-in-out infinite;
+  1001→  1001→}
+  1002→  1002→@keyframes float-anim {
+  1003→  1003→  0%, 100% { transform: translateY(0); }
+  1004→  1004→  50% { transform: translateY(-4px); }
+  1005→  1005→}
+  1006→  1006→
+  1007→  1007→/* ============= NOTIFICATION DOT ============= */
+  1008→  1008→.notification-dot {
+  1009→  1009→  position: relative;
+  1010→  1010→}
+  1011→  1011→.notification-dot::after {
+  1012→  1012→  content: '';
+  1013→  1013→  position: absolute;
+  1014→  1014→  top: -2px;
+  1015→  1015→  right: -2px;
+  1016→  1016→  width: 8px;
+  1017→  1017→  height: 8px;
+  1018→  1018→  background: #ef4444;
+  1019→  1019→  border-radius: 50%;
+  1020→  1020→  border: 1px solid #1a0a2e;
+  1021→  1021→  animation: pulse-dot 1.5s ease-in-out infinite;
+  1022→  1022→}
+  1023→  1023→@keyframes pulse-dot {
+  1024→  1024→  0%, 100% { transform: scale(1); opacity: 1; }
+  1025→  1025→  50% { transform: scale(1.3); opacity: 0.7; }
+  1026→  1026→}
+  1027→  1027→

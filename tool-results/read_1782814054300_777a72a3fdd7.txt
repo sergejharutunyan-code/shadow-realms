@@ -1,0 +1,927 @@
+     1→'use client';
+     2→
+     3→import { useGameStore } from '@/lib/game-store';
+     4→import { ARENA_OPPONENTS, ARENA_RANKS, ArenaOpponent } from '@/lib/game-data';
+     5→import { motion, AnimatePresence } from 'framer-motion';
+     6→import { useState, useEffect, useMemo } from 'react';
+     7→import {
+     8→  Swords,
+     9→  Shield,
+    10→  Trophy,
+    11→  Crown,
+    12→  Clock,
+    13→  Flame,
+    14→  Skull,
+    15→  Star,
+    16→  Zap,
+    17→  ChevronRight,
+    18→} from 'lucide-react';
+    19→
+    20→// ============= Helpers =============
+    21→
+    22→function getCurrentRank(trophies: number) {
+    23→  let rank = ARENA_RANKS[0];
+    24→  for (const r of ARENA_RANKS) {
+    25→    if (trophies >= r.minTrophies) rank = r;
+    26→  }
+    27→  return rank;
+    28→}
+    29→
+    30→function getNextRank(trophies: number) {
+    31→  for (const r of ARENA_RANKS) {
+    32→    if (trophies < r.minTrophies) return r;
+    33→  }
+    34→  return null;
+    35→}
+    36→
+    37→function formatTime(ms: number): string {
+    38→  if (ms <= 0) return '00:00';
+    39→  const totalSeconds = Math.ceil(ms / 1000);
+    40→  const minutes = Math.floor(totalSeconds / 60);
+    41→  const seconds = totalSeconds % 60;
+    42→  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    43→}
+    44→
+    45→function formatPower(n: number): string {
+    46→  if (n >= 1000000) return `${(n / 1000000).toFixed(2)}M`;
+    47→  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+    48→  return n.toString();
+    49→}
+    50→
+    51→// Defense rating 1-5 -> themed color palette for opponent cards
+    52→function getDefenseTheme(rating: number) {
+    53→  switch (rating) {
+    54→    case 1:
+    55→      return {
+    56→        border: 'border-gray-500/40',
+    57→        text: 'text-gray-300',
+    58→        bg: 'from-gray-900/70 to-gray-950/90',
+    59→        ring: 'shadow-[0_0_18px_rgba(156,163,175,0.20)]',
+    60→        accent: 'text-gray-400',
+    61→      };
+    62→    case 2:
+    63→      return {
+    64→        border: 'border-green-500/40',
+    65→        text: 'text-green-300',
+    66→        bg: 'from-green-950/50 to-gray-950/90',
+    67→        ring: 'shadow-[0_0_18px_rgba(34,197,94,0.22)]',
+    68→        accent: 'text-green-400',
+    69→      };
+    70→    case 3:
+    71→      return {
+    72→        border: 'border-sky-500/50',
+    73→        text: 'text-sky-300',
+    74→        bg: 'from-sky-950/50 to-gray-950/90',
+    75→        ring: 'shadow-[0_0_20px_rgba(56,189,248,0.25)]',
+    76→        accent: 'text-sky-400',
+    77→      };
+    78→    case 4:
+    79→      return {
+    80→        border: 'border-purple-500/50',
+    81→        text: 'text-purple-300',
+    82→        bg: 'from-purple-950/60 to-gray-950/90',
+    83→        ring: 'shadow-[0_0_22px_rgba(168,85,247,0.30)]',
+    84→        accent: 'text-purple-400',
+    85→      };
+    86→    case 5:
+    87→      return {
+    88→        border: 'border-red-500/60',
+    89→        text: 'text-red-300',
+    90→        bg: 'from-red-950/60 to-gray-950/90',
+    91→        ring: 'shadow-[0_0_26px_rgba(239,68,68,0.40)]',
+    92→        accent: 'text-red-400',
+    93→      };
+    94→    default:
+    95→      return {
+    96→        border: 'border-gray-500/40',
+    97→        text: 'text-gray-300',
+    98→        bg: 'from-gray-900/70 to-gray-950/90',
+    99→        ring: 'shadow-[0_0_18px_rgba(156,163,175,0.20)]',
+   100→        accent: 'text-gray-400',
+   101→      };
+   102→  }
+   103→}
+   104→
+   105→// ============= Battle Result Modal =============
+   106→
+   107→interface BattleResult {
+   108→  won: boolean;
+   109→  gold: number;
+   110→  gems: number;
+   111→  trophies: number;
+   112→  opponentName: string;
+   113→}
+   114→
+   115→function BattleResultModal({
+   116→  result,
+   117→  onClose,
+   118→}: {
+   119→  result: BattleResult;
+   120→  onClose: () => void;
+   121→}) {
+   122→  const { won, gold, gems, trophies, opponentName } = result;
+   123→
+   124→  // Confetti particles for victory
+   125→  const confetti = useMemo(() => {
+   126→    if (!won) return [];
+   127→    return Array.from({ length: 28 }, (_, i) => ({
+   128→      id: i,
+   129→      x: Math.random() * 100,
+   130→      delay: Math.random() * 0.6,
+   131→      duration: 1.2 + Math.random() * 1.6,
+   132→      color: ['#ffd700', '#ff6b00', '#ff4500', '#ffe066', '#ff8c00', '#ffaa00'][i % 6],
+   133→      size: 4 + Math.random() * 6,
+   134→      rotate: Math.random() * 360,
+   135→    }));
+   136→  }, [won]);
+   137→
+   138→  // Ash particles for defeat
+   139→  const ash = useMemo(() => {
+   140→    if (won) return [];
+   141→    return Array.from({ length: 18 }, (_, i) => ({
+   142→      id: i,
+   143→      x: Math.random() * 100,
+   144→      delay: Math.random() * 0.8,
+   145→      duration: 1.6 + Math.random() * 1.6,
+   146→      size: 3 + Math.random() * 5,
+   147→    }));
+   148→  }, [won]);
+   149→
+   150→  return (
+   151→    <motion.div
+   152→      initial={{ opacity: 0 }}
+   153→      animate={{ opacity: 1 }}
+   154→      exit={{ opacity: 0 }}
+   155→      className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+   156→      onClick={onClose}
+   157→    >
+   158→      {/* Background radial glow */}
+   159→      <motion.div
+   160→        initial={{ scale: 0.8, opacity: 0 }}
+   161→        animate={{ scale: 1, opacity: 1 }}
+   162→        transition={{ duration: 0.4 }}
+   163→        className={`absolute inset-0 pointer-events-none ${
+   164→          won
+   165→            ? 'bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.18),transparent_60%)]'
+   166→            : 'bg-[radial-gradient(circle_at_center,rgba(120,40,40,0.28),transparent_60%)]'
+   167→        }`}
+   168→      />
+   169→
+   170→      {/* Confetti for victory */}
+   171→      {won &&
+   172→        confetti.map((c) => (
+   173→          <motion.div
+   174→            key={c.id}
+   175→            initial={{ y: -50, x: `${c.x}%`, opacity: 1, rotate: 0 }}
+   176→            animate={{ y: '110vh', opacity: [1, 1, 0], rotate: c.rotate }}
+   177→            transition={{
+   178→              duration: c.duration,
+   179→              delay: c.delay,
+   180→              repeat: Infinity,
+   181→              ease: 'linear',
+   182→            }}
+   183→            className="absolute top-0 pointer-events-none"
+   184→            style={{
+   185→              width: c.size,
+   186→              height: c.size * 1.5,
+   187→              backgroundColor: c.color,
+   188→              borderRadius: 1,
+   189→            }}
+   190→          />
+   191→        ))}
+   192→
+   193→      {/* Ash particles for defeat */}
+   194→      {!won &&
+   195→        ash.map((a) => (
+   196→          <motion.div
+   197→            key={a.id}
+   198→            initial={{ y: -50, x: `${a.x}%`, opacity: 0.8 }}
+   199→            animate={{ y: '110vh', opacity: [0.8, 0.4, 0] }}
+   200→            transition={{
+   201→              duration: a.duration,
+   202→              delay: a.delay,
+   203→              repeat: Infinity,
+   204→              ease: 'linear',
+   205→            }}
+   206→            className="absolute top-0 pointer-events-none rounded-full bg-gray-500"
+   207→            style={{ width: a.size, height: a.size }}
+   208→          />
+   209→        ))}
+   210→
+   211→      {/* Modal Content */}
+   212→      <motion.div
+   213→        initial={{ scale: 0.7, opacity: 0, y: 30 }}
+   214→        animate={{ scale: 1, opacity: 1, y: 0 }}
+   215→        exit={{ scale: 0.7, opacity: 0, y: 30 }}
+   216→        transition={{ type: 'spring', damping: 18, stiffness: 220 }}
+   217→        onClick={(e) => e.stopPropagation()}
+   218→        className={`relative w-full max-w-sm rounded-2xl border-2 p-6 text-center ${
+   219→          won
+   220→            ? 'bg-gradient-to-b from-amber-950/95 via-yellow-950/80 to-black border-amber-500/60 shadow-[0_0_40px_rgba(255,215,0,0.40)]'
+   221→            : 'bg-gradient-to-b from-red-950/95 via-gray-950/80 to-black border-red-700/60 shadow-[0_0_40px_rgba(220,38,38,0.30)]'
+   222→        }`}
+   223→      >
+   224→        {/* Trophy / Skull emblem */}
+   225→        <motion.div
+   226→          initial={{ scale: 0, rotate: won ? -90 : 90 }}
+   227→          animate={{ scale: 1, rotate: 0 }}
+   228→          transition={{ delay: 0.15, type: 'spring', damping: 12, stiffness: 200 }}
+   229→          className={`mx-auto mb-3 w-20 h-20 rounded-full flex items-center justify-center border-2 ${
+   230→            won
+   231→              ? 'bg-amber-500/15 border-amber-400/50'
+   232→              : 'bg-red-900/30 border-red-700/50'
+   233→          }`}
+   234→        >
+   235→          {won ? (
+   236→            <Trophy className="w-12 h-12 text-amber-300" />
+   237→          ) : (
+   238→            <Skull className="w-12 h-12 text-red-400" />
+   239→          )}
+   240→        </motion.div>
+   241→
+   242→        {/* Result Title */}
+   243→        <motion.h2
+   244→          initial={{ opacity: 0, y: 10 }}
+   245→          animate={{ opacity: 1, y: 0 }}
+   246→          transition={{ delay: 0.3 }}
+   247→          className={`text-4xl font-black tracking-wider ${
+   248→            won ? 'gold-text' : 'text-red-400'
+   249→          }`}
+   250→          style={
+   251→            won
+   252→              ? { filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.5))' }
+   253→              : { filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.5))' }
+   254→          }
+   255→        >
+   256→          {won ? 'VICTORY' : 'DEFEAT'}
+   257→        </motion.h2>
+   258→
+   259→        <motion.p
+   260→          initial={{ opacity: 0 }}
+   261→          animate={{ opacity: 1 }}
+   262→          transition={{ delay: 0.4 }}
+   263→          className={`text-xs mt-1 mb-4 ${
+   264→            won ? 'text-amber-200/80' : 'text-red-300/70'
+   265→          }`}
+   266→        >
+   267→          {won
+   268→            ? 'Glory and spoils are yours, champion.'
+   269→            : `${opponentName} has bested your team...`}
+   270→        </motion.p>
+   271→
+   272→        {/* Rewards */}
+   273→        <motion.div
+   274→          initial={{ opacity: 0, y: 15 }}
+   275→          animate={{ opacity: 1, y: 0 }}
+   276→          transition={{ delay: 0.5 }}
+   277→          className="bg-black/40 border border-white/10 rounded-xl p-3 mb-4 space-y-2"
+   278→        >
+   279→          <div className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">
+   280→            Rewards Earned
+   281→          </div>
+   282→          <RewardRow
+   283→            icon="🪙"
+   284→            label="Gold"
+   285→            value={`+${gold.toLocaleString()}`}
+   286→            color="text-amber-300"
+   287→          />
+   288→          <RewardRow
+   289→            icon="💎"
+   290→            label="Gems"
+   291→            value={`+${gems}`}
+   292→            color="text-cyan-300"
+   293→          />
+   294→          <RewardRow
+   295→            icon="🏆"
+   296→            label="Trophies"
+   297→            value={`${trophies >= 0 ? '+' : ''}${trophies}`}
+   298→            color={trophies >= 0 ? 'text-yellow-300' : 'text-red-300'}
+   299→          />
+   300→        </motion.div>
+   301→
+   302→        {/* Continue Button */}
+   303→        <motion.button
+   304→          initial={{ opacity: 0, y: 10 }}
+   305→          animate={{ opacity: 1, y: 0 }}
+   306→          transition={{ delay: 0.6 }}
+   307→          whileHover={{ scale: 1.03 }}
+   308→          whileTap={{ scale: 0.97 }}
+   309→          onClick={onClose}
+   310→          className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide ${
+   311→            won
+   312→              ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-black shadow-lg shadow-amber-500/30'
+   313→              : 'bg-gradient-to-r from-red-700 to-gray-800 text-white shadow-lg shadow-red-700/30'
+   314→          }`}
+   315→        >
+   316→          <ChevronRight className="w-4 h-4 inline mr-1" />
+   317→          Continue
+   318→        </motion.button>
+   319→      </motion.div>
+   320→    </motion.div>
+   321→  );
+   322→}
+   323→
+   324→function RewardRow({
+   325→  icon,
+   326→  label,
+   327→  value,
+   328→  color,
+   329→}: {
+   330→  icon: string;
+   331→  label: string;
+   332→  value: string;
+   333→  color: string;
+   334→}) {
+   335→  return (
+   336→    <div className="flex items-center justify-between">
+   337→      <div className="flex items-center gap-2">
+   338→        <span className="text-base">{icon}</span>
+   339→        <span className="text-xs text-gray-400">{label}</span>
+   340→      </div>
+   341→      <span className={`text-sm font-bold ${color}`}>{value}</span>
+   342→    </div>
+   343→  );
+   344→}
+   345→
+   346→// ============= Opponent Card =============
+   347→
+   348→function OpponentCard({
+   349→  opponent,
+   350→  isCoolingDown,
+   351→  cooldownRemaining,
+   352→  onAttack,
+   353→  playerPower,
+   354→  canAffordEnergy,
+   355→}: {
+   356→  opponent: ArenaOpponent;
+   357→  isCoolingDown: boolean;
+   358→  cooldownRemaining: string;
+   359→  onAttack: (o: ArenaOpponent) => void;
+   360→  playerPower: number;
+   361→  canAffordEnergy: boolean;
+   362→}) {
+   363→  const theme = getDefenseTheme(opponent.defenseRating);
+   364→  const powerRatio = playerPower / (playerPower + opponent.power);
+   365→  const winChance = Math.min(0.85, Math.max(0.15, powerRatio));
+   366→
+   367→  const disabled = isCoolingDown || !canAffordEnergy;
+   368→
+   369→  return (
+   370→    <motion.div
+   371→      initial={{ opacity: 0, y: 15 }}
+   372→      animate={{ opacity: 1, y: 0 }}
+   373→      whileHover={disabled ? {} : { scale: 1.02 }}
+   374→      whileTap={disabled ? {} : { scale: 0.99 }}
+   375→      className={`relative bg-gradient-to-b ${theme.bg} border-2 ${theme.border} rounded-xl p-3 overflow-hidden ${theme.ring} hover:shadow-xl transition-shadow`}
+   376→    >
+   377→      {/* Decorative background skull */}
+   378→      <div className="absolute -top-4 -right-4 opacity-5 pointer-events-none">
+   379→        <Skull className="w-24 h-24" />
+   380→      </div>
+   381→
+   382→      {/* Rank position badge */}
+   383→      <div className="absolute top-2 right-2 z-10">
+   384→        <div className="flex items-center gap-1 bg-black/50 border border-white/10 rounded-full px-2 py-0.5">
+   385→          <Crown className="w-2.5 h-2.5 text-amber-400" />
+   386→          <span className="text-[10px] font-bold text-amber-200">
+   387→            #{opponent.rank}
+   388→          </span>
+   389→        </div>
+   390→      </div>
+   391→
+   392→      {/* Header */}
+   393→      <div className="flex items-start gap-3 mb-3">
+   394→        <div
+   395→          className={`w-12 h-12 rounded-lg bg-gradient-to-br ${theme.bg} border ${theme.border} flex items-center justify-center flex-shrink-0`}
+   396→        >
+   397→          <Skull className={`w-6 h-6 ${theme.text}`} />
+   398→        </div>
+   399→        <div className="flex-1 min-w-0 pr-12">
+   400→          <div className="text-sm font-bold text-white truncate">
+   401→            {opponent.name}
+   402→          </div>
+   403→          <div className="flex items-center gap-2 mt-0.5">
+   404→            <span className="text-[10px] text-gray-400">Lv.{opponent.level}</span>
+   405→            {opponent.vipLevel > 0 && (
+   406→              <span className="flex items-center gap-0.5 bg-amber-500/15 border border-amber-500/30 rounded-full px-1.5 py-0.5">
+   407→                <Crown className="w-2.5 h-2.5 text-amber-400" />
+   408→                <span className="text-[9px] font-bold text-amber-300">
+   409→                  VIP {opponent.vipLevel}
+   410→                </span>
+   411→              </span>
+   412→            )}
+   413→          </div>
+   414→        </div>
+   415→      </div>
+   416→
+   417→      {/* Stats grid */}
+   418→      <div className="grid grid-cols-2 gap-2 mb-3">
+   419→        <div className="bg-black/30 border border-white/5 rounded-lg p-2">
+   420→          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-gray-500">
+   421→            <Zap className="w-2.5 h-2.5 text-orange-400" />
+   422→            Power
+   423→          </div>
+   424→          <div className="text-sm font-bold text-orange-300">
+   425→            {formatPower(opponent.power)}
+   426→          </div>
+   427→        </div>
+   428→        <div className="bg-black/30 border border-white/5 rounded-lg p-2">
+   429→          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-gray-500">
+   430→            <Shield className="w-2.5 h-2.5 text-blue-400" />
+   431→            Defense
+   432→          </div>
+   433→          <div className="flex items-center gap-0.5 mt-0.5">
+   434→            {Array.from({ length: 5 }).map((_, i) => (
+   435→              <Star
+   436→                key={i}
+   437→                className={`w-3 h-3 ${
+   438→                  i < opponent.defenseRating
+   439→                    ? 'text-amber-400 fill-amber-400'
+   440→                    : 'text-gray-700'
+   441→                }`}
+   442→              />
+   443→            ))}
+   444→          </div>
+   445→        </div>
+   446→      </div>
+   447→
+   448→      {/* Win chance bar */}
+   449→      <div className="mb-3">
+   450→        <div className="flex items-center justify-between text-[10px] text-gray-400 mb-0.5">
+   451→          <span>Win Chance</span>
+   452→          <span
+   453→            className={
+   454→              winChance >= 0.5 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'
+   455→            }
+   456→          >
+   457→            {Math.round(winChance * 100)}%
+   458→          </span>
+   459→        </div>
+   460→        <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden">
+   461→          <div
+   462→            className={`h-full rounded-full bg-gradient-to-r ${
+   463→              winChance >= 0.6
+   464→                ? 'from-green-600 to-green-400'
+   465→                : winChance >= 0.4
+   466→                ? 'from-amber-600 to-amber-400'
+   467→                : 'from-red-700 to-red-500'
+   468→            }`}
+   469→            style={{ width: `${winChance * 100}%` }}
+   470→          />
+   471→        </div>
+   472→      </div>
+   473→
+   474→      {/* Rewards preview */}
+   475→      <div className="flex items-center justify-between bg-black/30 rounded-lg p-2 mb-3">
+   476→        <div className="flex items-center gap-1 text-[10px]">
+   477→          <span>🪙</span>
+   478→          <span className="text-amber-300 font-bold">
+   479→            {opponent.reward.gold.toLocaleString()}
+   480→          </span>
+   481→        </div>
+   482→        <div className="flex items-center gap-1 text-[10px]">
+   483→          <span>💎</span>
+   484→          <span className="text-cyan-300 font-bold">{opponent.reward.gems}</span>
+   485→        </div>
+   486→        <div className="flex items-center gap-1 text-[10px]">
+   487→          <span>🏆</span>
+   488→          <span className="text-yellow-300 font-bold">
+   489→            +{opponent.reward.trophies}
+   490→          </span>
+   491→        </div>
+   492→      </div>
+   493→
+   494→      {/* Action area */}
+   495→      {isCoolingDown ? (
+   496→        <div className="w-full py-2.5 rounded-lg bg-gray-900/60 border border-gray-700/40 flex items-center justify-center gap-2 text-gray-400 text-xs font-medium animate-pulse">
+   497→          <Clock className="w-3.5 h-3.5" />
+   498→          <span className="font-mono tabular-nums">{cooldownRemaining}</span>
+   499→        </div>
+   500→      ) : (
+   501→        <motion.button
+   502→          whileHover={canAffordEnergy ? { scale: 1.03 } : {}}
+   503→          whileTap={canAffordEnergy ? { scale: 0.96 } : {}}
+   504→          onClick={() => onAttack(opponent)}
+   505→          disabled={!canAffordEnergy}
+   506→          className={`w-full py-2.5 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-2 transition-shadow ${
+   507→            canAffordEnergy
+   508→              ? 'bg-gradient-to-r from-red-700 via-red-600 to-orange-600 text-white shadow-lg shadow-red-700/30 hover:shadow-red-500/50'
+   509→              : 'bg-gray-800/60 text-gray-500 border border-gray-700/40 cursor-not-allowed'
+   510→          }`}
+   511→        >
+   512→          <Swords className="w-4 h-4" />
+   513→          ATTACK
+   514→          <span className="ml-1 bg-black/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
+   515→            ⚡10
+   516→          </span>
+   517→        </motion.button>
+   518→      )}
+   519→    </motion.div>
+   520→  );
+   521→}
+   522→
+   523→// ============= Screen Header =============
+   524→
+   525→function ScreenHeader() {
+   526→  return (
+   527→    <div className="text-center mb-4">
+   528→      <motion.div
+   529→        initial={{ opacity: 0, scale: 0.85 }}
+   530→        animate={{ opacity: 1, scale: 1 }}
+   531→        className="inline-flex items-center justify-center gap-2 mb-1"
+   532→      >
+   533→        <motion.div
+   534→          animate={{ rotate: [0, -10, 0] }}
+   535→          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   536→        >
+   537→          <Swords className="w-5 h-5 text-red-500" />
+   538→        </motion.div>
+   539→        <Trophy className="w-10 h-10 text-amber-400" />
+   540→        <motion.div
+   541→          animate={{ rotate: [0, 10, 0] }}
+   542→          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   543→        >
+   544→          <Swords className="w-5 h-5 text-red-500" />
+   545→        </motion.div>
+   546→      </motion.div>
+   547→      <h2 className="text-2xl font-black gold-text tracking-wide">PvP Arena</h2>
+   548→      <p className="text-xs text-gray-400 mt-1">
+   549→        Battle rival champions for glory and trophies
+   550→      </p>
+   551→    </div>
+   552→  );
+   553→}
+   554→
+   555→// ============= Main Screen =============
+   556→
+   557→export function ArenaScreen() {
+   558→  const player = useGameStore((s) => s.player);
+   559→  const team = useGameStore((s) => s.team);
+   560→  const heroes = useGameStore((s) => s.heroes);
+   561→  const arenaTrophies = useGameStore((s) => s.arenaTrophies);
+   562→  const arenaWins = useGameStore((s) => s.arenaWins);
+   563→  const arenaLosses = useGameStore((s) => s.arenaLosses);
+   564→  const arenaCooldown = useGameStore((s) => s.arenaCooldown);
+   565→  const startArenaBattle = useGameStore((s) => s.startArenaBattle);
+   566→  const setScreen = useGameStore((s) => s.setScreen);
+   567→
+   568→  const [lastResult, setLastResult] = useState<BattleResult | null>(null);
+   569→  const [now, setNow] = useState(Date.now());
+   570→
+   571→  // Tick every second for cooldown timer
+   572→  useEffect(() => {
+   573→    const interval = setInterval(() => setNow(Date.now()), 1000);
+   574→    return () => clearInterval(interval);
+   575→  }, []);
+   576→
+   577→  // Player's team power (matches store calculation)
+   578→  const playerPower = useMemo(() => {
+   579→    return team.reduce((sum, id) => {
+   580→      const h = heroes.find((hr) => hr.id === id);
+   581→      return (
+   582→        sum +
+   583→        (h
+   584→          ? h.attack + h.defense + Math.floor(h.health / 10) + h.speed * 5
+   585→          : 0)
+   586→      );
+   587→    }, 0);
+   588→  }, [team, heroes]);
+   589→
+   590→  const isCoolingDown = arenaCooldown > now;
+   591→  const cooldownRemaining = formatTime(arenaCooldown - now);
+   592→
+   593→  const currentRank = getCurrentRank(arenaTrophies);
+   594→  const nextRank = getNextRank(arenaTrophies);
+   595→  const rankProgress = nextRank
+   596→    ? ((arenaTrophies - currentRank.minTrophies) /
+   597→        (nextRank.minTrophies - currentRank.minTrophies)) *
+   598→      100
+   599→    : 100;
+   600→  const trophiesToNext = nextRank ? nextRank.minTrophies - arenaTrophies : 0;
+   601→
+   602→  const totalBattles = arenaWins + arenaLosses;
+   603→  const winRate =
+   604→    totalBattles > 0 ? Math.round((arenaWins / totalBattles) * 100) : 0;
+   605→
+   606→  const canAffordEnergy = player.energy >= 10;
+   607→
+   608→  const handleAttack = (opponent: ArenaOpponent) => {
+   609→    // Snapshot before
+   610→    const before = useGameStore.getState();
+   611→    const prev = {
+   612→      wins: before.arenaWins,
+   613→      gold: before.player.gold,
+   614→      gems: before.player.gems,
+   615→      trophies: before.arenaTrophies,
+   616→      energy: before.player.energy,
+   617→      cooldown: before.arenaCooldown,
+   618→    };
+   619→
+   620→    startArenaBattle(opponent.id);
+   621→
+   622→    // Snapshot after (Zustand set is synchronous)
+   623→    const after = useGameStore.getState();
+   624→
+   625→    // If nothing changed, battle didn't actually happen (cooldown/energy guard)
+   626→    if (
+   627→      after.arenaCooldown === prev.cooldown &&
+   628→      after.player.energy === prev.energy
+   629→    ) {
+   630→      return;
+   631→    }
+   632→
+   633→    const won = after.arenaWins > prev.wins;
+   634→    const gold = after.player.gold - prev.gold;
+   635→    const gems = after.player.gems - prev.gems;
+   636→    const trophies = after.arenaTrophies - prev.trophies;
+   637→
+   638→    setLastResult({
+   639→      won,
+   640→      gold,
+   641→      gems,
+   642→      trophies,
+   643→      opponentName: opponent.name,
+   644→    });
+   645→  };
+   646→
+   647→  // ===== Empty team guard =====
+   648→  if (team.length === 0) {
+   649→    return (
+   650→      <div className="relative p-3 sm:p-4 max-w-4xl mx-auto min-h-[60vh] flex flex-col">
+   651→        <ScreenHeader />
+   652→        <motion.div
+   653→          initial={{ opacity: 0, scale: 0.95 }}
+   654→          animate={{ opacity: 1, scale: 1 }}
+   655→          className="flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-b from-red-950/30 to-black/40 border-2 border-red-700/30 rounded-2xl p-8"
+   656→        >
+   657→          <motion.div
+   658→            animate={{ scale: [1, 1.08, 1] }}
+   659→            transition={{ duration: 2, repeat: Infinity }}
+   660→            className="w-20 h-20 rounded-full bg-red-900/30 border-2 border-red-700/40 flex items-center justify-center mb-4"
+   661→          >
+   662→            <Skull className="w-10 h-10 text-red-400" />
+   663→          </motion.div>
+   664→          <h3 className="text-lg font-bold gold-text mb-2">No Team Assembled</h3>
+   665→          <p className="text-sm text-gray-400 mb-1">
+   666→            You need at least one champion in your team to enter the arena.
+   667→          </p>
+   668→          <p className="text-xs text-gray-500 mb-5">
+   669→            Assemble a team of worthy champions before seeking battle.
+   670→          </p>
+   671→          <motion.button
+   672→            whileHover={{ scale: 1.04 }}
+   673→            whileTap={{ scale: 0.96 }}
+   674→            onClick={() => setScreen('heroes')}
+   675→            className="bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-bold text-sm px-6 py-2.5 rounded-xl shadow-lg shadow-amber-500/30 flex items-center gap-2"
+   676→          >
+   677→            <Swords className="w-4 h-4" />
+   678→            Go to Heroes
+   679→            <ChevronRight className="w-4 h-4" />
+   680→          </motion.button>
+   681→        </motion.div>
+   682→      </div>
+   683→    );
+   684→  }
+   685→
+   686→  return (
+   687→    <div className="relative p-3 sm:p-4 max-w-4xl mx-auto">
+   688→      {/* Atmospheric glow overlays */}
+   689→      <div className="absolute inset-0 -z-10 pointer-events-none">
+   690→        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-red-600/5 rounded-full blur-3xl" />
+   691→        <div className="absolute bottom-0 right-0 w-72 h-72 bg-purple-700/5 rounded-full blur-3xl" />
+   692→      </div>
+   693→
+   694→      <ScreenHeader />
+   695→
+   696→      {/* Player rank / status card */}
+   697→      <motion.div
+   698→        initial={{ opacity: 0, y: 10 }}
+   699→        animate={{ opacity: 1, y: 0 }}
+   700→        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-950/40 via-purple-950/20 to-black border border-amber-500/30 p-4 mb-4"
+   701→      >
+   702→        <div className="absolute -top-2 -right-2 opacity-10 pointer-events-none">
+   703→          <Trophy className="w-24 h-24 text-amber-400" />
+   704→        </div>
+   705→
+   706→        <div className="relative z-10">
+   707→          {/* Top row: rank + trophies */}
+   708→          <div className="flex items-start justify-between mb-3">
+   709→            <div className="flex items-center gap-2">
+   710→              <span className="text-2xl">{currentRank.icon}</span>
+   711→              <div>
+   712→                <div className="text-[10px] uppercase tracking-wider text-gray-400">
+   713→                  Current Rank
+   714→                </div>
+   715→                <div className="text-base font-bold gold-text leading-tight">
+   716→                  {currentRank.rank}
+   717→                </div>
+   718→              </div>
+   719→            </div>
+   720→            <div className="flex items-center gap-2">
+   721→              <Trophy className="w-5 h-5 text-amber-400" />
+   722→              <div className="text-right">
+   723→                <div className="text-[10px] uppercase tracking-wider text-gray-400">
+   724→                  Trophies
+   725→                </div>
+   726→                <div className="text-lg font-bold gold-text leading-tight">
+   727→                  {arenaTrophies.toLocaleString()}
+   728→                </div>
+   729→              </div>
+   730→            </div>
+   731→          </div>
+   732→
+   733→          {/* Progress to next rank */}
+   734→          <div className="mb-3">
+   735→            <div className="flex items-center justify-between text-[10px] mb-1">
+   736→              <span className="text-gray-400">
+   737→                {nextRank ? (
+   738→                  <>
+   739→                    Progress to{' '}
+   740→                    <span className="text-amber-300 font-medium">
+   741→                      {nextRank.rank}
+   742→                    </span>
+   743→                  </>
+   744→                ) : (
+   745→                  <span className="text-amber-300 font-medium">
+   746→                    Maximum rank achieved!
+   747→                  </span>
+   748→                )}
+   749→              </span>
+   750→              {nextRank && (
+   751→                <span className="text-gray-400">
+   752→                  {trophiesToNext} 🏆 to go
+   753→                </span>
+   754→              )}
+   755→            </div>
+   756→            <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
+   757→              <motion.div
+   758→                initial={{ width: 0 }}
+   759→                animate={{ width: `${Math.min(rankProgress, 100)}%` }}
+   760→                transition={{ duration: 0.6, ease: 'easeOut' }}
+   761→                className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-yellow-300 rounded-full shadow-[0_0_8px_rgba(255,200,50,0.5)]"
+   762→              />
+   763→            </div>
+   764→          </div>
+   765→
+   766→          {/* W-L-Record + win rate */}
+   767→          <div className="grid grid-cols-3 gap-2">
+   768→            <div className="bg-black/30 border border-white/5 rounded-lg p-2 text-center">
+   769→              <div className="flex items-center justify-center gap-1 text-[9px] uppercase tracking-wider text-gray-500">
+   770→                <Swords className="w-2.5 h-2.5 text-green-400" />
+   771→                Wins
+   772→              </div>
+   773→              <div className="text-sm font-bold text-green-400">{arenaWins}</div>
+   774→            </div>
+   775→            <div className="bg-black/30 border border-white/5 rounded-lg p-2 text-center">
+   776→              <div className="flex items-center justify-center gap-1 text-[9px] uppercase tracking-wider text-gray-500">
+   777→                <Skull className="w-2.5 h-2.5 text-red-400" />
+   778→                Losses
+   779→              </div>
+   780→              <div className="text-sm font-bold text-red-400">{arenaLosses}</div>
+   781→            </div>
+   782→            <div className="bg-black/30 border border-white/5 rounded-lg p-2 text-center">
+   783→              <div className="flex items-center justify-center gap-1 text-[9px] uppercase tracking-wider text-gray-500">
+   784→                <Flame className="w-2.5 h-2.5 text-orange-400" />
+   785→                Win Rate
+   786→              </div>
+   787→              <div className="text-sm font-bold text-orange-300">{winRate}%</div>
+   788→            </div>
+   789→          </div>
+   790→        </div>
+   791→      </motion.div>
+   792→
+   793→      {/* Cooldown banner */}
+   794→      <AnimatePresence>
+   795→        {isCoolingDown && (
+   796→          <motion.div
+   797→            initial={{ opacity: 0, height: 0 }}
+   798→            animate={{ opacity: 1, height: 'auto' }}
+   799→            exit={{ opacity: 0, height: 0 }}
+   800→            className="mb-4"
+   801→          >
+   802→            <div className="bg-gradient-to-r from-red-950/50 via-purple-950/30 to-red-950/50 border border-red-700/40 rounded-xl p-3 flex items-center justify-between">
+   803→              <div className="flex items-center gap-2">
+   804→                <motion.div
+   805→                  animate={{ scale: [1, 1.15, 1] }}
+   806→                  transition={{ duration: 1, repeat: Infinity }}
+   807→                >
+   808→                  <Clock className="w-5 h-5 text-red-400" />
+   809→                </motion.div>
+   810→                <div>
+   811→                  <div className="text-xs font-bold text-red-300">
+   812→                    Battle Cooldown
+   813→                  </div>
+   814→                  <div className="text-[10px] text-gray-400">
+   815→                    Your champions are recovering...
+   816→                  </div>
+   817→                </div>
+   818→              </div>
+   819→              <div className="font-mono text-lg font-bold text-red-300 tabular-nums">
+   820→                {cooldownRemaining}
+   821→              </div>
+   822→            </div>
+   823→          </motion.div>
+   824→        )}
+   825→      </AnimatePresence>
+   826→
+   827→      {/* Player power indicator */}
+   828→      <div className="bg-black/30 border border-white/5 rounded-lg p-2 mb-3 flex items-center justify-between">
+   829→        <div className="flex items-center gap-2">
+   830→          <Zap className="w-4 h-4 text-orange-400" />
+   831→          <span className="text-xs text-gray-400">Your Team Power</span>
+   832→        </div>
+   833→        <span className="text-sm font-bold text-orange-300">
+   834→          {formatPower(playerPower)}
+   835→        </span>
+   836→      </div>
+   837→
+   838→      {/* Opponents header */}
+   839→      <div className="flex items-center justify-between mb-3">
+   840→        <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">
+   841→          <Swords className="w-4 h-4 text-red-400" />
+   842→          Available Opponents
+   843→        </h3>
+   844→        <span className="text-[10px] text-gray-500">
+   845→          ⚡10 energy per battle
+   846→        </span>
+   847→      </div>
+   848→
+   849→      {/* Opponents grid */}
+   850→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+   851→        {ARENA_OPPONENTS.map((opponent) => (
+   852→          <OpponentCard
+   853→            key={opponent.id}
+   854→            opponent={opponent}
+   855→            isCoolingDown={isCoolingDown}
+   856→            cooldownRemaining={cooldownRemaining}
+   857→            onAttack={handleAttack}
+   858→            playerPower={playerPower}
+   859→            canAffordEnergy={canAffordEnergy}
+   860→          />
+   861→        ))}
+   862→      </div>
+   863→
+   864→      {/* Arena rank tiers */}
+   865→      <div className="mt-6">
+   866→        <h3 className="text-sm font-bold text-amber-200 mb-2 flex items-center gap-2">
+   867→          <Crown className="w-4 h-4 text-amber-400" />
+   868→          Arena Ranks
+   869→        </h3>
+   870→        <div className="bg-black/30 border border-white/5 rounded-xl p-3 overflow-x-auto game-scrollbar">
+   871→          <div className="flex gap-2 min-w-max">
+   872→            {ARENA_RANKS.map((r) => {
+   873→              const isCurrent = r.rank === currentRank.rank;
+   874→              const isAchieved = arenaTrophies >= r.minTrophies;
+   875→              return (
+   876→                <div
+   877→                  key={r.rank}
+   878→                  className={`relative flex flex-col items-center justify-center min-w-[80px] py-2 px-3 rounded-lg border ${
+   879→                    isCurrent
+   880→                      ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(255,200,50,0.3)]'
+   881→                      : isAchieved
+   882→                      ? 'bg-green-900/15 border-green-600/30'
+   883→                      : 'bg-gray-900/40 border-gray-700/30'
+   884→                  }`}
+   885→                >
+   886→                  <span className="text-lg">{r.icon}</span>
+   887→                  <span
+   888→                    className={`text-[9px] font-bold mt-0.5 ${
+   889→                      isCurrent
+   890→                        ? 'gold-text'
+   891→                        : isAchieved
+   892→                        ? 'text-green-300'
+   893→                        : 'text-gray-500'
+   894→                    }`}
+   895→                  >
+   896→                    {r.rank}
+   897→                  </span>
+   898→                  <span className="text-[8px] text-gray-500">
+   899→                    {r.minTrophies} 🏆
+   900→                  </span>
+   901→                  {isCurrent && (
+   902→                    <motion.div
+   903→                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-amber-400"
+   904→                      animate={{ opacity: [1, 0.3, 1] }}
+   905→                      transition={{ duration: 1.5, repeat: Infinity }}
+   906→                    />
+   907→                  )}
+   908→                </div>
+   909→              );
+   910→            })}
+   911→          </div>
+   912→        </div>
+   913→      </div>
+   914→
+   915→      {/* Battle result modal */}
+   916→      <AnimatePresence>
+   917→        {lastResult && (
+   918→          <BattleResultModal
+   919→            result={lastResult}
+   920→            onClose={() => setLastResult(null)}
+   921→          />
+   922→        )}
+   923→      </AnimatePresence>
+   924→    </div>
+   925→  );
+   926→}
+   927→

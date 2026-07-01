@@ -1,0 +1,2522 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Premium Dark Fantasy Color Palette */
+  --gold-primary: #ffd700;
+  --gold-light: #ffe566;
+  --gold-dark: #b8860b;
+  --gold-deep: #8b6914;
+  --purple-deep: #2d1b4e;
+  --purple-mid: #4a1f8a;
+  --purple-light: #7c3aed;
+  --red-accent: #dc2626;
+  --red-dark: #7f1d1d;
+  --dark-bg: #0a0a1a;
+  --dark-surface: #0f0f23;
+  --dark-elevated: #1a0a2e;
+  --dark-border: rgba(255, 215, 0, 0.15);
+
+  /* Premium Shadow System */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(255, 215, 0, 0.1);
+  --shadow-gold-intense: 0 0 30px rgba(255, 215, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.2), 0 0 90px rgba(255, 215, 0, 0.1);
+  --shadow-purple: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
+  --shadow-red: 0 0 20px rgba(220, 38, 38, 0.3), 0 0 40px rgba(220, 38, 38, 0.1);
+
+  /* Original theme vars */
+  --background: oklch(0.06 0.02 280);
+  --foreground: oklch(0.95 0.02 60);
+  --card: oklch(0.1 0.02 280);
+  --card-foreground: oklch(0.95 0.02 60);
+  --popover: oklch(0.1 0.02 280);
+  --popover-foreground: oklch(0.95 0.02 60);
+  --primary: oklch(0.75 0.18 50);
+  --primary-foreground: oklch(0.1 0.05 280);
+  --secondary: oklch(0.18 0.03 280);
+  --secondary-foreground: oklch(0.95 0.02 60);
+  --muted: oklch(0.15 0.02 280);
+  --muted-foreground: oklch(0.6 0.02 280);
+  --accent: oklch(0.22 0.04 280);
+  --accent-foreground: oklch(0.95 0.02 60);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.2 0.03 280);
+  --input: oklch(0.15 0.03 280);
+  --ring: oklch(0.75 0.18 50);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.1 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.02 60);
+  --sidebar-primary: oklch(0.75 0.18 50);
+  --sidebar-primary-foreground: oklch(0.1 0.05 280);
+  --sidebar-accent: oklch(0.18 0.03 280);
+  --sidebar-accent-foreground: oklch(0.95 0.02 60);
+  --sidebar-border: oklch(0.25 0.03 280);
+  --sidebar-ring: oklch(0.75 0.18 50);
+}
+
+.dark {
+  --background: oklch(0.06 0.02 280);
+  --foreground: oklch(0.95 0.02 60);
+  --card: oklch(0.1 0.02 280);
+  --card-foreground: oklch(0.95 0.02 60);
+  --popover: oklch(0.1 0.02 280);
+  --popover-foreground: oklch(0.95 0.02 60);
+  --primary: oklch(0.75 0.18 50);
+  --primary-foreground: oklch(0.1 0.05 280);
+  --secondary: oklch(0.18 0.03 280);
+  --secondary-foreground: oklch(0.95 0.02 60);
+  --muted: oklch(0.15 0.02 280);
+  --muted-foreground: oklch(0.6 0.02 280);
+  --accent: oklch(0.22 0.04 280);
+  --accent-foreground: oklch(0.95 0.02 60);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(0.2 0.03 280);
+  --input: oklch(0.15 0.03 280);
+  --ring: oklch(0.75 0.18 50);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.1 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.02 60);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.95 0.02 60);
+  --sidebar-accent: oklch(0.18 0.03 280);
+  --sidebar-accent-foreground: oklch(0.95 0.02 60);
+  --sidebar-border: oklch(0.25 0.03 280);
+  --sidebar-ring: oklch(0.75 0.18 50);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Game-specific styles */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes summon-burst {
+  0% { transform: scale(0.3); opacity: 0; filter: brightness(3); }
+  50% { transform: scale(1.1); opacity: 1; filter: brightness(1.5); }
+  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes damage-flash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(3) hue-rotate(20deg); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes particle-rise {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(0); opacity: 0; }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-slide-up { animation: slideUp 0.4s ease-out; }
+.animate-summon-burst { animation: summon-burst 0.6s ease-out; }
+.animate-damage-flash { animation: damage-flash 0.3s ease-out; }
+.animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
+
+/* Scrollbar styling */
+.game-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.game-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.3);
+  border-radius: 3px;
+}
+.game-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,200,50,0.3);
+  border-radius: 3px;
+}
+.game-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,200,50,0.5);
+}
+
+/* Hero card rarity borders */
+.rarity-common { border-image: linear-gradient(180deg, #6b7280, #4b5563) 1; }
+.rarity-uncommon { border-image: linear-gradient(180deg, #22c55e, #15803d) 1; }
+.rarity-rare { border-image: linear-gradient(180deg, #3b82f6, #1d4ed8) 1; }
+.rarity-epic { border-image: linear-gradient(180deg, #a855f7, #7c3aed) 1; }
+.rarity-legendary { border-image: linear-gradient(180deg, #eab308, #b45309) 1; }
+.rarity-mythic { border-image: linear-gradient(180deg, #ef4444, #dc2626) 1; }
+
+/* Dark fantasy background */
+.dark-fantasy-bg {
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(220, 38, 38, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(234, 179, 8, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0a1a 0%, #0f0f23 50%, #0a0a1a 100%);
+}
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Fire gradient text */
+.fire-text {
+  background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gem gradient text */
+.gem-text {
+  background: linear-gradient(135deg, #00bfff, #9370db, #ff69b4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Additional animations */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+  50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+}
+
+@keyframes border-flow {
+  0% { border-image-source: linear-gradient(0deg, #ffd700, #ff6b00); }
+  50% { border-image-source: linear-gradient(180deg, #ff6b00, #ffd700); }
+  100% { border-image-source: linear-gradient(360deg, #ffd700, #ff6b00); }
+}
+
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+  50% { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes health-drain {
+  0% { filter: brightness(1) hue-rotate(0deg); }
+  50% { filter: brightness(2) hue-rotate(-30deg); }
+  100% { filter: brightness(1) hue-rotate(0deg); }
+}
+
+.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-text-glow { animation: text-glow 2s ease-in-out infinite; }
+.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.3s ease-out; }
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
+.animate-sparkle { animation: sparkle 1.5s ease-in-out infinite; }
+.animate-health-drain { animation: health-drain 0.5s ease-out; }
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Glow effects by rarity */
+.glow-common { box-shadow: 0 0 5px rgba(107, 114, 128, 0.3); }
+.glow-uncommon { box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+.glow-rare { box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+.glow-epic { box-shadow: 0 0 12px rgba(168, 85, 247, 0.5); }
+.glow-legendary { box-shadow: 0 0 15px rgba(234, 179, 8, 0.6); }
+.glow-mythic { box-shadow: 0 0 20px rgba(239, 68, 68, 0.7); }
+
+/* Premium button effect */
+.premium-button {
+  position: relative;
+  overflow: hidden;
+}
+.premium-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+/* Glow border */
+.glow-border {
+  position: relative;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #ffd700, #ff6b00, #ffd700);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Particle background */
+.particles-bg {
+  position: relative;
+  overflow: hidden;
+}
+.particles-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 2%),
+    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 2%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 2%);
+  background-size: 100px 100px, 150px 150px, 200px 200px;
+  pointer-events: none;
+}
+
+/* ============ NEW: Enhanced Styling v3 ============ */
+
+/* Animated ember particles rising */
+@keyframes ember-rise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-100vh) translateX(20px) scale(0.3); opacity: 0; }
+}
+.ember-particle {
+  position: fixed;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, #ffaa00, #ff4500);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ember-rise linear infinite;
+  box-shadow: 0 0 6px #ff6b00, 0 0 12px rgba(255, 107, 0, 0.4);
+  z-index: 1;
+}
+
+/* Decorative corner flourish */
+.corner-flourish {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.corner-flourish::before,
+.corner-flourish::after {
+  content: '';
+  position: absolute;
+  background: linear-gradient(135deg, #ffd700, transparent);
+}
+.corner-flourish::before { top: 0; left: 0; width: 100%; height: 2px; }
+.corner-flourish::after { top: 0; left: 0; width: 2px; height: 100%; }
+.corner-flourish.tl { top: 6px; left: 6px; }
+.corner-flourish.tr { top: 6px; right: 6px; transform: rotate(90deg); }
+.corner-flourish.bl { bottom: 6px; left: 6px; transform: rotate(-90deg); }
+.corner-flourish.br { bottom: 6px; right: 6px; transform: rotate(180deg); }
+
+/* Ornate card frame with gradient border */
+.ornate-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(20, 10, 40, 0.95) 0%, rgba(10, 5, 25, 0.95) 100%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ornate-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.5) 0%, rgba(168, 85, 247, 0.3) 50%, rgba(255, 215, 0, 0.5) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Premium gold button */
+.btn-gold {
+  background: linear-gradient(135deg, #ffd700 0%, #ff9500 50%, #ffd700 100%);
+  background-size: 200% 100%;
+  color: #1a0a2e;
+  font-weight: 700;
+  border: 1px solid #ffaa00;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+.btn-gold:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 20px rgba(255, 170, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+.btn-gold:active { transform: translateY(0); }
+
+/* Premium red button (attack) */
+.btn-attack {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #dc2626 100%);
+  background-size: 200% 100%;
+  color: #fff;
+  font-weight: 700;
+  border: 1px solid #ef4444;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+.btn-attack:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+  transform: translateY(-1px);
+}
+
+/* Premium purple button */
+.btn-arcane {
+  background: linear-gradient(135deg, #a855f7 0%, #6b21a8 50%, #a855f7 100%);
+  background-size: 200% 100%;
+  color: #fff;
+  font-weight: 700;
+  border: 1px solid #c084fc;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+.btn-arcane:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+  transform: translateY(-1px);
+}
+
+/* Stat pill */
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Rarity frame glow on hover */
+.rarity-frame {
+  position: relative;
+  transition: all 0.3s ease;
+}
+.rarity-frame:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+/* Section divider with diamond */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+}
+.section-divider::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3));
+}
+.section-divider::after {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.3), transparent);
+}
+
+/* Banner ribbon */
+.banner-ribbon {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.15) 50%, transparent 100%);
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Animated gradient border */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animated-border {
+  position: relative;
+  background: rgba(10, 5, 25, 0.9);
+  border-radius: 12px;
+}
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #ffd700, #a855f7, #ef4444, #ffd700);
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Glow pulse for important UI */
+@keyframes important-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4); }
+}
+.important-pulse { animation: important-pulse 2s ease-in-out infinite; }
+
+/* Counter increment animation */
+@keyframes count-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-count-up { animation: count-up 0.3s ease-out; }
+
+/* Reward chip */
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Locked overlay */
+.locked-overlay {
+  position: relative;
+}
+.locked-overlay::after {
+  content: '🔒';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.8));
+}
+
+/* Battle log entry */
+.battle-log-entry {
+  padding: 4px 8px;
+  border-left: 2px solid transparent;
+  font-size: 11px;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 2px;
+}
+.battle-log-entry.player { border-left-color: #ffd700; color: #fef3c7; }
+.battle-log-entry.enemy { border-left-color: #ef4444; color: #fecaca; }
+.battle-log-entry.crit { border-left-color: #ff6b00; color: #ffedd5; font-weight: 600; }
+.battle-log-entry.system { border-left-color: #a855f7; color: #e9d5ff; font-style: italic; }
+
+/* Victory/defeat text */
+.victory-text {
+  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  letter-spacing: 0.1em;
+}
+.defeat-text {
+  background: linear-gradient(135deg, #ef4444, #991b1b, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
+  letter-spacing: 0.1em;
+}
+
+/* Glass panel */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(20, 10, 40, 0.7) 0%, rgba(10, 5, 25, 0.7) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+/* ============= HERO PORTRAIT FRAME ============= */
+.hero-portrait-frame {
+  position: relative;
+  overflow: hidden;
+}
+.hero-portrait-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 215, 0, 0.15) 50%, transparent 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-portrait-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ============= ASCENSION GLOW ============= */
+.ascension-glow {
+  animation: ascension-pulse 2s ease-in-out infinite;
+}
+@keyframes ascension-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.7), 0 0 70px rgba(255, 215, 0, 0.4);
+  }
+}
+
+/* ============= TOWER VISUALIZATION ============= */
+.tower-segment {
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+.tower-segment::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, transparent, currentColor, transparent);
+  opacity: 0.5;
+}
+.tower-segment-boss {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.4) 0%, rgba(69, 10, 10, 0.6) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(127, 29, 29, 0.3);
+}
+.tower-segment-current {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.5) 0%, rgba(180, 83, 9, 0.3) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.7);
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 15px rgba(251, 191, 36, 0.2);
+  animation: tower-current-pulse 2s ease-in-out infinite;
+}
+@keyframes tower-current-pulse {
+  0%, 100% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 15px rgba(251, 191, 36, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6), inset 0 0 25px rgba(251, 191, 36, 0.35); }
+}
+.tower-segment-cleared {
+  background: linear-gradient(135deg, rgba(20, 83, 45, 0.3) 0%, rgba(34, 197, 94, 0.15) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  opacity: 0.7;
+}
+.tower-segment-locked {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.4) 0%, rgba(15, 15, 30, 0.6) 100%);
+  border: 1px solid rgba(100, 100, 120, 0.2);
+  filter: blur(0.5px);
+  opacity: 0.5;
+}
+
+/* ============= SOUL/RUNE CIRCLES ============= */
+.rune-circle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rune-circle::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 50%;
+  animation: rune-rotate 8s linear infinite;
+  border-style: dashed;
+}
+.rune-circle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 50%;
+  animation: rune-rotate-reverse 12s linear infinite;
+}
+@keyframes rune-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes rune-rotate-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* ============= SHIMMER TEXT ============= */
+.shimmer-text {
+  background: linear-gradient(90deg, #d4d4d4 0%, #fef3c7 25%, #ffd700 50%, #fef3c7 75%, #d4d4d4 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-sweep 3s linear infinite;
+}
+@keyframes shimmer-sweep {
+  to { background-position: 200% center; }
+}
+
+/* ============= EQUIPMENT SLOT ============= */
+.equipment-slot {
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.equipment-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.equipment-slot-empty {
+  border: 1px dashed rgba(120, 120, 140, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ============= POWER BADGE ============= */
+.power-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+/* ============= STAT BAR ============= */
+.stat-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.stat-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: bar-shine 2s linear infinite;
+}
+@keyframes bar-shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* ============= BADGE GLOW ============= */
+.badge-glow-amber {
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5), 0 0 16px rgba(251, 191, 36, 0.2);
+}
+.badge-glow-red {
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5), 0 0 16px rgba(239, 68, 68, 0.2);
+}
+.badge-glow-purple {
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5), 0 0 16px rgba(168, 85, 247, 0.2);
+}
+
+/* ============= MENU ITEM HOVER ============= */
+.menu-item-hover {
+  transition: all 0.2s ease;
+  position: relative;
+}
+.menu-item-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.menu-item-hover:hover::before {
+  opacity: 1;
+}
+
+/* ============= CARD TILT EFFECT ============= */
+.card-tilt {
+  transition: transform 0.2s ease;
+  transform-style: preserve-3d;
+}
+.card-tilt:hover {
+  transform: perspective(800px) rotateY(-3deg) rotateX(2deg) translateZ(8px);
+}
+
+/* ============= DECORATIVE CORNER ============= */
+.corner-decoration {
+  position: relative;
+}
+.corner-decoration::before,
+.corner-decoration::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  pointer-events: none;
+}
+.corner-decoration::before {
+  top: 4px;
+  left: 4px;
+  border-right: none;
+  border-bottom: none;
+}
+.corner-decoration::after {
+  bottom: 4px;
+  right: 4px;
+  border-left: none;
+  border-top: none;
+}
+
+/* ============= TOWER FLOOR NUMBER ============= */
+.floor-number {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fef3c7 0%, #f59e0b 50%, #92400e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  letter-spacing: 0.05em;
+}
+
+/* ============= DIVINE GLOW ============= */
+.divine-glow {
+  position: relative;
+}
+.divine-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  z-index: -1;
+  animation: divine-pulse 3s ease-in-out infinite;
+}
+@keyframes divine-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+/* ============= SCROLLABLE LIST ============= */
+.scrollable-list {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+}
+.scrollable-list::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollable-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+.scrollable-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.4), rgba(180, 83, 9, 0.4));
+  border-radius: 3px;
+}
+.scrollable-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.6), rgba(180, 83, 9, 0.6));
+}
+
+/* ============= SECTION TITLE ============= */
+.section-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(251, 191, 36, 0.7);
+  position: relative;
+  padding-left: 12px;
+}
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(180deg, #fbbf24, #92400e);
+  border-radius: 1px;
+}
+
+/* ============= RARITY FRAME ============= */
+.rarity-frame-common { box-shadow: inset 0 0 0 1px rgba(156, 163, 175, 0.3); }
+.rarity-frame-uncommon { box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4), 0 0 8px rgba(34, 197, 94, 0.15); }
+.rarity-frame-rare { box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4), 0 0 10px rgba(59, 130, 246, 0.2); }
+.rarity-frame-epic { box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.5), 0 0 12px rgba(168, 85, 247, 0.25); }
+.rarity-frame-legendary { box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.6), 0 0 16px rgba(251, 191, 36, 0.3); }
+.rarity-frame-mythic {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35);
+  animation: mythic-pulse 2.5s ease-in-out infinite;
+}
+@keyframes mythic-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.5); }
+}
+
+/* ============= ENERGY BAR ============= */
+.energy-bar {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* ============= TEXT GLOW EFFECTS ============= */
+.text-glow-amber { text-shadow: 0 0 8px rgba(251, 191, 36, 0.6); }
+.text-glow-red { text-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+.text-glow-purple { text-shadow: 0 0 8px rgba(168, 85, 247, 0.6); }
+.text-glow-cyan { text-shadow: 0 0 8px rgba(34, 211, 238, 0.6); }
+
+/* ============= BORDER GLOW ============= */
+.border-glow-amber {
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.2), inset 0 0 12px rgba(251, 191, 36, 0.05);
+}
+.border-glow-red {
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2), inset 0 0 12px rgba(239, 68, 68, 0.05);
+}
+
+/* ============= SKELETON LOADING ============= */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(40, 30, 60, 0.4) 0%, rgba(60, 50, 80, 0.6) 50%, rgba(40, 30, 60, 0.4) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer-anim 1.5s linear infinite;
+}
+@keyframes skeleton-shimmer-anim {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ============= FLOATING ANIMATION ============= */
+.float-anim {
+  animation: float-anim 3s ease-in-out infinite;
+}
+@keyframes float-anim {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ============= NOTIFICATION DOT ============= */
+.notification-dot {
+  position: relative;
+}
+.notification-dot::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 1px solid #1a0a2e;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* ============ v4: Enhanced Battle & Visual Effects ============ */
+
+/* Screen shake effect for critical hits */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, 2px); }
+  20% { transform: translate(3px, -2px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2px, -3px); }
+  50% { transform: translate(-3px, 1px); }
+  60% { transform: translate(3px, -1px); }
+  70% { transform: translate(-1px, 3px); }
+  80% { transform: translate(1px, -3px); }
+  90% { transform: translate(-2px, 2px); }
+}
+.animate-screen-shake { animation: screen-shake 0.4s ease-out; }
+
+/* Hero card hover glow enhancement */
+@keyframes hero-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 200, 50, 0.1); }
+  50% { box-shadow: 0 0 25px rgba(255, 200, 50, 0.25), 0 0 50px rgba(255, 200, 50, 0.1); }
+}
+.animate-hero-glow { animation: hero-glow 2s ease-in-out infinite; }
+
+/* Battle turn indicator pulse */
+@keyframes turn-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.3); border-color: rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.8); }
+}
+.animate-turn-pulse { animation: turn-pulse 1s ease-in-out infinite; }
+
+/* Energy refill shimmer */
+@keyframes energy-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.energy-bar-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: energy-shimmer 2s linear infinite;
+}
+
+/* Mythic rarity animated border */
+@keyframes mythic-border {
+  0% { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+  33% { border-color: #ff8c00; box-shadow: 0 0 10px rgba(255, 140, 0, 0.5); }
+  66% { border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+  100% { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+}
+.animate-mythic-border { animation: mythic-border 3s ease-in-out infinite; }
+
+/* Legendary rarity animated border */
+@keyframes legendary-border {
+  0%, 100% { border-color: #eab308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.4); }
+  50% { border-color: #ffd700; box-shadow: 0 0 16px rgba(255, 215, 0, 0.6); }
+}
+.animate-legendary-border { animation: legendary-border 2s ease-in-out infinite; }
+
+/* Summoning portal glow */
+@keyframes portal-glow {
+  0%, 100% { box-shadow: 0 0 30px rgba(147, 51, 234, 0.3), inset 0 0 30px rgba(147, 51, 234, 0.1); }
+  50% { box-shadow: 0 0 60px rgba(147, 51, 234, 0.5), 0 0 100px rgba(147, 51, 234, 0.2), inset 0 0 50px rgba(147, 51, 234, 0.2); }
+}
+.animate-portal-glow { animation: portal-glow 2.5s ease-in-out infinite; }
+
+/* Ascension dramatic effect */
+@keyframes ascension-burst {
+  0% { transform: scale(0.5); opacity: 0; filter: brightness(3); }
+  40% { transform: scale(1.3); opacity: 1; filter: brightness(2); }
+  70% { transform: scale(0.95); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.animate-ascension-burst { animation: ascension-burst 0.8s ease-out; }
+
+/* Floating damage text */
+@keyframes damage-float {
+  0% { transform: translateY(0) scale(0.5); opacity: 1; }
+  20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-50px) scale(0.8); opacity: 0; }
+}
+.animate-damage-float { animation: damage-float 1.2s ease-out forwards; }
+
+/* Critical hit flash */
+@keyframes crit-flash {
+  0% { background-color: transparent; }
+  20% { background-color: rgba(255, 215, 0, 0.3); }
+  100% { background-color: transparent; }
+}
+.animate-crit-flash { animation: crit-flash 0.4s ease-out; }
+
+/* XP gain bar animation */
+@keyframes xp-gain {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}
+.animate-xp-gain { animation: xp-gain 0.6s ease-out; }
+
+/* Dark fantasy section separator */
+.dark-fantasy-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 200, 50, 0.3), rgba(168, 85, 247, 0.3), rgba(255, 200, 50, 0.3), transparent);
+  margin: 12px 0;
+}
+
+/* Premium card with animated border */
+.premium-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(20, 10, 40, 0.95), rgba(10, 5, 25, 0.95));
+  border-radius: 16px;
+  overflow: hidden;
+}
+.premium-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 2px;
+  background: linear-gradient(135deg, #ffd700, #ff6b00, #a855f7, #ffd700);
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Tab active indicator */
+.tab-active-glow {
+  position: relative;
+}
+.tab-active-glow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+  border-radius: 1px;
+}
+
+/* Notification badge */
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ============ v5: Additional Polish ============ */
+
+/* Awakening glow effect for awakened heroes */
+@keyframes awakening-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.3), 0 0 20px rgba(236, 72, 153, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(236, 72, 153, 0.3); }
+}
+.animate-awakening-glow { animation: awakening-glow 2s ease-in-out infinite; }
+
+/* Dungeon element aura effects */
+.element-aura-fire { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.1); }
+.element-aura-water { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), inset 0 0 20px rgba(34, 211, 238, 0.1); }
+.element-aura-earth { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.1); }
+.element-aura-dark { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), inset 0 0 20px rgba(168, 85, 247, 0.1); }
+.element-aura-light { box-shadow: 0 0 20px rgba(250, 204, 21, 0.3), inset 0 0 20px rgba(250, 204, 21, 0.1); }
+.element-aura-void { box-shadow: 0 0 20px rgba(236, 72, 153, 0.3), inset 0 0 20px rgba(236, 72, 153, 0.1); }
+
+/* Material shimmer */
+@keyframes material-shimmer {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px currentColor); }
+  50% { filter: brightness(1.4) drop-shadow(0 0 8px currentColor); }
+}
+.animate-material-shimmer { animation: material-shimmer 2.5s ease-in-out infinite; }
+
+/* Card rarity background patterns */
+.rarity-bg-common { background: linear-gradient(135deg, rgba(75, 85, 99, 0.1), rgba(31, 41, 55, 0.05)); }
+.rarity-bg-uncommon { background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(21, 128, 61, 0.05)); }
+.rarity-bg-rare { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05)); }
+.rarity-bg-epic { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.05)); }
+.rarity-bg-legendary { background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(180, 83, 9, 0.05)); }
+.rarity-bg-mythic { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); }
+
+/* Stage path connector */
+.stage-connector {
+  background: linear-gradient(180deg, transparent, rgba(255, 200, 50, 0.3), transparent);
+  width: 2px;
+}
+
+/* Glowing text for special elements */
+.glow-text-amber { text-shadow: 0 0 10px rgba(255, 200, 50, 0.6), 0 0 20px rgba(255, 200, 50, 0.3); }
+.glow-text-purple { text-shadow: 0 0 10px rgba(168, 85, 247, 0.6), 0 0 20px rgba(168, 85, 247, 0.3); }
+.glow-text-red { text-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.3); }
+.glow-text-cyan { text-shadow: 0 0 10px rgba(34, 211, 238, 0.6), 0 0 20px rgba(34, 211, 238, 0.3); }
+
+/* Card entrance animation */
+@keyframes card-entrance {
+  0% { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.animate-card-entrance { animation: card-entrance 0.5s ease-out forwards; }
+
+/* Glow pulse for important buttons */
+@keyframes button-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 30px rgba(245, 158, 11, 0.2); }
+}
+.animate-button-glow { animation: button-glow 2s ease-in-out infinite; }
+
+/* Element-themed backgrounds */
+.bg-element-fire { background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%); }
+.bg-element-water { background: radial-gradient(circle, rgba(34, 211, 238, 0.15), transparent 70%); }
+.bg-element-earth { background: radial-gradient(circle, rgba(245, 158, 11, 0.15), transparent 70%); }
+.bg-element-dark { background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%); }
+.bg-element-light { background: radial-gradient(circle, rgba(250, 204, 21, 0.15), transparent 70%); }
+.bg-element-void { background: radial-gradient(circle, rgba(236, 72, 153, 0.15), transparent 70%); }
+
+/* Rarity star burst */
+@keyframes star-burst {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+.animate-star-burst { animation: star-burst 0.6s ease-out forwards; }
+
+/* Progress bar glow */
+.progress-bar-glow {
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: energy-shimmer 2s linear infinite;
+}
+
+/* ============= NEW ENHANCED VISUAL EFFECTS ============= */
+
+/* Animated gradient border for premium cards */
+@keyframes premium-border-flow {
+  0% { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+  33% { border-color: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.3); }
+  66% { border-color: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+  100% { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+}
+.animate-premium-border { animation: premium-border-flow 3s ease-in-out infinite; border-width: 2px; border-style: solid; }
+
+/* Hero card hover glow effect */
+@keyframes hero-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(245,158,11,0.2), inset 0 0 5px rgba(245,158,11,0.05); }
+  50% { box-shadow: 0 0 15px rgba(245,158,11,0.4), 0 0 30px rgba(245,158,11,0.15), inset 0 0 10px rgba(245,158,11,0.1); }
+}
+.animate-hero-glow { animation: hero-glow 3s ease-in-out infinite; }
+
+/* Mythic rarity pulse - intense red/gold glow */
+@keyframes mythic-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.4), 0 0 16px rgba(255,215,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(239,68,68,0.6), 0 0 40px rgba(255,215,0,0.3), 0 0 60px rgba(239,68,68,0.1); }
+}
+.animate-mythic-pulse { animation: mythic-pulse 2s ease-in-out infinite; }
+
+/* Legendary shimmer effect */
+@keyframes legendary-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-legendary-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.1) 25%, rgba(255,215,0,0.3) 50%, rgba(255,215,0,0.1) 75%, transparent 100%);
+  background-size: 200% 100%;
+  animation: legendary-shimmer 3s ease-in-out infinite;
+}
+
+/* Energy refill animation */
+@keyframes energy-refill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* Screen transition - portal swirl */
+@keyframes portal-swirl {
+  0% { transform: rotate(0deg) scale(0.8); opacity: 0; filter: blur(8px) brightness(2); }
+  50% { transform: rotate(180deg) scale(1.05); opacity: 1; filter: blur(0) brightness(1.2); }
+  100% { transform: rotate(360deg) scale(1); opacity: 1; filter: blur(0) brightness(1); }
+}
+
+/* Ascension burst effect */
+@keyframes ascension-burst {
+  0% { transform: scale(0); opacity: 0; }
+  30% { transform: scale(1.5); opacity: 1; }
+  60% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.animate-ascension-burst {
+  animation: ascension-burst 0.8s ease-out forwards;
+}
+
+/* Sacrifice dissolve effect */
+@keyframes sacrifice-dissolve {
+  0% { transform: scale(1); opacity: 1; filter: blur(0) brightness(1); }
+  50% { transform: scale(1.1); opacity: 0.5; filter: blur(2px) brightness(2); }
+  100% { transform: scale(0); opacity: 0; filter: blur(8px) brightness(3); }
+}
+.animate-sacrifice-dissolve {
+  animation: sacrifice-dissolve 0.6s ease-in forwards;
+}
+
+/* Treasure chest open animation */
+@keyframes chest-open {
+  0% { transform: perspective(400px) rotateX(0deg); }
+  40% { transform: perspective(400px) rotateX(-30deg); }
+  60% { transform: perspective(400px) rotateX(-25deg); }
+  100% { transform: perspective(400px) rotateX(0deg); }
+}
+.animate-chest-open { animation: chest-open 0.8s ease-out; }
+
+/* Floating gold coins */
+@keyframes coin-float {
+  0% { transform: translateY(0) rotateY(0deg); opacity: 1; }
+  50% { transform: translateY(-30px) rotateY(180deg); opacity: 0.8; }
+  100% { transform: translateY(-60px) rotateY(360deg); opacity: 0; }
+}
+.animate-coin-float { animation: coin-float 1.5s ease-out forwards; }
+
+/* Rage/power-up aura */
+@keyframes power-aura {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(239,68,68,0.3), 0 0 20px rgba(245,158,11,0.2), inset 0 0 5px rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.3);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(245,158,11,0.3), 0 0 60px rgba(239,68,68,0.1), inset 0 0 10px rgba(239,68,68,0.2);
+    border-color: rgba(245,158,11,0.5);
+  }
+}
+.animate-power-aura { animation: power-aura 2s ease-in-out infinite; }
+
+/* Ice/frost effect */
+@keyframes frost-spread {
+  0% { opacity: 0; transform: scale(0.5); filter: blur(4px); }
+  100% { opacity: 0.3; transform: scale(1.5); filter: blur(0); }
+}
+.animate-frost { animation: frost-spread 0.8s ease-out forwards; }
+
+/* Void distortion effect */
+@keyframes void-distort {
+  0%, 100% { transform: scale(1) skewX(0deg); filter: hue-rotate(0deg); }
+  25% { transform: scale(1.02) skewX(1deg); filter: hue-rotate(10deg); }
+  75% { transform: scale(0.98) skewX(-1deg); filter: hue-rotate(-10deg); }
+}
+.animate-void-distort { animation: void-distort 2s ease-in-out infinite; }
+
+/* Crown/badge entrance */
+@keyframes badge-entrance {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-badge-entrance { animation: badge-entrance 0.5s ease-out forwards; }
+
+/* Particle trail for scrolls and items */
+@keyframes particle-trail {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-40px) scale(0); opacity: 0; }
+}
+.particle-trail span {
+  animation: particle-trail 1.2s ease-out forwards;
+  position: absolute;
+}
+
+/* Dark vignette overlay for modals */
+.modal-vignette {
+  position: relative;
+}
+.modal-vignette::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(10,10,30,0.6) 100%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* Rarity glow backgrounds */
+.rarity-glow-common { background: radial-gradient(circle, rgba(107,114,128,0.1) 0%, transparent 70%); }
+.rarity-glow-uncommon { background: radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%); }
+.rarity-glow-rare { background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); }
+.rarity-glow-epic { background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%); }
+.rarity-glow-legendary { background: radial-gradient(circle, rgba(234,179,8,0.2) 0%, transparent 70%); }
+.rarity-glow-mythic { background: radial-gradient(circle, rgba(239,68,68,0.2) 0%, transparent 70%); }
+
+/* Stat comparison - positive/negative highlights */
+.stat-increase { color: #22c55e; text-shadow: 0 0 5px rgba(34,197,94,0.3); }
+.stat-decrease { color: #ef4444; text-shadow: 0 0 5px rgba(239,68,68,0.3); }
+
+/* Premium card wrapper with animated border */
+.premium-card {
+  position: relative;
+  background: linear-gradient(135deg, #1a0a2e, #0f0f23);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.premium-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #ffd700, #a855f7, #ef4444, #ffd700);
+  background-size: 300% 300%;
+  animation: gradient-border-flow 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+@keyframes gradient-border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Battle damage number styles */
+.damage-number-player { 
+  color: #fbbf24; 
+  text-shadow: 0 0 5px rgba(251,191,36,0.5), 0 2px 4px rgba(0,0,0,0.5);
+  font-weight: 900;
+}
+.damage-number-crit { 
+  color: #ef4444; 
+  text-shadow: 0 0 8px rgba(239,68,68,0.6), 0 0 16px rgba(239,68,68,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  font-weight: 900;
+  font-size: 1.2em;
+}
+.damage-number-heal { 
+  color: #22c55e; 
+  text-shadow: 0 0 5px rgba(34,197,94,0.5), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Screen-specific backdrop effects */
+.backdrop-battle { background: radial-gradient(ellipse at 50% 30%, rgba(239,68,68,0.08) 0%, transparent 60%); }
+.backdrop-summon { background: radial-gradient(ellipse at 50% 30%, rgba(168,85,247,0.08) 0%, transparent 60%); }
+.backdrop-shop { background: radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.08) 0%, transparent 60%); }
+.backdrop-guild { background: radial-gradient(ellipse at 50% 30%, rgba(34,197,94,0.08) 0%, transparent 60%); }
+.backdrop-arena { background: radial-gradient(ellipse at 50% 30%, rgba(220,38,38,0.08) 0%, transparent 60%); }
+
+/* Ember particles - enhanced */
+.particles-bg .ember-particle {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffa500, #ff4500);
+  opacity: 0;
+  animation: ember-rise var(--ember-duration, 10s) var(--ember-delay, 0s) ease-in infinite;
+  pointer-events: none;
+}
+@keyframes ember-rise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(-50vh) translateX(20px) scale(0.8); opacity: 0.3; }
+  100% { transform: translateY(-100vh) translateX(-10px) scale(0); opacity: 0; }
+}
+
+/* Scroll indicator for long content */
+.scroll-indicator {
+  position: relative;
+}
+.scroll-indicator::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(15,15,35,0.8));
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ============ v6: 3D HERO CARD EFFECTS ============ */
+
+/* 3D perspective container for hero cards */
+.hero-3d-container {
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+/* 3D card body - receives tilt transforms */
+.hero-3d-card {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+/* 3D depth layers - children positioned at different Z depths */
+.hero-3d-layer-bg {
+  transform: translateZ(0px);
+  transition: transform 0.15s ease-out;
+}
+.hero-3d-layer-mid {
+  transform: translateZ(20px);
+  transition: transform 0.15s ease-out;
+}
+.hero-3d-layer-front {
+  transform: translateZ(40px);
+  transition: transform 0.15s ease-out;
+}
+.hero-3d-layer-shine {
+  transform: translateZ(50px);
+  pointer-events: none;
+}
+
+/* Holographic shimmer overlay - rainbow iridescent effect */
+.holographic-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.03) 30%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(168, 85, 247, 0.12) 45%,
+    rgba(59, 130, 246, 0.1) 50%,
+    rgba(34, 197, 94, 0.08) 55%,
+    rgba(255, 255, 255, 0.06) 60%,
+    rgba(255, 215, 0, 0.1) 65%,
+    transparent 80%
+  );
+  background-size: 300% 100%;
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 0.3s ease, background-position 0.3s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+.hero-3d-card:hover .holographic-overlay {
+  opacity: 1;
+  background-position: 100% center;
+  animation: holographic-sweep 2s linear infinite;
+}
+
+@keyframes holographic-sweep {
+  0% { background-position: -100% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Holographic effect for Epic+ rarity */
+.holographic-epic {
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(168, 85, 247, 0.05) 25%,
+    rgba(168, 85, 247, 0.15) 35%,
+    rgba(236, 72, 153, 0.12) 40%,
+    rgba(59, 130, 246, 0.1) 45%,
+    transparent 55%,
+    rgba(168, 85, 247, 0.08) 65%,
+    transparent 80%
+  );
+  background-size: 400% 100%;
+}
+
+/* Holographic effect for Legendary rarity */
+.holographic-legendary {
+  background: linear-gradient(
+    105deg,
+    transparent 10%,
+    rgba(255, 215, 0, 0.05) 20%,
+    rgba(255, 215, 0, 0.18) 30%,
+    rgba(255, 170, 0, 0.12) 40%,
+    rgba(255, 140, 0, 0.15) 45%,
+    rgba(255, 215, 0, 0.08) 55%,
+    rgba(239, 68, 68, 0.1) 65%,
+    rgba(255, 215, 0, 0.12) 75%,
+    transparent 85%
+  );
+  background-size: 400% 100%;
+}
+
+/* Holographic effect for Mythic rarity */
+.holographic-mythic {
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(239, 68, 68, 0.08) 15%,
+    rgba(255, 140, 0, 0.18) 25%,
+    rgba(255, 215, 0, 0.2) 35%,
+    rgba(168, 85, 247, 0.15) 40%,
+    rgba(236, 72, 153, 0.12) 45%,
+    rgba(239, 68, 68, 0.18) 55%,
+    rgba(255, 215, 0, 0.1) 65%,
+    rgba(239, 68, 68, 0.15) 75%,
+    transparent 90%
+  );
+  background-size: 400% 100%;
+}
+
+/* 3D depth shadow - under card */
+.hero-3d-shadow {
+  position: absolute;
+  inset: 4px -2px -4px 2px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  filter: blur(12px);
+  transform: translateZ(-20px);
+  transition: all 0.3s ease;
+  opacity: 0.4;
+}
+.hero-3d-card:hover .hero-3d-shadow {
+  opacity: 0.7;
+  filter: blur(20px);
+  inset: 8px -4px -8px 4px;
+}
+
+/* Edge light effect - simulates light hitting card edges */
+.edge-light {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 9;
+}
+.hero-3d-card:hover .edge-light {
+  opacity: 1;
+}
+.edge-light-top {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), transparent 30%);
+}
+.edge-light-left {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.1), transparent 25%);
+}
+
+/* 3D portrait parallax - portrait shifts differently from card */
+.hero-3d-portrait {
+  transform: translateZ(15px);
+  transition: transform 0.15s ease-out;
+}
+
+/* Floating gem/rune particle for high rarity heroes */
+@keyframes float-particle-3d {
+  0%, 100% {
+    transform: translateZ(30px) translateY(0px) rotateY(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateZ(35px) translateY(-8px) rotateY(90deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateZ(30px) translateY(-3px) rotateY(180deg);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateZ(25px) translateY(-12px) rotateY(270deg);
+    opacity: 0.8;
+  }
+}
+.hero-3d-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-particle-3d 3s ease-in-out infinite;
+  z-index: 15;
+}
+
+/* 3D stat bar with depth */
+.stat-3d-bar {
+  position: relative;
+  transform: translateZ(5px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Card frame with 3D beveled edge */
+.hero-3d-frame {
+  position: relative;
+  border: 2px solid transparent;
+  border-image: none;
+}
+.hero-3d-frame::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Rarity-specific 3D frame colors */
+.hero-3d-frame-common::before {
+  background: linear-gradient(135deg, rgba(156,163,175,0.4), rgba(75,85,99,0.2), rgba(156,163,175,0.4));
+}
+.hero-3d-frame-uncommon::before {
+  background: linear-gradient(135deg, rgba(34,197,94,0.5), rgba(21,128,61,0.2), rgba(34,197,94,0.5));
+}
+.hero-3d-frame-rare::before {
+  background: linear-gradient(135deg, rgba(59,130,246,0.5), rgba(29,78,216,0.2), rgba(59,130,246,0.5));
+}
+.hero-3d-frame-epic::before {
+  background: linear-gradient(135deg, rgba(168,85,247,0.6), rgba(124,58,237,0.2), rgba(236,72,153,0.5), rgba(168,85,247,0.6));
+  background-size: 200% 200%;
+  animation: gradient-border-flow 3s ease infinite;
+}
+.hero-3d-frame-legendary::before {
+  background: linear-gradient(135deg, rgba(255,215,0,0.7), rgba(234,179,8,0.3), rgba(255,140,0,0.5), rgba(255,215,0,0.7));
+  background-size: 200% 200%;
+  animation: gradient-border-flow 2.5s ease infinite;
+}
+.hero-3d-frame-mythic::before {
+  background: linear-gradient(135deg, rgba(239,68,68,0.7), rgba(255,140,0,0.5), rgba(255,215,0,0.6), rgba(168,85,247,0.5), rgba(239,68,68,0.7));
+  background-size: 300% 300%;
+  animation: gradient-border-flow 2s ease infinite;
+}
+
+/* 3D glow that responds to tilt - dynamic box shadow */
+.hero-3d-glow {
+  transition: box-shadow 0.3s ease;
+}
+.hero-3d-glow-rare {
+  box-shadow: 0 4px 15px rgba(59,130,246,0.2), 0 8px 30px rgba(59,130,246,0.1);
+}
+.hero-3d-glow-epic {
+  box-shadow: 0 4px 15px rgba(168,85,247,0.3), 0 8px 30px rgba(168,85,247,0.15);
+}
+.hero-3d-glow-legendary {
+  box-shadow: 0 4px 20px rgba(255,215,0,0.3), 0 8px 40px rgba(255,215,0,0.15), 0 0 60px rgba(255,215,0,0.05);
+}
+.hero-3d-glow-mythic {
+  box-shadow: 0 4px 20px rgba(239,68,68,0.3), 0 8px 40px rgba(239,68,68,0.15), 0 0 60px rgba(255,215,0,0.08);
+}
+
+/* 3D hero detail modal - rotating showcase */
+@keyframes hero-showcase-rotate {
+  0% { transform: perspective(1000px) rotateY(-15deg) rotateX(5deg); }
+  25% { transform: perspective(1000px) rotateY(0deg) rotateX(0deg); }
+  50% { transform: perspective(1000px) rotateY(15deg) rotateX(-5deg); }
+  75% { transform: perspective(1000px) rotateY(0deg) rotateX(0deg); }
+  100% { transform: perspective(1000px) rotateY(-15deg) rotateX(5deg); }
+}
+.hero-showcase-rotate {
+  animation: hero-showcase-rotate 8s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* 3D pedestal for hero detail view */
+.hero-pedestal {
+  position: relative;
+  transform: perspective(600px) rotateX(20deg);
+  transform-origin: bottom center;
+}
+.hero-pedestal::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 10%;
+  right: 10%;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(255,215,0,0.15) 0%, transparent 70%);
+  filter: blur(8px);
+}
+
+/* Card flip animation for summoning reveal */
+@keyframes card-flip-3d {
+  0% { transform: perspective(800px) rotateY(180deg) scale(0.5); opacity: 0; }
+  40% { transform: perspective(800px) rotateY(90deg) scale(1.1); opacity: 0.5; }
+  60% { transform: perspective(800px) rotateY(0deg) scale(1.05); opacity: 1; }
+  80% { transform: perspective(800px) rotateY(-5deg) scale(1); }
+  100% { transform: perspective(800px) rotateY(0deg) scale(1); }
+}
+.animate-card-flip-3d {
+  animation: card-flip-3d 1.2s ease-out forwards;
+  transform-style: preserve-3d;
+}
+
+/* 3D stat orb - floating stat display with depth */
+.stat-orb-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+}
+.stat-orb-3d::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.2), transparent 60%);
+  pointer-events: none;
+}
+
+/* 3D icon badge with depth */
+.badge-3d {
+  position: relative;
+  transform: translateZ(25px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), 0 0 12px rgba(255,215,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* 3D embossed text for hero names */
+.embossed-text {
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.15),
+    0 -1px 0 rgba(0,0,0,0.5),
+    0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* 3D recessed panel */
+.recessed-panel {
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.05);
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+/* 3D raised panel */
+.raised-panel {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05) inset;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Aura ring for legendary+ heroes */
+@keyframes aura-ring {
+  0% { transform: rotateX(60deg) rotateZ(0deg) scale(1); opacity: 0.3; }
+  50% { transform: rotateX(60deg) rotateZ(180deg) scale(1.1); opacity: 0.5; }
+  100% { transform: rotateX(60deg) rotateZ(360deg) scale(1); opacity: 0.3; }
+}
+.aura-ring {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  left: -10%;
+  top: -10%;
+  border: 2px solid;
+  border-radius: 50%;
+  animation: aura-ring 4s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.aura-ring-legendary {
+  border-color: rgba(255,215,0,0.4);
+  box-shadow: 0 0 15px rgba(255,215,0,0.2);
+}
+.aura-ring-mythic {
+  border-color: rgba(239,68,68,0.5);
+  box-shadow: 0 0 15px rgba(239,68,68,0.2);
+  animation-duration: 3s;
+}
+
+/* Double aura for mythic */
+.aura-ring-outer {
+  width: 140%;
+  height: 140%;
+  left: -20%;
+  top: -20%;
+  border-width: 1px;
+  border-style: dashed;
+}
+.aura-ring-outer.aura-ring-mythic {
+  border-color: rgba(255,215,0,0.3);
+  animation-direction: reverse;
+  animation-duration: 5s;
+}
+
+/* 3D environmental lighting on card hover */
+.hero-3d-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 11;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.hero-3d-card:hover .hero-3d-light {
+  opacity: 1;
+}
+
+/* Glare/reflection spot - follows mouse */
+.hero-3d-glare {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(8px);
+  transform: translateZ(50px);
+}
+.hero-3d-card:hover .hero-3d-glare {
+  opacity: 1;
+}
+
+/* ============ PREMIUM UPGRADE v7 ============ */
+
+/* Premium gold gradient text with animated shimmer */
+.premium-gold-text {
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 25%, #ffe566 50%, #ffd700 75%, #b8860b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: premium-gold-sweep 3s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+}
+@keyframes premium-gold-sweep {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Premium deep card shadow with layered depth */
+.premium-card-shadow {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.2),
+    0 16px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Premium shimmer animation for legendary+ items */
+@keyframes premium-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.premium-shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(255, 215, 0, 0.08) 35%,
+    rgba(255, 215, 0, 0.2) 40%,
+    rgba(255, 230, 100, 0.3) 42%,
+    rgba(255, 215, 0, 0.2) 45%,
+    rgba(255, 215, 0, 0.08) 50%,
+    transparent 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: premium-shimmer 3s ease-in-out infinite;
+}
+
+/* Premium sparkle animation for gem-like items */
+@keyframes gem-sparkle {
+  0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  20% { transform: scale(1.2) rotate(72deg); opacity: 1; }
+  40% { transform: scale(0.8) rotate(144deg); opacity: 0.6; }
+  60% { transform: scale(1.4) rotate(216deg); opacity: 0.9; }
+  80% { transform: scale(0.6) rotate(288deg); opacity: 0.3; }
+}
+.premium-gem-sparkle {
+  animation: gem-sparkle 2s ease-in-out infinite;
+}
+
+/* Ornate corner flourishes for premium cards - enhanced version */
+.premium-corner-tl,
+.premium-corner-tr,
+.premium-corner-bl,
+.premium-corner-br {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 15;
+}
+.premium-corner-tl::before,
+.premium-corner-tr::before,
+.premium-corner-bl::before,
+.premium-corner-br::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.7), rgba(255, 215, 0, 0.1));
+  border-radius: 1px;
+}
+.premium-corner-tl::after,
+.premium-corner-tr::after,
+.premium-corner-bl::after,
+.premium-corner-br::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.7), rgba(255, 215, 0, 0.1));
+  border-radius: 1px;
+}
+.premium-corner-tl { top: 4px; left: 4px; }
+.premium-corner-tl::before { top: 0; left: 0; }
+.premium-corner-tl::after { top: 0; left: 0; }
+.premium-corner-tr { top: 4px; right: 4px; }
+.premium-corner-tr::before { top: 0; right: 0; background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.7)); }
+.premium-corner-tr::after { top: 0; right: 0; }
+.premium-corner-bl { bottom: 4px; left: 4px; }
+.premium-corner-bl::before { bottom: 0; left: 0; }
+.premium-corner-bl::after { bottom: 0; left: 0; background: linear-gradient(0deg, rgba(255, 215, 0, 0.7), rgba(255, 215, 0, 0.1)); }
+.premium-corner-br { bottom: 4px; right: 4px; }
+.premium-corner-br::before { bottom: 0; right: 0; background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.7)); }
+.premium-corner-br::after { bottom: 0; right: 0; background: linear-gradient(0deg, rgba(255, 215, 0, 0.7), rgba(255, 215, 0, 0.1)); }
+
+/* Premium button with glow, hover and press effects */
+.premium-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffd700 0%, #ff9500 50%, #ffd700 100%);
+  background-size: 200% 100%;
+  color: #1a0a2e;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  border: 1px solid rgba(255, 230, 100, 0.6);
+  box-shadow:
+    0 0 12px rgba(255, 170, 0, 0.5),
+    0 0 24px rgba(255, 170, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.premium-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+  animation: premium-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+.premium-btn:hover {
+  background-position: 100% 0;
+  box-shadow:
+    0 0 20px rgba(255, 170, 0, 0.8),
+    0 0 40px rgba(255, 170, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px) scale(1.02);
+}
+.premium-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    0 0 8px rgba(255, 170, 0, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Premium glass morphism with gold tint */
+.premium-glass {
+  background: linear-gradient(135deg, rgba(26, 10, 46, 0.6) 0%, rgba(15, 15, 35, 0.7) 50%, rgba(26, 10, 46, 0.6) 100%);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 215, 0, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium scrollbar - enhanced gold themed */
+.game-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.game-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+.game-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.4), rgba(180, 83, 9, 0.4));
+  border-radius: 2px;
+}
+.game-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.6), rgba(180, 83, 9, 0.6));
+}
+
+/* Premium frame styles for different rarities */
+.premium-frame-common {
+  box-shadow: inset 0 0 0 1px rgba(156, 163, 175, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.premium-frame-uncommon {
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4), 0 0 8px rgba(34, 197, 94, 0.15), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.premium-frame-rare {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4), 0 0 12px rgba(59, 130, 246, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.premium-frame-epic {
+  box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.5), 0 0 16px rgba(168, 85, 247, 0.25), 0 0 30px rgba(168, 85, 247, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.premium-frame-legendary {
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(255, 215, 0, 0.1), 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: premium-legendary-pulse 2.5s ease-in-out infinite;
+}
+.premium-frame-mythic {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35), 0 0 40px rgba(255, 215, 0, 0.15), 0 0 60px rgba(239, 68, 68, 0.1), 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: premium-mythic-pulse 2s ease-in-out infinite;
+}
+@keyframes premium-legendary-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(255, 215, 0, 0.1), 0 4px 20px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.3); }
+}
+@keyframes premium-mythic-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.35), 0 0 40px rgba(255, 215, 0, 0.15), 0 0 60px rgba(239, 68, 68, 0.1), 0 4px 20px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.5), 0 0 60px rgba(255, 215, 0, 0.2), 0 0 80px rgba(239, 68, 68, 0.15), 0 4px 20px rgba(0, 0, 0, 0.3); }
+}
+
+/* Animated border glow for epic+ rarities */
+@keyframes premium-border-glow-epic {
+  0%, 100% { border-color: rgba(168, 85, 247, 0.5); }
+  50% { border-color: rgba(168, 85, 247, 0.8); }
+}
+@keyframes premium-border-glow-legendary {
+  0%, 100% { border-color: rgba(255, 215, 0, 0.5); }
+  50% { border-color: rgba(255, 215, 0, 0.8); }
+}
+@keyframes premium-border-glow-mythic {
+  0% { border-color: rgba(239, 68, 68, 0.6); }
+  33% { border-color: rgba(255, 140, 0, 0.7); }
+  66% { border-color: rgba(255, 215, 0, 0.6); }
+  100% { border-color: rgba(239, 68, 68, 0.6); }
+}
+.premium-border-glow-epic {
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  animation: premium-border-glow-epic 2s ease-in-out infinite;
+}
+.premium-border-glow-legendary {
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  animation: premium-border-glow-legendary 2s ease-in-out infinite;
+}
+.premium-border-glow-mythic {
+  border: 2px solid rgba(239, 68, 68, 0.6);
+  animation: premium-border-glow-mythic 3s ease-in-out infinite;
+}
+
+/* Premium nameplate at bottom of cards */
+.premium-nameplate {
+  position: relative;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 20%, rgba(0, 0, 0, 0.85) 100%);
+  border-top: 1px solid rgba(255, 215, 0, 0.15);
+}
+.premium-nameplate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+}
+
+/* Premium star rendering with golden glow */
+.premium-star {
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.3));
+}
+
+/* Premium inner vignette for portrait area */
+.premium-vignette {
+  position: relative;
+}
+.premium-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 80%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Premium header gold line animation */
+@keyframes premium-header-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.premium-header-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+}
+.premium-header-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.8), rgba(255, 230, 100, 1), rgba(255, 215, 0, 0.8), transparent);
+  animation: premium-header-line 4s linear infinite;
+}
+
+/* Premium resource pill */
+.premium-resource-pill {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 9999px;
+  padding: 4px 12px 4px 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 215, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.premium-resource-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+}
+
+/* Premium avatar frame */
+.premium-avatar-frame {
+  position: relative;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3), inset 0 0 8px rgba(255, 215, 0, 0.1);
+}
+.premium-avatar-frame::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: inherit;
+  animation: premium-avatar-pulse 3s ease-in-out infinite;
+}
+@keyframes premium-avatar-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Premium nav glass effect */
+.premium-nav-glass {
+  background: linear-gradient(180deg, rgba(15, 15, 35, 0.85) 0%, rgba(10, 5, 25, 0.95) 100%);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border-top: 1px solid rgba(255, 215, 0, 0.12);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium active tab golden glow indicator */
+.premium-tab-indicator {
+  position: relative;
+}
+.premium-tab-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ffd700, #ffe566, #ffd700, transparent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.6), 0 0 16px rgba(255, 215, 0, 0.3);
+}
+
+/* Premium dashboard stat card */
+.premium-stat-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(15, 15, 35, 0.6) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.premium-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+}
+
+/* Premium quick action button */
+.premium-quick-action {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+.premium-quick-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+.premium-quick-action:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium news ticker */
+.premium-ticker {
+  position: relative;
+  background: linear-gradient(90deg, rgba(15, 15, 35, 0.9) 0%, rgba(26, 10, 46, 0.9) 50%, rgba(15, 15, 35, 0.9) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  overflow: hidden;
+}
+.premium-ticker::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, rgba(15, 15, 35, 0.95), transparent);
+  z-index: 10;
+}
+.premium-ticker::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, rgba(15, 15, 35, 0.95));
+  z-index: 10;
+}
+
+/* Premium team hero card in dashboard */
+.premium-team-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+.premium-team-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 3;
+}
+.premium-team-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), transparent 30%, transparent 70%, rgba(255, 215, 0, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Premium power display */
+.premium-power-display {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 170, 0, 0.08) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 9999px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2), inset 0 1px 0 rgba(255, 215, 0, 0.1);
+}
+
+/* Premium skill icon prefix */
+.premium-skill-row {
+  position: relative;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 215, 0, 0.15);
+}
+.premium-skill-row::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffd700;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
+/* Premium animated stat bar */
+.premium-stat-animated {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.4);
+}
+.premium-stat-animated-fill {
+  height: 100%;
+  border-radius: 3px;
+  position: relative;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.premium-stat-animated-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: bar-shine 2s linear infinite;
+}
+
+/* Premium dark fantasy background - enhanced */
+.dark-fantasy-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(220, 38, 38, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(234, 179, 8, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(26, 10, 46, 0.5) 0%, transparent 70%),
+    linear-gradient(180deg, #060612 0%, #0a0a1a 50%, #060612 100%);
+}
+
+/* Ambient particle styling */
+.ambient-particle {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: ambient-float linear infinite;
+}
+@keyframes ambient-float {
+  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-20vh) translateX(30px); opacity: 0; }
+}
+
+/* Premium hero card portrait area - taller and more prominent */
+.premium-portrait-area {
+  position: relative;
+  overflow: hidden;
+}
+.premium-portrait-area img {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+.premium-portrait-area:hover img {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* Compact card hero image - prominent display */
+.premium-compact-portrait {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+}

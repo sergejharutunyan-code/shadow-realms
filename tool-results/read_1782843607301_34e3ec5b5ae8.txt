@@ -1,0 +1,762 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useGameStore, GameScreen } from '@/lib/game-store';
+     4→     4→import { RARITY_CONFIG, ELEMENT_CONFIG, DAILY_REWARDS, ARENA_RANKS, DAILY_MISSIONS } from '@/lib/game-data';
+     5→     5→import { motion, AnimatePresence } from 'framer-motion';
+     6→     6→import { useState, useEffect, useMemo } from 'react';
+     7→     7→import {
+     8→     8→  Swords, Sparkles, Map, ShoppingBag, Crown, Users, Zap, Star, Gift,
+     9→     9→  ChevronRight, Trophy, Target, Flame, Shield, Clock, TowerControl as Tower,
+    10→    10→  Landmark as Dungeon, Scroll, Store, CircleDashed, PartyPopper
+    11→    11→} from 'lucide-react';
+    12→    12→import Image from 'next/image';
+    13→    13→import { GAME_IMAGES, getHeroImageUrl, getHeroGradient } from '@/lib/hero-images';
+    14→    14→
+    15→    15→// ============= Constants =============
+    16→    16→
+    17→    17→const NEWS_EVENTS = [
+    18→    18→  { emoji: '🔥', text: 'Wandering Merchant arrives in 2h 30m!' },
+    19→    19→  { emoji: '⚔️', text: 'Arena Season 3 starts tomorrow!' },
+    20→    20→  { emoji: '🌟', text: 'New Hero: Void Emperor Zarkon - Rate Up!' },
+    21→    21→  { emoji: '🏰', text: 'Guild Wars registration open!' },
+    22→    22→  { emoji: '💀', text: 'Tower of Eternity: Double rewards this weekend!' },
+    23→    23→];
+    24→    24→
+    25→    25→const DAILY_REWARD_ICONS = ['🪙', '⬆️', '⚡', '🔮', '🦸', '🧙', '🐉'];
+    26→    26→
+    27→    27→// ============= Main Component =============
+    28→    28→
+    29→    29→export function GameDashboard() {
+    30→    30→  const player = useGameStore(s => s.player);
+    31→    31→  const heroes = useGameStore(s => s.heroes);
+    32→    32→  const team = useGameStore(s => s.team);
+    33→    33→  const setScreen = useGameStore(s => s.setScreen);
+    34→    34→  const showDailyReward = useGameStore(s => s.showDailyReward);
+    35→    35→  const setShowDailyReward = useGameStore(s => s.setShowDailyReward);
+    36→    36→  const claimDailyReward = useGameStore(s => s.claimDailyReward);
+    37→    37→  const dailyClaimed = useGameStore(s => s.dailyClaimed);
+    38→    38→  const arenaTrophies = useGameStore(s => s.arenaTrophies);
+    39→    39→  const towerHighestFloor = useGameStore(s => s.towerHighestFloor);
+    40→    40→  const loginStreak = useGameStore(s => s.loginStreak);
+    41→    41→  const showStreakReward = useGameStore(s => s.showStreakReward);
+    42→    42→  const dungeonAttempts = useGameStore(s => s.dungeonAttempts);
+    43→    43→  const missionProgress = useGameStore(s => s.missionProgress);
+    44→    44→  const getMerchantDeals = useGameStore(s => s.getMerchantDeals);
+    45→    45→
+    46→    46→  const teamHeroes = team.map(id => heroes.find(h => h.id === id)).filter(Boolean);
+    47→    47→  const todayReward = DAILY_REWARDS[player.dailyRewardDay % 7];
+    48→    48→
+    49→    49→  // Calculate team power
+    50→    50→  const teamPower = teamHeroes.reduce((sum, h) => {
+    51→    51→    if (!h) return sum;
+    52→    52→    return sum + h.attack + h.defense + h.health / 10 + h.speed * 5;
+    53→    53→  }, 0);
+    54→    54→
+    55→    55→  // Power ranking estimation
+    56→    56→  const powerRank = useMemo(() => {
+    57→    57→    const p = teamPower;
+    58→    58→    if (p > 50000) return 'Top 1%';
+    59→    59→    if (p > 30000) return 'Top 5%';
+    60→    60→    if (p > 15000) return 'Top 10%';
+    61→    61→    if (p > 5000) return 'Top 25%';
+    62→    62→    if (p > 1000) return 'Top 50%';
+    63→    63→    return 'Unranked';
+    64→    64→  }, [teamPower]);
+    65→    65→
+    66→    66→  // Arena rank from trophies
+    67→    67→  const arenaRank = useMemo(() => {
+    68→    68→    let rank = ARENA_RANKS[0];
+    69→    69→    for (const r of ARENA_RANKS) {
+    70→    70→      if (arenaTrophies >= r.minTrophies) rank = r;
+    71→    71→    }
+    72→    72→    return rank;
+    73→    73→  }, [arenaTrophies]);
+    74→    74→
+    75→    75→  // Today's dungeon element (based on day of week)
+    76→    76→  const todayElement = useMemo(() => {
+    77→    77→    const dayOfWeek = new Date().getDay();
+    78→    78→    const elements = ['fire', 'water', 'earth', 'dark', 'light', 'void'];
+    79→    79→    return elements[dayOfWeek % elements.length];
+    80→    80→  }, []);
+    81→    81→
+    82→    82→  const todayElementConfig = ELEMENT_CONFIG[todayElement as keyof typeof ELEMENT_CONFIG];
+    83→    83→
+    84→    84→  // Merchant deals check
+    85→    85→  const merchantDeals = useMemo(() => {
+    86→    86→    try { return getMerchantDeals(); } catch { return []; }
+    87→    87→  }, [getMerchantDeals]);
+    88→    88→  const hasMerchantDeals = merchantDeals.length > 0;
+    89→    89→
+    90→    90→  // Daily quest progress
+    91→    91→  const dailyQuestProgress = useMemo(() => {
+    92→    92→    const completed = missionProgress.filter(m => m.claimed).length;
+    93→    93→    return { completed, total: DAILY_MISSIONS.length };
+    94→    94→  }, [missionProgress]);
+    95→    95→
+    96→    96→  // Countdown timer for special offer (simulated - resets daily)
+    97→    97→  const [offerTime, setOfferTime] = useState('');
+    98→    98→  useEffect(() => {
+    99→    99→    const update = () => {
+   100→   100→      const now = new Date();
+   101→   101→      const end = new Date(now);
+   102→   102→      end.setHours(23, 59, 59, 999);
+   103→   103→      const diff = end.getTime() - now.getTime();
+   104→   104→      const h = Math.floor(diff / 3600000);
+   105→   105→      const m = Math.floor((diff % 3600000) / 60000);
+   106→   106→      const s = Math.floor((diff % 60000) / 1000);
+   107→   107→      setOfferTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+   108→   108→    };
+   109→   109→    update();
+   110→   110→    const interval = setInterval(update, 1000);
+   111→   111→    return () => clearInterval(interval);
+   112→   112→  }, []);
+   113→   113→
+   114→   114→  // Confetti state for daily reward claim
+   115→   115→  const [showConfetti, setShowConfetti] = useState(false);
+   116→   116→
+   117→   117→  // News ticker scroll
+   118→   118→  const [tickerIndex, setTickerIndex] = useState(0);
+   119→   119→  useEffect(() => {
+   120→   120→    const interval = setInterval(() => {
+   121→   121→      setTickerIndex(prev => (prev + 1) % NEWS_EVENTS.length);
+   122→   122→    }, 4000);
+   123→   123→    return () => clearInterval(interval);
+   124→   124→  }, []);
+   125→   125→
+   126→   126→  // Animated gradient border keyframes
+   127→   127→  const [gradientPhase, setGradientPhase] = useState(0);
+   128→   128→  useEffect(() => {
+   129→   129→    const interval = setInterval(() => {
+   130→   130→      setGradientPhase(prev => (prev + 1) % 3);
+   131→   131→    }, 2000);
+   132→   132→    return () => clearInterval(interval);
+   133→   133→  }, []);
+   134→   134→
+   135→   135→  const gradientColors = [
+   136→   136→    ['from-amber-500/60 via-transparent to-amber-500/60', 'border-amber-500/40'],
+   137→   137→    ['from-purple-500/60 via-transparent to-purple-500/60', 'border-purple-500/40'],
+   138→   138→    ['from-red-500/60 via-transparent to-red-500/60', 'border-red-500/40'],
+   139→   139→  ];
+   140→   140→
+   141→   141→  return (
+   142→   142→    <div className="p-3 sm:p-4 space-y-4 max-w-4xl mx-auto">
+   143→   143→
+   144→   144→      {/* ===== ENHANCED WELCOME BANNER ===== */}
+   145→   145→      <motion.div
+   146→   146→        initial={{ opacity: 0, y: 20 }}
+   147→   147→        animate={{ opacity: 1, y: 0 }}
+   148→   148→        className="relative overflow-hidden rounded-2xl p-[2px]"
+   149→   149→      >
+   150→   150→        {/* Animated gradient border */}
+   151→   151→        <motion.div
+   152→   152→          className="absolute inset-0 rounded-2xl"
+   153→   153→          animate={{
+   154→   154→            background: gradientPhase === 0
+   155→   155→              ? 'linear-gradient(135deg, rgba(245,158,11,0.5), transparent 40%, rgba(245,158,11,0.3))'
+   156→   156→              : gradientPhase === 1
+   157→   157→              ? 'linear-gradient(135deg, rgba(168,85,247,0.5), transparent 40%, rgba(168,85,247,0.3))'
+   158→   158→              : 'linear-gradient(135deg, rgba(239,68,68,0.5), transparent 40%, rgba(239,68,68,0.3))',
+   159→   159→          }}
+   160→   160→          transition={{ duration: 1.5, ease: 'easeInOut' }}
+   161→   161→        />
+   162→   162→
+   163→   163→        <div className="relative rounded-2xl overflow-hidden border border-amber-500/20 p-4 sm:p-6 bg-[#1a0a2e]">
+   164→   164→          {/* Background image */}
+   165→   165→          <div className="absolute inset-0">
+   166→   166→            <Image
+   167→   167→              src={GAME_IMAGES.titleBg}
+   168→   168→              alt="Shadow Realms"
+   169→   169→              fill
+   170→   170→              className="object-cover opacity-30"
+   171→   171→              sizes="(max-width: 768px) 100vw, 768px"
+   172→   172→            />
+   173→   173→          </div>
+   174→   174→          <div className="absolute inset-0 bg-gradient-to-r from-[#1a0a2e]/90 via-[#1a0a2e]/70 to-[#1a0a2e]/90" />
+   175→   175→
+   176→   176→          {/* Decorative elements */}
+   177→   177→          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full" />
+   178→   178→          <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-tr from-purple-500/10 to-transparent rounded-tr-full" />
+   179→   179→
+   180→   180→          {/* Floating sparkle particles */}
+   181→   181→          <motion.div
+   182→   182→            className="absolute top-6 right-8 text-amber-300/60"
+   183→   183→            animate={{ y: [-4, 4, -4], opacity: [0.3, 0.8, 0.3], scale: [0.8, 1.2, 0.8] }}
+   184→   184→            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+   185→   185→          >
+   186→   186→            ✦
+   187→   187→          </motion.div>
+   188→   188→          <motion.div
+   189→   189→            className="absolute top-12 right-16 text-purple-300/40 text-sm"
+   190→   190→            animate={{ y: [2, -6, 2], opacity: [0.2, 0.6, 0.2], scale: [0.6, 1, 0.6] }}
+   191→   191→            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+   192→   192→          >
+   193→   193→            ✧
+   194→   194→          </motion.div>
+   195→   195→          <motion.div
+   196→   196→            className="absolute bottom-8 right-12 text-red-300/40 text-xs"
+   197→   197→            animate={{ y: [-2, 5, -2], opacity: [0.2, 0.5, 0.2], scale: [0.7, 1.1, 0.7] }}
+   198→   198→            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+   199→   199→          >
+   200→   200→            ✦
+   201→   201→          </motion.div>
+   202→   202→
+   203→   203→          <div className="relative z-10">
+   204→   204→            <div className="flex items-center justify-between mb-2">
+   205→   205→              <div className="flex items-center gap-2">
+   206→   206→                <Flame className="w-5 h-5 text-amber-400" />
+   207→   207→                <h1 className="text-xl sm:text-2xl font-bold gold-text">Shadow Realms</h1>
+   208→   208→              </div>
+   209→   209→              {/* Power Ranking Badge */}
+   210→   210→              <div className="bg-black/40 border border-amber-500/30 rounded-full px-3 py-1 flex items-center gap-1.5">
+   211→   211→                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+   212→   212→                <span className="text-[10px] font-bold text-amber-300">{powerRank}</span>
+   213→   213→              </div>
+   214→   214→            </div>
+   215→   215→            <p className="text-sm text-gray-400 mb-4">Champions of Darkness</p>
+   216→   216→
+   217→   217→            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   218→   218→              <DashboardStat label="Team Power" value={Math.floor(teamPower).toLocaleString()} icon={<Swords className="w-4 h-4 text-red-400" />} />
+   219→   219→              <DashboardStat label="Heroes" value={heroes.length.toString()} icon={<Users className="w-4 h-4 text-blue-400" />} />
+   220→   220→              <DashboardStat label="Campaign" value={`Stage ${player.campaignStage}`} icon={<Target className="w-4 h-4 text-green-400" />} />
+   221→   221→              <DashboardStat label="VIP" value={`Level ${player.vipLevel}`} icon={<Crown className="w-4 h-4 text-amber-400" />} />
+   222→   222→            </div>
+   223→   223→          </div>
+   224→   224→        </div>
+   225→   225→      </motion.div>
+   226→   226→
+   227→   227→      {/* ===== NEWS/EVENTS TICKER ===== */}
+   228→   228→      <div className="relative overflow-hidden rounded-lg bg-[#0f0f23]/90 border border-gray-700/30 h-8 flex items-center">
+   229→   229→        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0f0f23] to-transparent z-10" />
+   230→   230→        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0f0f23] to-transparent z-10" />
+   231→   231→        <AnimatePresence mode="wait">
+   232→   232→          <motion.div
+   233→   233→            key={tickerIndex}
+   234→   234→            initial={{ x: 300, opacity: 0 }}
+   235→   235→            animate={{ x: 0, opacity: 1 }}
+   236→   236→            exit={{ x: -300, opacity: 0 }}
+   237→   237→            transition={{ duration: 0.6, ease: 'easeInOut' }}
+   238→   238→            className="whitespace-nowrap text-xs text-gray-300 px-10 w-full text-center"
+   239→   239→          >
+   240→   240→            {NEWS_EVENTS[tickerIndex].emoji} {NEWS_EVENTS[tickerIndex].text}
+   241→   241→          </motion.div>
+   242→   242→        </AnimatePresence>
+   243→   243→      </div>
+   244→   244→
+   245→   245→      {/* ===== DAILY REWARD BANNER ===== */}
+   246→   246→      {!dailyClaimed && (
+   247→   247→        <motion.div
+   248→   248→          initial={{ opacity: 0, x: -20 }}
+   249→   249→          animate={{ opacity: 1, x: 0 }}
+   250→   250→          className="bg-gradient-to-r from-amber-600/20 to-amber-500/5 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:border-amber-400/50 transition-all"
+   251→   251→          onClick={() => setShowDailyReward(true)}
+   252→   252→        >
+   253→   253→          <div className="flex items-center gap-3">
+   254→   254→            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+   255→   255→              <Gift className="w-5 h-5 text-amber-400 animate-bounce" />
+   256→   256→            </div>
+   257→   257→            <div>
+   258→   258→              <div className="text-sm font-bold text-amber-200">Daily Reward Available!</div>
+   259→   259→              <div className="text-xs text-amber-400/70">Day {(player.dailyRewardDay % 7) + 1} - {todayReward?.item}</div>
+   260→   260→            </div>
+   261→   261→          </div>
+   262→   262→          <ChevronRight className="w-5 h-5 text-amber-400" />
+   263→   263→        </motion.div>
+   264→   264→      )}
+   265→   265→
+   266→   266→      {/* ===== QUICK ACTIONS ===== */}
+   267→   267→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   268→   268→        <QuickAction
+   269→   269→          icon={<Sparkles className="w-6 h-6" />}
+   270→   270→          label="Summon Heroes"
+   271→   271→          sublabel={`${150} Gems`}
+   272→   272→          color="from-purple-600/30 to-purple-500/10"
+   273→   273→          borderColor="border-purple-500/30"
+   274→   274→          onClick={() => setScreen('summon')}
+   275→   275→        />
+   276→   276→        <QuickAction
+   277→   277→          icon={<Swords className="w-6 h-6" />}
+   278→   278→          label="Battle Now"
+   279→   279→          sublabel={`Stage ${player.campaignStage}`}
+   280→   280→          color="from-red-600/30 to-red-500/10"
+   281→   281→          borderColor="border-red-500/30"
+   282→   282→          onClick={() => setScreen('campaign')}
+   283→   283→        />
+   284→   284→        <QuickAction
+   285→   285→          icon={<ShoppingBag className="w-6 h-6" />}
+   286→   286→          label="Shop"
+   287→   287→          sublabel="Special Offers"
+   288→   288→          color="from-amber-600/30 to-amber-500/10"
+   289→   289→          borderColor="border-amber-500/30"
+   290→   290→          onClick={() => setScreen('shop')}
+   291→   291→        />
+   292→   292→        <QuickAction
+   293→   293→          icon={<Crown className="w-6 h-6" />}
+   294→   294→          label="VIP Lounge"
+   295→   295→          sublabel={`Level ${player.vipLevel}`}
+   296→   296→          color="from-yellow-600/30 to-yellow-500/10"
+   297→   297→          borderColor="border-yellow-500/30"
+   298→   298→          onClick={() => setScreen('vip')}
+   299→   299→        />
+   300→   300→      </div>
+   301→   301→
+   302→   302→      {/* ===== ACTIVITY HUB SECTION ===== */}
+   303→   303→      <div className="bg-[#0f0f23]/80 border border-amber-500/10 rounded-xl p-4">
+   304→   304→        <h2 className="text-sm font-bold text-amber-200 flex items-center gap-2 mb-3">
+   305→   305→          <Zap className="w-4 h-4" /> Activity Hub
+   306→   306→        </h2>
+   307→   307→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   308→   308→          {/* Arena Rank */}
+   309→   309→          <ActivityCard
+   310→   310→            icon={<span className="text-lg">{arenaRank.icon}</span>}
+   311→   311→            label="Arena Rank"
+   312→   312→            value={arenaRank.rank}
+   313→   313→            sublabel={`${arenaTrophies} 🏆`}
+   314→   314→            accentColor="text-amber-300"
+   315→   315→            bgColor="bg-amber-500/10"
+   316→   316→            borderColor="border-amber-500/20"
+   317→   317→            onClick={() => setScreen('arena')}
+   318→   318→          />
+   319→   319→          {/* Tower */}
+   320→   320→          <ActivityCard
+   321→   321→            icon={<Tower className="w-4 h-4 text-purple-400" />}
+   322→   322→            label="Tower"
+   323→   323→            value={`Floor ${towerHighestFloor}`}
+   324→   324→            sublabel="Highest"
+   325→   325→            accentColor="text-purple-300"
+   326→   326→            bgColor="bg-purple-500/10"
+   327→   327→            borderColor="border-purple-500/20"
+   328→   328→            onClick={() => setScreen('tower')}
+   329→   329→          />
+   330→   330→          {/* Login Streak */}
+   331→   331→          <ActivityCard
+   332→   332→            icon={<Flame className="w-4 h-4 text-orange-400" />}
+   333→   333→            label="Login Streak"
+   334→   334→            value={`${loginStreak} Days`}
+   335→   335→            sublabel={loginStreak >= 7 ? '🔥 On Fire!' : 'Keep going!'}
+   336→   336→            accentColor="text-orange-300"
+   337→   337→            bgColor="bg-orange-500/10"
+   338→   338→            borderColor="border-orange-500/20"
+   339→   339→            onClick={() => setScreen('login-streak')}
+   340→   340→          />
+   341→   341→          {/* Dungeon */}
+   342→   342→          <ActivityCard
+   343→   343→            icon={<span className="text-sm">{todayElementConfig?.icon || '⚔️'}</span>}
+   344→   344→            label="Dungeon"
+   345→   345→            value={todayElementConfig?.label || 'N/A'}
+   346→   346→            sublabel="Today's Element"
+   347→   347→            accentColor={todayElementConfig?.color || 'text-gray-300'}
+   348→   348→            bgColor={todayElementConfig?.bgColor || 'bg-gray-500/10'}
+   349→   349→            borderColor="border-gray-500/20"
+   350→   350→            onClick={() => setScreen('dungeon')}
+   351→   351→          />
+   352→   352→        </div>
+   353→   353→      </div>
+   354→   354→
+   355→   355→      {/* ===== QUICK ACCESS BAR ===== */}
+   356→   356→      {(hasMerchantDeals || showStreakReward || dailyQuestProgress.completed < dailyQuestProgress.total) && (
+   357→   357→        <div className="flex gap-2 overflow-x-auto pb-1 game-scrollbar">
+   358→   358→          {hasMerchantDeals && (
+   359→   359→            <motion.button
+   360→   360→              whileHover={{ scale: 1.03 }}
+   361→   361→              whileTap={{ scale: 0.97 }}
+   362→   362→              onClick={() => setScreen('merchant')}
+   363→   363→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-amber-600/20 to-amber-500/5 border border-amber-500/30 rounded-lg px-3 py-2 hover:border-amber-400/50 transition-all"
+   364→   364→            >
+   365→   365→              <Store className="w-4 h-4 text-amber-400" />
+   366→   366→              <div className="text-left">
+   367→   367→                <div className="text-[10px] font-bold text-amber-200">Wandering Merchant</div>
+   368→   368→                <div className="text-[9px] text-amber-400/70">{merchantDeals.length} deals available</div>
+   369→   369→              </div>
+   370→   370→              <ChevronRight className="w-3 h-3 text-amber-400/60" />
+   371→   371→            </motion.button>
+   372→   372→          )}
+   373→   373→          {showStreakReward && (
+   374→   374→            <motion.button
+   375→   375→              whileHover={{ scale: 1.03 }}
+   376→   376→              whileTap={{ scale: 0.97 }}
+   377→   377→              onClick={() => setScreen('login-streak')}
+   378→   378→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-orange-600/20 to-orange-500/5 border border-orange-500/30 rounded-lg px-3 py-2 hover:border-orange-400/50 transition-all"
+   379→   379→            >
+   380→   380→              <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
+   381→   381→              <div className="text-left">
+   382→   382→                <div className="text-[10px] font-bold text-orange-200">Login Streak Reward!</div>
+   383→   383→                <div className="text-[9px] text-orange-400/70">Claim now</div>
+   384→   384→              </div>
+   385→   385→              <ChevronRight className="w-3 h-3 text-orange-400/60" />
+   386→   386→            </motion.button>
+   387→   387→          )}
+   388→   388→          {dailyQuestProgress.completed < dailyQuestProgress.total && (
+   389→   389→            <motion.button
+   390→   390→              whileHover={{ scale: 1.03 }}
+   391→   391→              whileTap={{ scale: 0.97 }}
+   392→   392→              onClick={() => setScreen('missions')}
+   393→   393→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-cyan-600/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg px-3 py-2 hover:border-cyan-400/50 transition-all"
+   394→   394→            >
+   395→   395→              <Scroll className="w-4 h-4 text-cyan-400" />
+   396→   396→              <div className="text-left">
+   397→   397→                <div className="text-[10px] font-bold text-cyan-200">Daily Quests</div>
+   398→   398→                <div className="text-[9px] text-cyan-400/70">{dailyQuestProgress.completed}/{dailyQuestProgress.total} complete</div>
+   399→   399→              </div>
+   400→   400→              <ChevronRight className="w-3 h-3 text-cyan-400/60" />
+   401→   401→            </motion.button>
+   402→   402→          )}
+   403→   403→        </div>
+   404→   404→      )}
+   405→   405→
+   406→   406→      {/* ===== ENHANCED TEAM PREVIEW ===== */}
+   407→   407→      <div className="bg-[#0f0f23]/80 border border-amber-500/10 rounded-xl p-4">
+   408→   408→        <div className="flex items-center justify-between mb-3">
+   409→   409→          <h2 className="text-sm font-bold text-amber-200 flex items-center gap-2">
+   410→   410→            <Star className="w-4 h-4" /> Your Team
+   411→   411→          </h2>
+   412→   412→          <button onClick={() => setScreen('heroes')} className="text-xs text-amber-400 hover:text-amber-300">
+   413→   413→            Manage →
+   414→   414→          </button>
+   415→   415→        </div>
+   416→   416→        {teamHeroes.length === 0 ? (
+   417→   417→          <div className="text-center py-8">
+   418→   418→            <Users className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+   419→   419→            <p className="text-sm text-gray-400 mb-2">No heroes in your team yet!</p>
+   420→   420→            <button
+   421→   421→              onClick={() => setScreen('summon')}
+   422→   422→              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:from-purple-400 hover:to-purple-500 transition-all"
+   423→   423→            >
+   424→   424→              <Sparkles className="w-3 h-3 inline mr-1" /> Summon Your First Hero
+   425→   425→            </button>
+   426→   426→          </div>
+   427→   427→        ) : (
+   428→   428→          <div className="flex gap-2 overflow-x-auto pb-2 game-scrollbar">
+   429→   429→            {teamHeroes.map((hero) => {
+   430→   430→              if (!hero) return null;
+   431→   431→              const rarity = RARITY_CONFIG[hero.rarity];
+   432→   432→              const element = ELEMENT_CONFIG[hero.element];
+   433→   433→              const heroPower = Math.floor(hero.attack + hero.defense + hero.health / 10 + hero.speed * 5);
+   434→   434→              const heroImage = getHeroImageUrl(hero.templateId);
+   435→   435→              const heroGradient = getHeroGradient(hero.rarity);
+   436→   436→              return (
+   437→   437→                <motion.div
+   438→   438→                  key={hero.id}
+   439→   439→                  whileHover={{ scale: 1.03, y: -2 }}
+   440→   440→                  className={`hero-3d-container flex-shrink-0 relative`}
+   441→   441→                >
+   442→   442→                  <div className={`hero-3d-card rounded-lg overflow-hidden hero-3d-frame-${hero.rarity} hero-3d-glow-${hero.rarity}`}
+   443→   443→                    style={{ transformStyle: 'preserve-3d' }}
+   444→   444→                  >
+   445→   445→                    <div className={`bg-gradient-to-b ${heroGradient} p-2 min-w-[100px] relative`}>
+   446→   446→                      {/* Element badge with 3D depth */}
+   447→   447→                      <div className="absolute -top-1 -right-1 bg-black/60 border border-gray-600/30 rounded-full w-5 h-5 flex items-center justify-center text-[10px] badge-3d" title={element.label}>
+   448→   448→                        {element.icon}
+   449→   449→                      </div>
+   450→   450→                      <div className="text-center hero-3d-layer-front">
+   451→   451→                        {heroImage ? (
+   452→   452→                          <div className="hero-3d-portrait w-10 h-10 mx-auto rounded-full overflow-hidden border border-white/10 mb-1">
+   453→   453→                            <Image src={heroImage} alt={hero.name} width={40} height={40} className="object-cover w-full h-full" unoptimized />
+   454→   454→                          </div>
+   455→   455→                        ) : (
+   456→   456→                          <div className="text-xl mb-1">{element.icon}</div>
+   457→   457→                        )}
+   458→   458→                        <div className="text-xs font-bold text-white truncate embossed-text">{hero.name}</div>
+   459→   459→                        <div className={`text-[10px] ${rarity.color}`}>{rarity.label}</div>
+   460→   460→                        <div className="text-[10px] text-muted-foreground">Lv.{hero.level}</div>
+   461→   461→                        {/* Power number with 3D glow */}
+   462→   462→                        <div className="power-badge mt-0.5 mx-auto w-fit">
+   463→   463→                          ⚡{heroPower.toLocaleString()}
+   464→   464→                        </div>
+   465→   465→                        <div className="flex justify-center gap-0.5 mt-0.5">
+   466→   466→                          {Array.from({ length: hero.stars }, (_, i) => (
+   467→   467→                            <Star key={i} className="w-2 h-2 fill-yellow-400 text-yellow-400" />
+   468→   468→                          ))}
+   469→   469→                        </div>
+   470→   470→                      </div>
+   471→   471→                      {/* Holographic overlay for epic+ */}
+   472→   472→                      {['epic', 'legendary', 'mythic'].includes(hero.rarity) && (
+   473→   473→                        <div className={`holographic-overlay ${
+   474→   474→                          hero.rarity === 'epic' ? 'holographic-epic' :
+   475→   475→                          hero.rarity === 'legendary' ? 'holographic-legendary' : 'holographic-mythic'
+   476→   476→                        }`} />
+   477→   477→                      )}
+   478→   478→                    </div>
+   479→   479→                  </div>
+   480→   480→                </motion.div>
+   481→   481→              );
+   482→   482→            })}
+   483→   483→            {team.length < 5 && (
+   484→   484→              <motion.div
+   485→   485→                whileHover={{ scale: 1.03 }}
+   486→   486→                onClick={() => setScreen('heroes')}
+   487→   487→                className="flex-shrink-0 rounded-lg p-2 min-w-[100px] flex items-center justify-center cursor-pointer relative overflow-hidden"
+   488→   488→                style={{
+   489→   489→                  border: '2px dashed',
+   490→   490→                  borderColor: 'rgba(245,158,11,0.3)',
+   491→   491→                  animation: 'pulse-glow 2s ease-in-out infinite',
+   492→   492→                }}
+   493→   493→              >
+   494→   494→                <motion.div
+   495→   495→                  className="absolute inset-0 bg-amber-500/5"
+   496→   496→                  animate={{ opacity: [0.1, 0.25, 0.1] }}
+   497→   497→                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+   498→   498→                />
+   499→   499→                <div className="text-center text-gray-400 relative z-10">
+   500→   500→                  <motion.div
+   501→   501→                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 1, 0.5] }}
+   502→   502→                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+   503→   503→                  >
+   504→   504→                    <Sparkles className="w-5 h-5 mx-auto text-amber-400/60" />
+   505→   505→                  </motion.div>
+   506→   506→                  <div className="text-[10px] mt-1 text-amber-400/70">Summon</div>
+   507→   507→                </div>
+   508→   508→              </motion.div>
+   509→   509→            )}
+   510→   510→          </div>
+   511→   511→        )}
+   512→   512→      </div>
+   513→   513→
+   514→   514→      {/* ===== ENHANCED SPECIAL OFFER BANNER ===== */}
+   515→   515→      <motion.div
+   516→   516→        initial={{ opacity: 0 }}
+   517→   517→        animate={{ opacity: 1 }}
+   518→   518→        transition={{ delay: 0.5 }}
+   519→   519→        className="relative overflow-hidden rounded-xl p-[2px] cursor-pointer"
+   520→   520→        onClick={() => setScreen('shop')}
+   521→   521→      >
+   522→   522→        {/* Animated gradient border */}
+   523→   523→        <motion.div
+   524→   524→          className="absolute inset-0 rounded-xl"
+   525→   525→          animate={{
+   526→   526→            background: gradientPhase === 0
+   527→   527→              ? 'linear-gradient(90deg, rgba(239,68,68,0.6), transparent 30%, transparent 70%, rgba(239,68,68,0.6))'
+   528→   528→              : gradientPhase === 1
+   529→   529→              ? 'linear-gradient(90deg, rgba(245,158,11,0.6), transparent 30%, transparent 70%, rgba(245,158,11,0.6))'
+   530→   530→              : 'linear-gradient(90deg, rgba(168,85,247,0.6), transparent 30%, transparent 70%, rgba(168,85,247,0.6))',
+   531→   531→          }}
+   532→   532→          transition={{ duration: 1.5, ease: 'easeInOut' }}
+   533→   533→        />
+   534→   534→        <div className="relative rounded-xl bg-gradient-to-r from-red-900/40 via-amber-900/30 to-red-900/40 border border-red-500/30 p-4 overflow-hidden hover:border-red-400/50 transition-all">
+   535→   535→          <div className="absolute inset-0 animate-shimmer" />
+   536→   536→
+   537→   537→          {/* 75% OFF Badge */}
+   538→   538→          <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-red-700 text-white text-[10px] font-black px-2 py-1 rounded-bl-lg rounded-tr-lg shadow-lg shadow-red-500/30 transform rotate-3">
+   539→   539→            75% OFF
+   540→   540→          </div>
+   541→   541→
+   542→   542→          <div className="relative z-10 flex items-center justify-between">
+   543→   543→            <div>
+   544→   544→              <div className="flex items-center gap-2">
+   545→   545→                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">LIMITED</span>
+   546→   546→                <span className="text-sm font-bold text-amber-200">Starter Pack</span>
+   547→   547→              </div>
+   548→   548→              <div className="text-xs text-gray-400 mt-1">1,000 Gems + Epic Hero + 50,000 Gold</div>
+   549→   549→              {/* Countdown Timer */}
+   550→   550→              <div className="flex items-center gap-1.5 mt-1.5">
+   551→   551→                <Clock className="w-3 h-3 text-red-400" />
+   552→   552→                <span className="text-[10px] font-mono text-red-300">Ends in {offerTime}</span>
+   553→   553→              </div>
+   554→   554→            </div>
+   555→   555→            <div className="text-right">
+   556→   556→              <div className="text-lg font-bold text-amber-400">$4.99</div>
+   557→   557→              <div className="text-[10px] text-gray-500 line-through">$19.99</div>
+   558→   558→            </div>
+   559→   559→          </div>
+   560→   560→        </div>
+   561→   561→      </motion.div>
+   562→   562→
+   563→   563→      {/* ===== ENHANCED DAILY REWARD MODAL ===== */}
+   564→   564→      <AnimatePresence>
+   565→   565→        {showDailyReward && (
+   566→   566→          <motion.div
+   567→   567→            initial={{ opacity: 0 }}
+   568→   568→            animate={{ opacity: 1 }}
+   569→   569→            exit={{ opacity: 0 }}
+   570→   570→            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+   571→   571→            onClick={() => setShowDailyReward(false)}
+   572→   572→          >
+   573→   573→            <motion.div
+   574→   574→              initial={{ scale: 0.5, opacity: 0 }}
+   575→   575→              animate={{ scale: 1, opacity: 1 }}
+   576→   576→              exit={{ scale: 0.5, opacity: 0 }}
+   577→   577→              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+   578→   578→              className="bg-gradient-to-b from-[#1a0a2e] to-[#0f0f23] border border-amber-500/30 rounded-2xl p-6 max-w-sm w-full relative overflow-hidden"
+   579→   579→              onClick={e => e.stopPropagation()}
+   580→   580→            >
+   581→   581→              {/* Confetti burst on claim */}
+   582→   582→              {showConfetti && (
+   583→   583→                <div className="absolute inset-0 pointer-events-none z-20">
+   584→   584→                  {Array.from({ length: 20 }).map((_, i) => (
+   585→   585→                    <motion.div
+   586→   586→                      key={i}
+   587→   587→                      className="absolute text-sm"
+   588→   588→                      initial={{
+   589→   589→                        x: '50%',
+   590→   590→                        y: '50%',
+   591→   591→                        scale: 0,
+   592→   592→                        opacity: 1,
+   593→   593→                      }}
+   594→   594→                      animate={{
+   595→   595→                        x: `${50 + (Math.random() - 0.5) * 80}%`,
+   596→   596→                        y: `${50 + (Math.random() - 0.5) * 80}%`,
+   597→   597→                        scale: [0, 1.5, 0],
+   598→   598→                        opacity: [1, 1, 0],
+   599→   599→                        rotate: Math.random() * 360,
+   600→   600→                      }}
+   601→   601→                      transition={{ duration: 1.2, ease: 'easeOut' }}
+   602→   602→                    >
+   603→   603→                      {['🪙', '💎', '⭐', '✨', '🎁'][i % 5]}
+   604→   604→                    </motion.div>
+   605→   605→                  ))}
+   606→   606→                </div>
+   607→   607→              )}
+   608→   608→
+   609→   609→              {/* Close button */}
+   610→   610→              <button
+   611→   611→                onClick={() => { setShowDailyReward(false); setShowConfetti(false); }}
+   612→   612→                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 border border-gray-600/30 flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-all z-10"
+   613→   613→              >
+   614→   614→                ✕
+   615→   615→              </button>
+   616→   616→
+   617→   617→              {/* Sparkle effects */}
+   618→   618→              <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+   619→   619→                <motion.div
+   620→   620→                  animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+   621→   621→                  transition={{ duration: 2, repeat: Infinity }}
+   622→   622→                  className="text-4xl"
+   623→   623→                >
+   624→   624→                  🎁
+   625→   625→                </motion.div>
+   626→   626→              </div>
+   627→   627→
+   628→   628→              <h3 className="text-lg font-bold gold-text text-center mb-4 mt-4">Daily Login Reward</h3>
+   629→   629→              <div className="text-center mb-4">
+   630→   630→                <div className="text-sm text-gray-400">Day {(player.dailyRewardDay % 7) + 1} of 7</div>
+   631→   631→                <div className="mt-3 space-y-2">
+   632→   632→                  <div className="flex items-center justify-center gap-2 text-amber-300">
+   633→   633→                    <span>🪙</span> +{todayReward?.gold} Gold
+   634→   634→                  </div>
+   635→   635→                  <div className="flex items-center justify-center gap-2 text-cyan-300">
+   636→   636→                    <span>💎</span> +{todayReward?.gems} Gems
+   637→   637→                  </div>
+   638→   638→                  <div className="flex items-center justify-center gap-2 text-purple-300">
+   639→   639→                    <span>🎁</span> {todayReward?.item}
+   640→   640→                  </div>
+   641→   641→                </div>
+   642→   642→              </div>
+   643→   643→
+   644→   644→              {/* 7-day reward preview with icons */}
+   645→   645→              <div className="grid grid-cols-7 gap-1.5 mb-4">
+   646→   646→                {DAILY_REWARDS.map((r, i) => {
+   647→   647→                  const isToday = i === (player.dailyRewardDay % 7);
+   648→   648→                  const isPast = i < (player.dailyRewardDay % 7);
+   649→   649→                  return (
+   650→   650→                    <div
+   651→   651→                      key={i}
+   652→   652→                      className={`text-center p-1.5 rounded-lg text-[10px] relative ${
+   653→   653→                        isToday
+   654→   654→                          ? 'bg-amber-500/30 border border-amber-400 animate-pulse'
+   655→   655→                          : isPast
+   656→   656→                          ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+   657→   657→                          : 'bg-gray-800/50 border border-gray-700/30 text-gray-500'
+   658→   658→                      }`}
+   659→   659→                    >
+   660→   660→                      <div className="text-sm mb-0.5">{DAILY_REWARD_ICONS[i]}</div>
+   661→   661→                      <div className="font-bold">D{i + 1}</div>
+   662→   662→                      {isPast && (
+   663→   663→                        <div className="absolute top-0.5 right-0.5 text-[8px]">✓</div>
+   664→   664→                      )}
+   665→   665→                    </div>
+   666→   666→                  );
+   667→   667→                })}
+   668→   668→              </div>
+   669→   669→
+   670→   670→              <div className="flex gap-2">
+   671→   671→                <button
+   672→   672→                  onClick={() => { setShowDailyReward(false); setShowConfetti(false); }}
+   673→   673→                  className="flex-1 bg-gray-700/50 text-gray-300 font-medium py-2 rounded-lg hover:bg-gray-600/50 transition-all border border-gray-600/30"
+   674→   674→                >
+   675→   675→                  Later
+   676→   676→                </button>
+   677→   677→                <button
+   678→   678→                  onClick={() => { claimDailyReward(); setShowConfetti(true); }}
+   679→   679→                  disabled={showConfetti}
+   680→   680→                  className={`flex-1 font-bold py-2 rounded-lg transition-all shadow-lg shadow-amber-500/30 ${
+   681→   681→                    showConfetti
+   682→   682→                      ? 'bg-green-600 text-white'
+   683→   683→                      : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500'
+   684→   684→                  }`}
+   685→   685→                >
+   686→   686→                  {showConfetti ? '✓ Claimed!' : 'Claim!'}
+   687→   687→                </button>
+   688→   688→              </div>
+   689→   689→            </motion.div>
+   690→   690→          </motion.div>
+   691→   691→        )}
+   692→   692→      </AnimatePresence>
+   693→   693→
+   694→   694→      {/* Pulse glow keyframe style (for add hero slot) */}
+   695→   695→      <style jsx global>{`
+   696→   696→        @keyframes pulse-glow {
+   697→   697→          0%, 100% { border-color: rgba(245,158,11,0.3); }
+   698→   698→          50% { border-color: rgba(245,158,11,0.6); }
+   699→   699→        }
+   700→   700→      `}</style>
+   701→   701→    </div>
+   702→   702→  );
+   703→   703→}
+   704→   704→
+   705→   705→// ============= Sub-Components =============
+   706→   706→
+   707→   707→function DashboardStat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+   708→   708→  return (
+   709→   709→    <div className="bg-black/30 rounded-lg p-2 text-center">
+   710→   710→      <div className="flex items-center justify-center gap-1 mb-1">
+   711→   711→        {icon}
+   712→   712→      </div>
+   713→   713→      <div className="text-sm font-bold text-white">{value}</div>
+   714→   714→      <div className="text-[10px] text-muted-foreground">{label}</div>
+   715→   715→    </div>
+   716→   716→  );
+   717→   717→}
+   718→   718→
+   719→   719→function QuickAction({ icon, label, sublabel, color, borderColor, onClick }: {
+   720→   720→  icon: React.ReactNode; label: string; sublabel: string; color: string; borderColor: string; onClick: () => void;
+   721→   721→}) {
+   722→   722→  return (
+   723→   723→    <motion.button
+   724→   724→      whileHover={{ scale: 1.03 }}
+   725→   725→      whileTap={{ scale: 0.97 }}
+   726→   726→      onClick={onClick}
+   727→   727→      className={`bg-gradient-to-br ${color} border ${borderColor} rounded-xl p-3 text-left hover:shadow-lg transition-all`}
+   728→   728→    >
+   729→   729→      <div className="text-amber-300 mb-1">{icon}</div>
+   730→   730→      <div className="text-xs font-bold text-white">{label}</div>
+   731→   731→      <div className="text-[10px] text-gray-400">{sublabel}</div>
+   732→   732→    </motion.button>
+   733→   733→  );
+   734→   734→}
+   735→   735→
+   736→   736→function ActivityCard({ icon, label, value, sublabel, accentColor, bgColor, borderColor, onClick }: {
+   737→   737→  icon: React.ReactNode;
+   738→   738→  label: string;
+   739→   739→  value: string;
+   740→   740→  sublabel: string;
+   741→   741→  accentColor: string;
+   742→   742→  bgColor: string;
+   743→   743→  borderColor: string;
+   744→   744→  onClick: () => void;
+   745→   745→}) {
+   746→   746→  return (
+   747→   747→    <motion.button
+   748→   748→      whileHover={{ scale: 1.03 }}
+   749→   749→      whileTap={{ scale: 0.97 }}
+   750→   750→      onClick={onClick}
+   751→   751→      className={`${bgColor} border ${borderColor} rounded-lg p-2.5 text-left hover:shadow-lg transition-all cursor-pointer`}
+   752→   752→    >
+   753→   753→      <div className="flex items-center gap-2 mb-1">
+   754→   754→        {icon}
+   755→   755→        <span className="text-[10px] text-muted-foreground">{label}</span>
+   756→   756→      </div>
+   757→   757→      <div className={`text-xs font-bold ${accentColor}`}>{value}</div>
+   758→   758→      <div className="text-[9px] text-muted-foreground/70">{sublabel}</div>
+   759→   759→    </motion.button>
+   760→   760→  );
+   761→   761→}
+   762→   762→

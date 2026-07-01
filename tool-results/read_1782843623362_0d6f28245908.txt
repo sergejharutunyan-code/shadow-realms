@@ -1,0 +1,564 @@
+   200→            ✦
+   201→          </motion.div>
+   202→
+   203→          <div className="relative z-10">
+   204→            <div className="flex items-center justify-between mb-2">
+   205→              <div className="flex items-center gap-2">
+   206→                <Flame className="w-5 h-5 text-amber-400" />
+   207→                <h1 className="text-xl sm:text-2xl font-bold gold-text">Shadow Realms</h1>
+   208→              </div>
+   209→              {/* Power Ranking Badge */}
+   210→              <div className="bg-black/40 border border-amber-500/30 rounded-full px-3 py-1 flex items-center gap-1.5">
+   211→                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+   212→                <span className="text-[10px] font-bold text-amber-300">{powerRank}</span>
+   213→              </div>
+   214→            </div>
+   215→            <p className="text-sm text-gray-400 mb-4">Champions of Darkness</p>
+   216→
+   217→            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   218→              <DashboardStat label="Team Power" value={Math.floor(teamPower).toLocaleString()} icon={<Swords className="w-4 h-4 text-red-400" />} />
+   219→              <DashboardStat label="Heroes" value={heroes.length.toString()} icon={<Users className="w-4 h-4 text-blue-400" />} />
+   220→              <DashboardStat label="Campaign" value={`Stage ${player.campaignStage}`} icon={<Target className="w-4 h-4 text-green-400" />} />
+   221→              <DashboardStat label="VIP" value={`Level ${player.vipLevel}`} icon={<Crown className="w-4 h-4 text-amber-400" />} />
+   222→            </div>
+   223→          </div>
+   224→        </div>
+   225→      </motion.div>
+   226→
+   227→      {/* ===== NEWS/EVENTS TICKER ===== */}
+   228→      <div className="relative overflow-hidden rounded-lg bg-[#0f0f23]/90 border border-gray-700/30 h-8 flex items-center">
+   229→        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0f0f23] to-transparent z-10" />
+   230→        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0f0f23] to-transparent z-10" />
+   231→        <AnimatePresence mode="wait">
+   232→          <motion.div
+   233→            key={tickerIndex}
+   234→            initial={{ x: 300, opacity: 0 }}
+   235→            animate={{ x: 0, opacity: 1 }}
+   236→            exit={{ x: -300, opacity: 0 }}
+   237→            transition={{ duration: 0.6, ease: 'easeInOut' }}
+   238→            className="whitespace-nowrap text-xs text-gray-300 px-10 w-full text-center"
+   239→          >
+   240→            {NEWS_EVENTS[tickerIndex].emoji} {NEWS_EVENTS[tickerIndex].text}
+   241→          </motion.div>
+   242→        </AnimatePresence>
+   243→      </div>
+   244→
+   245→      {/* ===== DAILY REWARD BANNER ===== */}
+   246→      {!dailyClaimed && (
+   247→        <motion.div
+   248→          initial={{ opacity: 0, x: -20 }}
+   249→          animate={{ opacity: 1, x: 0 }}
+   250→          className="bg-gradient-to-r from-amber-600/20 to-amber-500/5 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:border-amber-400/50 transition-all"
+   251→          onClick={() => setShowDailyReward(true)}
+   252→        >
+   253→          <div className="flex items-center gap-3">
+   254→            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+   255→              <Gift className="w-5 h-5 text-amber-400 animate-bounce" />
+   256→            </div>
+   257→            <div>
+   258→              <div className="text-sm font-bold text-amber-200">Daily Reward Available!</div>
+   259→              <div className="text-xs text-amber-400/70">Day {(player.dailyRewardDay % 7) + 1} - {todayReward?.item}</div>
+   260→            </div>
+   261→          </div>
+   262→          <ChevronRight className="w-5 h-5 text-amber-400" />
+   263→        </motion.div>
+   264→      )}
+   265→
+   266→      {/* ===== QUICK ACTIONS ===== */}
+   267→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   268→        <QuickAction
+   269→          icon={<Sparkles className="w-6 h-6" />}
+   270→          label="Summon Heroes"
+   271→          sublabel={`${150} Gems`}
+   272→          color="from-purple-600/30 to-purple-500/10"
+   273→          borderColor="border-purple-500/30"
+   274→          onClick={() => setScreen('summon')}
+   275→        />
+   276→        <QuickAction
+   277→          icon={<Swords className="w-6 h-6" />}
+   278→          label="Battle Now"
+   279→          sublabel={`Stage ${player.campaignStage}`}
+   280→          color="from-red-600/30 to-red-500/10"
+   281→          borderColor="border-red-500/30"
+   282→          onClick={() => setScreen('campaign')}
+   283→        />
+   284→        <QuickAction
+   285→          icon={<ShoppingBag className="w-6 h-6" />}
+   286→          label="Shop"
+   287→          sublabel="Special Offers"
+   288→          color="from-amber-600/30 to-amber-500/10"
+   289→          borderColor="border-amber-500/30"
+   290→          onClick={() => setScreen('shop')}
+   291→        />
+   292→        <QuickAction
+   293→          icon={<Crown className="w-6 h-6" />}
+   294→          label="VIP Lounge"
+   295→          sublabel={`Level ${player.vipLevel}`}
+   296→          color="from-yellow-600/30 to-yellow-500/10"
+   297→          borderColor="border-yellow-500/30"
+   298→          onClick={() => setScreen('vip')}
+   299→        />
+   300→      </div>
+   301→
+   302→      {/* ===== ACTIVITY HUB SECTION ===== */}
+   303→      <div className="bg-[#0f0f23]/80 border border-amber-500/10 rounded-xl p-4">
+   304→        <h2 className="text-sm font-bold text-amber-200 flex items-center gap-2 mb-3">
+   305→          <Zap className="w-4 h-4" /> Activity Hub
+   306→        </h2>
+   307→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   308→          {/* Arena Rank */}
+   309→          <ActivityCard
+   310→            icon={<span className="text-lg">{arenaRank.icon}</span>}
+   311→            label="Arena Rank"
+   312→            value={arenaRank.rank}
+   313→            sublabel={`${arenaTrophies} 🏆`}
+   314→            accentColor="text-amber-300"
+   315→            bgColor="bg-amber-500/10"
+   316→            borderColor="border-amber-500/20"
+   317→            onClick={() => setScreen('arena')}
+   318→          />
+   319→          {/* Tower */}
+   320→          <ActivityCard
+   321→            icon={<Tower className="w-4 h-4 text-purple-400" />}
+   322→            label="Tower"
+   323→            value={`Floor ${towerHighestFloor}`}
+   324→            sublabel="Highest"
+   325→            accentColor="text-purple-300"
+   326→            bgColor="bg-purple-500/10"
+   327→            borderColor="border-purple-500/20"
+   328→            onClick={() => setScreen('tower')}
+   329→          />
+   330→          {/* Login Streak */}
+   331→          <ActivityCard
+   332→            icon={<Flame className="w-4 h-4 text-orange-400" />}
+   333→            label="Login Streak"
+   334→            value={`${loginStreak} Days`}
+   335→            sublabel={loginStreak >= 7 ? '🔥 On Fire!' : 'Keep going!'}
+   336→            accentColor="text-orange-300"
+   337→            bgColor="bg-orange-500/10"
+   338→            borderColor="border-orange-500/20"
+   339→            onClick={() => setScreen('login-streak')}
+   340→          />
+   341→          {/* Dungeon */}
+   342→          <ActivityCard
+   343→            icon={<span className="text-sm">{todayElementConfig?.icon || '⚔️'}</span>}
+   344→            label="Dungeon"
+   345→            value={todayElementConfig?.label || 'N/A'}
+   346→            sublabel="Today's Element"
+   347→            accentColor={todayElementConfig?.color || 'text-gray-300'}
+   348→            bgColor={todayElementConfig?.bgColor || 'bg-gray-500/10'}
+   349→            borderColor="border-gray-500/20"
+   350→            onClick={() => setScreen('dungeon')}
+   351→          />
+   352→        </div>
+   353→      </div>
+   354→
+   355→      {/* ===== QUICK ACCESS BAR ===== */}
+   356→      {(hasMerchantDeals || showStreakReward || dailyQuestProgress.completed < dailyQuestProgress.total) && (
+   357→        <div className="flex gap-2 overflow-x-auto pb-1 game-scrollbar">
+   358→          {hasMerchantDeals && (
+   359→            <motion.button
+   360→              whileHover={{ scale: 1.03 }}
+   361→              whileTap={{ scale: 0.97 }}
+   362→              onClick={() => setScreen('merchant')}
+   363→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-amber-600/20 to-amber-500/5 border border-amber-500/30 rounded-lg px-3 py-2 hover:border-amber-400/50 transition-all"
+   364→            >
+   365→              <Store className="w-4 h-4 text-amber-400" />
+   366→              <div className="text-left">
+   367→                <div className="text-[10px] font-bold text-amber-200">Wandering Merchant</div>
+   368→                <div className="text-[9px] text-amber-400/70">{merchantDeals.length} deals available</div>
+   369→              </div>
+   370→              <ChevronRight className="w-3 h-3 text-amber-400/60" />
+   371→            </motion.button>
+   372→          )}
+   373→          {showStreakReward && (
+   374→            <motion.button
+   375→              whileHover={{ scale: 1.03 }}
+   376→              whileTap={{ scale: 0.97 }}
+   377→              onClick={() => setScreen('login-streak')}
+   378→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-orange-600/20 to-orange-500/5 border border-orange-500/30 rounded-lg px-3 py-2 hover:border-orange-400/50 transition-all"
+   379→            >
+   380→              <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
+   381→              <div className="text-left">
+   382→                <div className="text-[10px] font-bold text-orange-200">Login Streak Reward!</div>
+   383→                <div className="text-[9px] text-orange-400/70">Claim now</div>
+   384→              </div>
+   385→              <ChevronRight className="w-3 h-3 text-orange-400/60" />
+   386→            </motion.button>
+   387→          )}
+   388→          {dailyQuestProgress.completed < dailyQuestProgress.total && (
+   389→            <motion.button
+   390→              whileHover={{ scale: 1.03 }}
+   391→              whileTap={{ scale: 0.97 }}
+   392→              onClick={() => setScreen('missions')}
+   393→              className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-cyan-600/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg px-3 py-2 hover:border-cyan-400/50 transition-all"
+   394→            >
+   395→              <Scroll className="w-4 h-4 text-cyan-400" />
+   396→              <div className="text-left">
+   397→                <div className="text-[10px] font-bold text-cyan-200">Daily Quests</div>
+   398→                <div className="text-[9px] text-cyan-400/70">{dailyQuestProgress.completed}/{dailyQuestProgress.total} complete</div>
+   399→              </div>
+   400→              <ChevronRight className="w-3 h-3 text-cyan-400/60" />
+   401→            </motion.button>
+   402→          )}
+   403→        </div>
+   404→      )}
+   405→
+   406→      {/* ===== ENHANCED TEAM PREVIEW ===== */}
+   407→      <div className="bg-[#0f0f23]/80 border border-amber-500/10 rounded-xl p-4">
+   408→        <div className="flex items-center justify-between mb-3">
+   409→          <h2 className="text-sm font-bold text-amber-200 flex items-center gap-2">
+   410→            <Star className="w-4 h-4" /> Your Team
+   411→          </h2>
+   412→          <button onClick={() => setScreen('heroes')} className="text-xs text-amber-400 hover:text-amber-300">
+   413→            Manage →
+   414→          </button>
+   415→        </div>
+   416→        {teamHeroes.length === 0 ? (
+   417→          <div className="text-center py-8">
+   418→            <Users className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+   419→            <p className="text-sm text-gray-400 mb-2">No heroes in your team yet!</p>
+   420→            <button
+   421→              onClick={() => setScreen('summon')}
+   422→              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:from-purple-400 hover:to-purple-500 transition-all"
+   423→            >
+   424→              <Sparkles className="w-3 h-3 inline mr-1" /> Summon Your First Hero
+   425→            </button>
+   426→          </div>
+   427→        ) : (
+   428→          <div className="flex gap-2 overflow-x-auto pb-2 game-scrollbar">
+   429→            {teamHeroes.map((hero) => {
+   430→              if (!hero) return null;
+   431→              const rarity = RARITY_CONFIG[hero.rarity];
+   432→              const element = ELEMENT_CONFIG[hero.element];
+   433→              const heroPower = Math.floor(hero.attack + hero.defense + hero.health / 10 + hero.speed * 5);
+   434→              const heroImage = getHeroImageUrl(hero.templateId);
+   435→              const heroGradient = getHeroGradient(hero.rarity);
+   436→              return (
+   437→                <motion.div
+   438→                  key={hero.id}
+   439→                  whileHover={{ scale: 1.03, y: -2 }}
+   440→                  className={`hero-3d-container flex-shrink-0 relative`}
+   441→                >
+   442→                  <div className={`hero-3d-card rounded-lg overflow-hidden hero-3d-frame-${hero.rarity} hero-3d-glow-${hero.rarity}`}
+   443→                    style={{ transformStyle: 'preserve-3d' }}
+   444→                  >
+   445→                    <div className={`bg-gradient-to-b ${heroGradient} p-2 min-w-[100px] relative`}>
+   446→                      {/* Element badge with 3D depth */}
+   447→                      <div className="absolute -top-1 -right-1 bg-black/60 border border-gray-600/30 rounded-full w-5 h-5 flex items-center justify-center text-[10px] badge-3d" title={element.label}>
+   448→                        {element.icon}
+   449→                      </div>
+   450→                      <div className="text-center hero-3d-layer-front">
+   451→                        {heroImage ? (
+   452→                          <div className="hero-3d-portrait w-10 h-10 mx-auto rounded-full overflow-hidden border border-white/10 mb-1">
+   453→                            <Image src={heroImage} alt={hero.name} width={40} height={40} className="object-cover w-full h-full" unoptimized />
+   454→                          </div>
+   455→                        ) : (
+   456→                          <div className="text-xl mb-1">{element.icon}</div>
+   457→                        )}
+   458→                        <div className="text-xs font-bold text-white truncate embossed-text">{hero.name}</div>
+   459→                        <div className={`text-[10px] ${rarity.color}`}>{rarity.label}</div>
+   460→                        <div className="text-[10px] text-muted-foreground">Lv.{hero.level}</div>
+   461→                        {/* Power number with 3D glow */}
+   462→                        <div className="power-badge mt-0.5 mx-auto w-fit">
+   463→                          ⚡{heroPower.toLocaleString()}
+   464→                        </div>
+   465→                        <div className="flex justify-center gap-0.5 mt-0.5">
+   466→                          {Array.from({ length: hero.stars }, (_, i) => (
+   467→                            <Star key={i} className="w-2 h-2 fill-yellow-400 text-yellow-400" />
+   468→                          ))}
+   469→                        </div>
+   470→                      </div>
+   471→                      {/* Holographic overlay for epic+ */}
+   472→                      {['epic', 'legendary', 'mythic'].includes(hero.rarity) && (
+   473→                        <div className={`holographic-overlay ${
+   474→                          hero.rarity === 'epic' ? 'holographic-epic' :
+   475→                          hero.rarity === 'legendary' ? 'holographic-legendary' : 'holographic-mythic'
+   476→                        }`} />
+   477→                      )}
+   478→                    </div>
+   479→                  </div>
+   480→                </motion.div>
+   481→              );
+   482→            })}
+   483→            {team.length < 5 && (
+   484→              <motion.div
+   485→                whileHover={{ scale: 1.03 }}
+   486→                onClick={() => setScreen('heroes')}
+   487→                className="flex-shrink-0 rounded-lg p-2 min-w-[100px] flex items-center justify-center cursor-pointer relative overflow-hidden"
+   488→                style={{
+   489→                  border: '2px dashed',
+   490→                  borderColor: 'rgba(245,158,11,0.3)',
+   491→                  animation: 'pulse-glow 2s ease-in-out infinite',
+   492→                }}
+   493→              >
+   494→                <motion.div
+   495→                  className="absolute inset-0 bg-amber-500/5"
+   496→                  animate={{ opacity: [0.1, 0.25, 0.1] }}
+   497→                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+   498→                />
+   499→                <div className="text-center text-gray-400 relative z-10">
+   500→                  <motion.div
+   501→                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 1, 0.5] }}
+   502→                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+   503→                  >
+   504→                    <Sparkles className="w-5 h-5 mx-auto text-amber-400/60" />
+   505→                  </motion.div>
+   506→                  <div className="text-[10px] mt-1 text-amber-400/70">Summon</div>
+   507→                </div>
+   508→              </motion.div>
+   509→            )}
+   510→          </div>
+   511→        )}
+   512→      </div>
+   513→
+   514→      {/* ===== ENHANCED SPECIAL OFFER BANNER ===== */}
+   515→      <motion.div
+   516→        initial={{ opacity: 0 }}
+   517→        animate={{ opacity: 1 }}
+   518→        transition={{ delay: 0.5 }}
+   519→        className="relative overflow-hidden rounded-xl p-[2px] cursor-pointer"
+   520→        onClick={() => setScreen('shop')}
+   521→      >
+   522→        {/* Animated gradient border */}
+   523→        <motion.div
+   524→          className="absolute inset-0 rounded-xl"
+   525→          animate={{
+   526→            background: gradientPhase === 0
+   527→              ? 'linear-gradient(90deg, rgba(239,68,68,0.6), transparent 30%, transparent 70%, rgba(239,68,68,0.6))'
+   528→              : gradientPhase === 1
+   529→              ? 'linear-gradient(90deg, rgba(245,158,11,0.6), transparent 30%, transparent 70%, rgba(245,158,11,0.6))'
+   530→              : 'linear-gradient(90deg, rgba(168,85,247,0.6), transparent 30%, transparent 70%, rgba(168,85,247,0.6))',
+   531→          }}
+   532→          transition={{ duration: 1.5, ease: 'easeInOut' }}
+   533→        />
+   534→        <div className="relative rounded-xl bg-gradient-to-r from-red-900/40 via-amber-900/30 to-red-900/40 border border-red-500/30 p-4 overflow-hidden hover:border-red-400/50 transition-all">
+   535→          <div className="absolute inset-0 animate-shimmer" />
+   536→
+   537→          {/* 75% OFF Badge */}
+   538→          <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-red-700 text-white text-[10px] font-black px-2 py-1 rounded-bl-lg rounded-tr-lg shadow-lg shadow-red-500/30 transform rotate-3">
+   539→            75% OFF
+   540→          </div>
+   541→
+   542→          <div className="relative z-10 flex items-center justify-between">
+   543→            <div>
+   544→              <div className="flex items-center gap-2">
+   545→                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">LIMITED</span>
+   546→                <span className="text-sm font-bold text-amber-200">Starter Pack</span>
+   547→              </div>
+   548→              <div className="text-xs text-gray-400 mt-1">1,000 Gems + Epic Hero + 50,000 Gold</div>
+   549→              {/* Countdown Timer */}
+   550→              <div className="flex items-center gap-1.5 mt-1.5">
+   551→                <Clock className="w-3 h-3 text-red-400" />
+   552→                <span className="text-[10px] font-mono text-red-300">Ends in {offerTime}</span>
+   553→              </div>
+   554→            </div>
+   555→            <div className="text-right">
+   556→              <div className="text-lg font-bold text-amber-400">$4.99</div>
+   557→              <div className="text-[10px] text-gray-500 line-through">$19.99</div>
+   558→            </div>
+   559→          </div>
+   560→        </div>
+   561→      </motion.div>
+   562→
+   563→      {/* ===== ENHANCED DAILY REWARD MODAL ===== */}
+   564→      <AnimatePresence>
+   565→        {showDailyReward && (
+   566→          <motion.div
+   567→            initial={{ opacity: 0 }}
+   568→            animate={{ opacity: 1 }}
+   569→            exit={{ opacity: 0 }}
+   570→            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+   571→            onClick={() => setShowDailyReward(false)}
+   572→          >
+   573→            <motion.div
+   574→              initial={{ scale: 0.5, opacity: 0 }}
+   575→              animate={{ scale: 1, opacity: 1 }}
+   576→              exit={{ scale: 0.5, opacity: 0 }}
+   577→              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+   578→              className="bg-gradient-to-b from-[#1a0a2e] to-[#0f0f23] border border-amber-500/30 rounded-2xl p-6 max-w-sm w-full relative overflow-hidden"
+   579→              onClick={e => e.stopPropagation()}
+   580→            >
+   581→              {/* Confetti burst on claim */}
+   582→              {showConfetti && (
+   583→                <div className="absolute inset-0 pointer-events-none z-20">
+   584→                  {Array.from({ length: 20 }).map((_, i) => (
+   585→                    <motion.div
+   586→                      key={i}
+   587→                      className="absolute text-sm"
+   588→                      initial={{
+   589→                        x: '50%',
+   590→                        y: '50%',
+   591→                        scale: 0,
+   592→                        opacity: 1,
+   593→                      }}
+   594→                      animate={{
+   595→                        x: `${50 + (Math.random() - 0.5) * 80}%`,
+   596→                        y: `${50 + (Math.random() - 0.5) * 80}%`,
+   597→                        scale: [0, 1.5, 0],
+   598→                        opacity: [1, 1, 0],
+   599→                        rotate: Math.random() * 360,
+   600→                      }}
+   601→                      transition={{ duration: 1.2, ease: 'easeOut' }}
+   602→                    >
+   603→                      {['🪙', '💎', '⭐', '✨', '🎁'][i % 5]}
+   604→                    </motion.div>
+   605→                  ))}
+   606→                </div>
+   607→              )}
+   608→
+   609→              {/* Close button */}
+   610→              <button
+   611→                onClick={() => { setShowDailyReward(false); setShowConfetti(false); }}
+   612→                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 border border-gray-600/30 flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-all z-10"
+   613→              >
+   614→                ✕
+   615→              </button>
+   616→
+   617→              {/* Sparkle effects */}
+   618→              <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+   619→                <motion.div
+   620→                  animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+   621→                  transition={{ duration: 2, repeat: Infinity }}
+   622→                  className="text-4xl"
+   623→                >
+   624→                  🎁
+   625→                </motion.div>
+   626→              </div>
+   627→
+   628→              <h3 className="text-lg font-bold gold-text text-center mb-4 mt-4">Daily Login Reward</h3>
+   629→              <div className="text-center mb-4">
+   630→                <div className="text-sm text-gray-400">Day {(player.dailyRewardDay % 7) + 1} of 7</div>
+   631→                <div className="mt-3 space-y-2">
+   632→                  <div className="flex items-center justify-center gap-2 text-amber-300">
+   633→                    <span>🪙</span> +{todayReward?.gold} Gold
+   634→                  </div>
+   635→                  <div className="flex items-center justify-center gap-2 text-cyan-300">
+   636→                    <span>💎</span> +{todayReward?.gems} Gems
+   637→                  </div>
+   638→                  <div className="flex items-center justify-center gap-2 text-purple-300">
+   639→                    <span>🎁</span> {todayReward?.item}
+   640→                  </div>
+   641→                </div>
+   642→              </div>
+   643→
+   644→              {/* 7-day reward preview with icons */}
+   645→              <div className="grid grid-cols-7 gap-1.5 mb-4">
+   646→                {DAILY_REWARDS.map((r, i) => {
+   647→                  const isToday = i === (player.dailyRewardDay % 7);
+   648→                  const isPast = i < (player.dailyRewardDay % 7);
+   649→                  return (
+   650→                    <div
+   651→                      key={i}
+   652→                      className={`text-center p-1.5 rounded-lg text-[10px] relative ${
+   653→                        isToday
+   654→                          ? 'bg-amber-500/30 border border-amber-400 animate-pulse'
+   655→                          : isPast
+   656→                          ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+   657→                          : 'bg-gray-800/50 border border-gray-700/30 text-gray-500'
+   658→                      }`}
+   659→                    >
+   660→                      <div className="text-sm mb-0.5">{DAILY_REWARD_ICONS[i]}</div>
+   661→                      <div className="font-bold">D{i + 1}</div>
+   662→                      {isPast && (
+   663→                        <div className="absolute top-0.5 right-0.5 text-[8px]">✓</div>
+   664→                      )}
+   665→                    </div>
+   666→                  );
+   667→                })}
+   668→              </div>
+   669→
+   670→              <div className="flex gap-2">
+   671→                <button
+   672→                  onClick={() => { setShowDailyReward(false); setShowConfetti(false); }}
+   673→                  className="flex-1 bg-gray-700/50 text-gray-300 font-medium py-2 rounded-lg hover:bg-gray-600/50 transition-all border border-gray-600/30"
+   674→                >
+   675→                  Later
+   676→                </button>
+   677→                <button
+   678→                  onClick={() => { claimDailyReward(); setShowConfetti(true); }}
+   679→                  disabled={showConfetti}
+   680→                  className={`flex-1 font-bold py-2 rounded-lg transition-all shadow-lg shadow-amber-500/30 ${
+   681→                    showConfetti
+   682→                      ? 'bg-green-600 text-white'
+   683→                      : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-400 hover:to-amber-500'
+   684→                  }`}
+   685→                >
+   686→                  {showConfetti ? '✓ Claimed!' : 'Claim!'}
+   687→                </button>
+   688→              </div>
+   689→            </motion.div>
+   690→          </motion.div>
+   691→        )}
+   692→      </AnimatePresence>
+   693→
+   694→      {/* Pulse glow keyframe style (for add hero slot) */}
+   695→      <style jsx global>{`
+   696→        @keyframes pulse-glow {
+   697→          0%, 100% { border-color: rgba(245,158,11,0.3); }
+   698→          50% { border-color: rgba(245,158,11,0.6); }
+   699→        }
+   700→      `}</style>
+   701→    </div>
+   702→  );
+   703→}
+   704→
+   705→// ============= Sub-Components =============
+   706→
+   707→function DashboardStat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+   708→  return (
+   709→    <div className="bg-black/30 rounded-lg p-2 text-center">
+   710→      <div className="flex items-center justify-center gap-1 mb-1">
+   711→        {icon}
+   712→      </div>
+   713→      <div className="text-sm font-bold text-white">{value}</div>
+   714→      <div className="text-[10px] text-muted-foreground">{label}</div>
+   715→    </div>
+   716→  );
+   717→}
+   718→
+   719→function QuickAction({ icon, label, sublabel, color, borderColor, onClick }: {
+   720→  icon: React.ReactNode; label: string; sublabel: string; color: string; borderColor: string; onClick: () => void;
+   721→}) {
+   722→  return (
+   723→    <motion.button
+   724→      whileHover={{ scale: 1.03 }}
+   725→      whileTap={{ scale: 0.97 }}
+   726→      onClick={onClick}
+   727→      className={`bg-gradient-to-br ${color} border ${borderColor} rounded-xl p-3 text-left hover:shadow-lg transition-all`}
+   728→    >
+   729→      <div className="text-amber-300 mb-1">{icon}</div>
+   730→      <div className="text-xs font-bold text-white">{label}</div>
+   731→      <div className="text-[10px] text-gray-400">{sublabel}</div>
+   732→    </motion.button>
+   733→  );
+   734→}
+   735→
+   736→function ActivityCard({ icon, label, value, sublabel, accentColor, bgColor, borderColor, onClick }: {
+   737→  icon: React.ReactNode;
+   738→  label: string;
+   739→  value: string;
+   740→  sublabel: string;
+   741→  accentColor: string;
+   742→  bgColor: string;
+   743→  borderColor: string;
+   744→  onClick: () => void;
+   745→}) {
+   746→  return (
+   747→    <motion.button
+   748→      whileHover={{ scale: 1.03 }}
+   749→      whileTap={{ scale: 0.97 }}
+   750→      onClick={onClick}
+   751→      className={`${bgColor} border ${borderColor} rounded-lg p-2.5 text-left hover:shadow-lg transition-all cursor-pointer`}
+   752→    >
+   753→      <div className="flex items-center gap-2 mb-1">
+   754→        {icon}
+   755→        <span className="text-[10px] text-muted-foreground">{label}</span>
+   756→      </div>
+   757→      <div className={`text-xs font-bold ${accentColor}`}>{value}</div>
+   758→      <div className="text-[9px] text-muted-foreground/70">{sublabel}</div>
+   759→    </motion.button>
+   760→  );
+   761→}
+
+[showing lines 200-761 of 762; use offset=762 with limit to continue reading]

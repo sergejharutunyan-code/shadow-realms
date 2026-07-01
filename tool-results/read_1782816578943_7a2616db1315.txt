@@ -1,0 +1,868 @@
+     1→'use client';
+     2→
+     3→import { useGameStore } from '@/lib/game-store';
+     4→import { NPC_GUILDS, Guild, GuildMember } from '@/lib/game-data';
+     5→import { motion, AnimatePresence } from 'framer-motion';
+     6→import { useState, useMemo } from 'react';
+     7→import {
+     8→  Users,
+     9→  Crown,
+    10→  Star,
+    11→  Shield,
+    12→  Sword,
+    13→  Coins,
+    14→  ChevronRight,
+    15→  LogOut,
+    16→  MessageSquare,
+    17→  Award,
+    18→  Flame,
+    19→  Sparkles,
+    20→  Plus,
+    21→  Check,
+    22→  X,
+    23→} from 'lucide-react';
+    24→
+    25→// ----------------------- Role Config -----------------------
+    26→const ROLE_CONFIG: Record<
+    27→  GuildMember['role'],
+    28→  { icon: string; label: string; text: string; bg: string; border: string; ring: string }
+    29→> = {
+    30→  leader: {
+    31→    icon: '👑',
+    32→    label: 'Leader',
+    33→    text: 'text-amber-300',
+    34→    bg: 'bg-gradient-to-br from-amber-500/30 to-yellow-700/10',
+    35→    border: 'border-amber-500/50',
+    36→    ring: 'shadow-[0_0_12px_-2px_rgba(251,191,36,0.6)]',
+    37→  },
+    38→  officer: {
+    39→    icon: '⭐',
+    40→    label: 'Officer',
+    41→    text: 'text-purple-300',
+    42→    bg: 'bg-gradient-to-br from-slate-300/25 to-slate-500/10',
+    43→    border: 'border-slate-300/50',
+    44→    ring: 'shadow-[0_0_12px_-2px_rgba(203,213,225,0.5)]',
+    45→  },
+    46→  member: {
+    47→    icon: '•',
+    48→    label: 'Member',
+    49→    text: 'text-amber-700/80',
+    50→    bg: 'bg-gradient-to-br from-amber-700/25 to-amber-900/10',
+    51→    border: 'border-amber-700/40',
+    52→    ring: '',
+    53→  },
+    54→};
+    55→
+    56→// ----------------------- Guild Theme -----------------------
+    57→const GUILD_THEME: Record<
+    58→  string,
+    59→  { gradient: string; glow: string; accentText: string; ring: string; chip: string }
+    60→> = {
+    61→  guild_1: {
+    62→    // Shadow Legion - blood red / dark purple
+    63→    gradient: 'from-red-600/40 via-rose-800/20 to-purple-900/10',
+    64→    glow: 'shadow-[0_0_40px_-12px_rgba(220,38,38,0.55)]',
+    65→    accentText: 'text-rose-300',
+    66→    ring: 'bg-gradient-to-br from-red-500 via-rose-600 to-purple-700',
+    67→    chip: 'bg-red-500/15 text-rose-300 border-red-500/30',
+    68→  },
+    69→  guild_2: {
+    70→    // Knights of Dawn - gold / amber
+    71→    gradient: 'from-amber-500/40 via-yellow-700/20 to-orange-900/10',
+    72→    glow: 'shadow-[0_0_40px_-12px_rgba(245,158,11,0.55)]',
+    73→    accentText: 'text-amber-300',
+    74→    ring: 'bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-600',
+    75→    chip: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    76→  },
+    77→  guild_3: {
+    78→    // Dragon Hoard - emerald / teal
+    79→    gradient: 'from-emerald-500/40 via-teal-700/20 to-green-900/10',
+    80→    glow: 'shadow-[0_0_40px_-12px_rgba(16,185,129,0.55)]',
+    81→    accentText: 'text-emerald-300',
+    82→    ring: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-green-700',
+    83→    chip: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    84→  },
+    85→};
+    86→
+    87→function themeFor(guild: Guild) {
+    88→  return GUILD_THEME[guild.id] ?? GUILD_THEME.guild_1;
+    89→}
+    90→
+    91→function totalPower(guild: Guild): number {
+    92→  return guild.members.reduce((sum, m) => sum + m.power, 0);
+    93→}
+    94→
+    95→function fmtPower(n: number): string {
+    96→  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    97→  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    98→  return n.toLocaleString();
+    99→}
+   100→
+   101→function xpThreshold(level: number): number {
+   102→  return level * 50000;
+   103→}
+   104→
+   105→// ----------------------- Decorative Divider -----------------------
+   106→function OrnateDivider() {
+   107→  return (
+   108→    <div className="flex items-center justify-center my-4 select-none" aria-hidden>
+   109→      <svg width="100%" height="14" viewBox="0 0 400 14" preserveAspectRatio="none" className="max-w-md">
+   110→        <defs>
+   111→          <linearGradient id="div-grad" x1="0" x2="1">
+   112→            <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
+   113→            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.9" />
+   114→            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+   115→          </linearGradient>
+   116→        </defs>
+   117→        <line x1="0" y1="7" x2="180" y2="7" stroke="url(#div-grad)" strokeWidth="1" />
+   118→        <path
+   119→          d="M200 1 L208 7 L200 13 L192 7 Z"
+   120→          fill="#fbbf24"
+   121→          stroke="#f59e0b"
+   122→          strokeWidth="0.5"
+   123→        />
+   124→        <circle cx="185" cy="7" r="1.2" fill="#fbbf24" />
+   125→        <circle cx="215" cy="7" r="1.2" fill="#fbbf24" />
+   126→        <line x1="220" y1="7" x2="400" y2="7" stroke="url(#div-grad)" strokeWidth="1" />
+   127→      </svg>
+   128→    </div>
+   129→  );
+   130→}
+   131→
+   132→// ----------------------- Mock Guild Chat -----------------------
+   133→const MOCK_CHAT: { name: string; role: GuildMember['role']; text: string; time: string }[] = [
+   134→  { name: 'DarkLord', role: 'leader', text: 'Guild war starts Friday — bring your best team!', time: '5m' },
+   135→  { name: 'NightBlade', role: 'officer', text: 'I can craft legendary gear for anyone who needs it 🗡️', time: '12m' },
+   136→  { name: 'SoulReaper', role: 'member', text: 'Just hit level 35! Thanks for the carries team 💀', time: '38m' },
+   137→  { name: 'GhostArrow', role: 'member', text: 'Anyone up for stage 28 co-op tonight?', time: '1h' },
+   138→];
+   139→
+   140→// ----------------------- Main Component -----------------------
+   141→export function GuildScreen() {
+   142→  const guildId = useGameStore(s => s.guildId);
+   143→  const player = useGameStore(s => s.player);
+   144→  const heroes = useGameStore(s => s.heroes);
+   145→  const addNotification = useGameStore(s => s.addNotification);
+   146→
+   147→  const [joinedGuildId, setJoinedGuildId] = useState<string | null>(guildId);
+   148→  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+   149→
+   150→  const joinedGuild = useMemo(
+   151→    () => NPC_GUILDS.find(g => g.id === joinedGuildId) ?? null,
+   152→    [joinedGuildId]
+   153→  );
+   154→
+   155→  const playerPower = useMemo(
+   156→    () =>
+   157→      heroes.reduce(
+   158→        (sum, h) => sum + h.attack + h.defense + Math.floor(h.health / 10) + h.speed * 5,
+   159→        0
+   160→      ),
+   161→    [heroes]
+   162→  );
+   163→
+   164→  function handleJoin(guild: Guild) {
+   165→    setJoinedGuildId(guild.id);
+   166→    addNotification(`⚔️ You have joined ${guild.name}! Welcome, champion.`, 'success');
+   167→  }
+   168→
+   169→  function handleLeave() {
+   170→    if (joinedGuild) {
+   171→      addNotification(`You have left ${joinedGuild.name}.`, 'info');
+   172→    }
+   173→    setJoinedGuildId(null);
+   174→    setShowLeaveConfirm(false);
+   175→  }
+   176→
+   177→  function handleCreateGuild() {
+   178→    addNotification('🏰 Guild Creation is coming soon! Stay tuned, champion.', 'info');
+   179→  }
+   180→
+   181→  // ----------------------- NOT JOINED: Recruitment -----------------------
+   182→  if (!joinedGuild) {
+   183→    return (
+   184→      <div className="relative min-h-screen text-white">
+   185→        {/* Background: dark purple/black with radial gradients */}
+   186→        <div className="pointer-events-none fixed inset-0 -z-10 bg-[#0a0612]" aria-hidden />
+   187→        <div
+   188→          className="pointer-events-none fixed inset-0 -z-10"
+   189→          aria-hidden
+   190→          style={{
+   191→            background:
+   192→              'radial-gradient(circle at 15% 10%, rgba(124,45,181,0.28), transparent 45%), radial-gradient(circle at 85% 25%, rgba(220,38,38,0.18), transparent 50%), radial-gradient(circle at 50% 95%, rgba(245,158,11,0.12), transparent 55%)',
+   193→          }}
+   194→        />
+   195→
+   196→        <div className="p-3 sm:p-5 max-w-5xl mx-auto">
+   197→          {/* Header */}
+   198→          <motion.header
+   199→            initial={{ opacity: 0, y: -12 }}
+   200→            animate={{ opacity: 1, y: 0 }}
+   201→            transition={{ duration: 0.4 }}
+   202→            className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-br from-purple-950/60 via-[#140a22]/80 to-[#0a0612] p-5 sm:p-6"
+   203→          >
+   204→            {/* Decorative banner emoji */}
+   205→            <div className="absolute -top-6 -right-6 text-[120px] opacity-10 select-none" aria-hidden>
+   206→              ⚔️
+   207→            </div>
+   208→            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   209→              <div className="flex items-center gap-4">
+   210→                <motion.div
+   211→                  animate={{ rotate: [0, 4, -4, 0] }}
+   212→                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   213→                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-500/30 to-purple-700/20 border-2 border-amber-500/40 flex items-center justify-center shadow-[0_0_30px_-8px_rgba(245,158,11,0.6)]"
+   214→                >
+   215→                  <Shield className="w-9 h-9 sm:w-11 sm:h-11 text-amber-400" />
+   216→                </motion.div>
+   217→                <div>
+   218→                  <h1 className="text-2xl sm:text-3xl font-extrabold gold-text tracking-tight">
+   219→                    Guild Hall
+   220→                  </h1>
+   221→                  <p className="text-xs sm:text-sm text-purple-200/70 mt-0.5">
+   222→                    Join forces with other champions
+   223→                  </p>
+   224→                </div>
+   225→              </div>
+   226→              <motion.button
+   227→                whileHover={{ scale: 1.04 }}
+   228→                whileTap={{ scale: 0.97 }}
+   229→                onClick={handleCreateGuild}
+   230→                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-purple-500/15 border border-amber-500/40 text-amber-200 text-sm font-semibold hover:from-amber-500/25 hover:to-purple-500/25 transition-colors"
+   231→              >
+   232→                <Plus className="w-4 h-4" />
+   233→                Create Guild
+   234→              </motion.button>
+   235→            </div>
+   236→          </motion.header>
+   237→
+   238→          <OrnateDivider />
+   239→
+   240→          {/* Section title */}
+   241→          <div className="flex items-center gap-2 mb-4 px-1">
+   242→            <Flame className="w-4 h-4 text-rose-400" />
+   243→            <h2 className="text-sm font-bold uppercase tracking-wider text-purple-200">
+   244→              Available Guilds
+   245→            </h2>
+   246→            <div className="flex-1 h-px bg-gradient-to-r from-purple-500/30 to-transparent" />
+   247→            <span className="text-[10px] text-purple-300/60">{NPC_GUILDS.length} recruiting</span>
+   248→          </div>
+   249→
+   250→          {/* Guild recruitment cards */}
+   251→          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   252→            {NPC_GUILDS.map((guild, idx) => (
+   253→              <GuildRecruitCard
+   254→                key={guild.id}
+   255→                guild={guild}
+   256→                index={idx}
+   257→                onJoin={() => handleJoin(guild)}
+   258→              />
+   259→            ))}
+   260→          </div>
+   261→
+   262→          {/* Footer note */}
+   263→          <motion.div
+   264→            initial={{ opacity: 0 }}
+   265→            animate={{ opacity: 1 }}
+   266→            transition={{ delay: 0.4 }}
+   267→            className="mt-6 text-center text-[11px] text-purple-300/50"
+   268→          >
+   269→            <Sparkles className="inline w-3 h-3 mr-1 text-amber-400/70" />
+   270→            Joining a guild grants permanent perks while you remain a member.
+   271→          </motion.div>
+   272→        </div>
+   273→      </div>
+   274→    );
+   275→  }
+   276→
+   277→  // ----------------------- JOINED: My Guild -----------------------
+   278→  const theme = themeFor(joinedGuild);
+   279→  const guildPower = totalPower(joinedGuild) + playerPower;
+   280→  const threshold = xpThreshold(joinedGuild.level);
+   281→  const xpPct = Math.min(100, (joinedGuild.experience / threshold) * 100);
+   282→
+   283→  // Build display member list: guild members + player (You) as a member
+   284→  const playerMember: GuildMember = {
+   285→    name: player.name,
+   286→    level: player.level,
+   287→    power: playerPower,
+   288→    role: 'member',
+   289→    contributed: 0,
+   290→    lastOnline: 'Online',
+   291→  };
+   292→  const displayMembers: (GuildMember & { isYou?: boolean })[] = [
+   293→    ...joinedGuild.members.map(m => ({ ...m })),
+   294→    { ...playerMember, isYou: true },
+   295→  ];
+   296→
+   297→  // Sort by role (leader, officer, member) then power desc — keep "You" naturally by power
+   298→  const roleOrder: Record<GuildMember['role'], number> = { leader: 0, officer: 1, member: 2 };
+   299→  displayMembers.sort((a, b) => {
+   300→    if (roleOrder[a.role] !== roleOrder[b.role]) return roleOrder[a.role] - roleOrder[b.role];
+   301→    return b.power - a.power;
+   302→  });
+   303→
+   304→  return (
+   305→    <div className="relative min-h-screen text-white">
+   306→      {/* Background */}
+   307→      <div className="pointer-events-none fixed inset-0 -z-10 bg-[#0a0612]" aria-hidden />
+   308→      <div
+   309→        className="pointer-events-none fixed inset-0 -z-10"
+   310→        aria-hidden
+   311→        style={{
+   312→          background:
+   313→            'radial-gradient(circle at 12% 8%, rgba(124,45,181,0.3), transparent 45%), radial-gradient(circle at 88% 20%, rgba(220,38,38,0.16), transparent 50%), radial-gradient(circle at 50% 100%, rgba(245,158,11,0.14), transparent 55%)',
+   314→        }}
+   315→      />
+   316→
+   317→      <div className="p-3 sm:p-5 max-w-5xl mx-auto">
+   318→        {/* Header */}
+   319→        <motion.header
+   320→          initial={{ opacity: 0, y: -12 }}
+   321→          animate={{ opacity: 1, y: 0 }}
+   322→          transition={{ duration: 0.4 }}
+   323→          className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-br from-purple-950/60 via-[#140a22]/80 to-[#0a0612] p-5 sm:p-6 mb-4"
+   324→        >
+   325→          <div className="absolute -top-6 -right-6 text-[120px] opacity-10 select-none" aria-hidden>
+   326→            ⚔️
+   327→          </div>
+   328→          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   329→            <div className="flex items-center gap-4">
+   330→              <motion.div
+   331→                animate={{ rotate: [0, 4, -4, 0] }}
+   332→                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   333→                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-500/30 to-purple-700/20 border-2 border-amber-500/40 flex items-center justify-center shadow-[0_0_30px_-8px_rgba(245,158,11,0.6)]"
+   334→              >
+   335→                <Shield className="w-9 h-9 sm:w-11 sm:h-11 text-amber-400" />
+   336→              </motion.div>
+   337→              <div>
+   338→                <h1 className="text-2xl sm:text-3xl font-extrabold gold-text tracking-tight">
+   339→                  Guild Hall
+   340→                </h1>
+   341→                <p className="text-xs sm:text-sm text-purple-200/70 mt-0.5">
+   342→                  Join forces with other champions
+   343→                </p>
+   344→              </div>
+   345→            </div>
+   346→            <motion.button
+   347→              whileHover={{ scale: 1.04 }}
+   348→              whileTap={{ scale: 0.97 }}
+   349→              onClick={handleCreateGuild}
+   350→              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-purple-500/15 border border-amber-500/40 text-amber-200 text-sm font-semibold hover:from-amber-500/25 hover:to-purple-500/25 transition-colors"
+   351→            >
+   352→              <Plus className="w-4 h-4" />
+   353→              Create Guild
+   354→            </motion.button>
+   355→          </div>
+   356→        </motion.header>
+   357→
+   358→        {/* My Guild Header Card */}
+   359→        <motion.div
+   360→          initial={{ opacity: 0, y: 16, scale: 0.98 }}
+   361→          animate={{ opacity: 1, y: 0, scale: 1 }}
+   362→          transition={{ duration: 0.45 }}
+   363→          className={`relative overflow-hidden rounded-2xl p-[2px] ${theme.ring} ${theme.glow}`}
+   364→        >
+   365→          <div className="relative rounded-2xl bg-[#0d0817]/95 p-5 sm:p-6">
+   366→            {/* glow accent */}
+   367→            <div
+   368→              className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br ${theme.gradient} opacity-60`}
+   369→              aria-hidden
+   370→            />
+   371→            <div className="relative z-10 flex flex-col sm:flex-row gap-5">
+   372→              {/* Banner */}
+   373→              <motion.div
+   374→                whileHover={{ scale: 1.05, rotate: -2 }}
+   375→                className="shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-gradient-to-br from-black/60 to-purple-950/60 border-2 border-amber-500/40 flex items-center justify-center text-6xl sm:text-7xl shadow-inner"
+   376→              >
+   377→                {joinedGuild.banner}
+   378→              </motion.div>
+   379→
+   380→              {/* Info */}
+   381→              <div className="flex-1 min-w-0">
+   382→                <div className="flex flex-wrap items-center gap-2">
+   383→                  <h2 className="text-2xl sm:text-3xl font-extrabold gold-text tracking-tight">
+   384→                    {joinedGuild.name}
+   385→                  </h2>
+   386→                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-bold ${theme.chip}`}>
+   387→                    <Star className="w-3 h-3 fill-current" />
+   388→                    Lv. {joinedGuild.level}
+   389→                  </span>
+   390→                </div>
+   391→                <p className="text-xs sm:text-sm text-purple-200/70 mt-1 max-w-prose">
+   392→                  {joinedGuild.description}
+   393→                </p>
+   394→
+   395→                {/* Leader */}
+   396→                <div className="flex items-center gap-1.5 mt-2 text-[11px]">
+   397→                  <Crown className="w-3.5 h-3.5 text-amber-400" />
+   398→                  <span className="text-purple-300/60">Led by</span>
+   399→                  <span className="font-semibold text-amber-200">
+   400→                    {joinedGuild.members.find(m => m.role === 'leader')?.name ?? 'Unknown'}
+   401→                  </span>
+   402→                </div>
+   403→
+   404→                {/* Stats row */}
+   405→                <div className="grid grid-cols-3 gap-2 mt-4">
+   406→                  <StatPill
+   407→                    icon={<Sword className="w-3.5 h-3.5" />}
+   408→                    label="Total Power"
+   409→                    value={fmtPower(guildPower)}
+   410→                    tone={theme.accentText}
+   411→                  />
+   412→                  <StatPill
+   413→                    icon={<Users className="w-3.5 h-3.5" />}
+   414→                    label="Members"
+   415→                    value={`${displayMembers.length}/${joinedGuild.maxMembers}`}
+   416→                    tone="text-purple-200"
+   417→                  />
+   418→                  <StatPill
+   419→                    icon={<Award className="w-3.5 h-3.5" />}
+   420→                    label="Perks"
+   421→                    value={`${joinedGuild.perks.length}`}
+   422→                    tone="text-amber-200"
+   423→                  />
+   424→                </div>
+   425→
+   426→                {/* XP bar */}
+   427→                <div className="mt-4">
+   428→                  <div className="flex items-center justify-between text-[11px] mb-1">
+   429→                    <span className="text-purple-200/70 flex items-center gap-1">
+   430→                      <Sparkles className="w-3 h-3 text-amber-400" />
+   431→                      Guild XP
+   432→                    </span>
+   433→                    <span className={theme.accentText}>
+   434→                      {joinedGuild.experience.toLocaleString()} / {threshold.toLocaleString()}
+   435→                    </span>
+   436→                  </div>
+   437→                  <div className="w-full h-2.5 rounded-full bg-black/60 overflow-hidden border border-white/5">
+   438→                    <motion.div
+   439→                      initial={{ width: 0 }}
+   440→                      animate={{ width: `${xpPct}%` }}
+   441→                      transition={{ duration: 0.9, ease: 'easeOut' }}
+   442→                      className={`h-full bg-gradient-to-r ${theme.ring} rounded-full shadow-[0_0_10px_-1px_rgba(245,158,11,0.7)]`}
+   443→                    />
+   444→                  </div>
+   445→                  <div className="text-[10px] text-purple-300/50 mt-1">
+   446→                    {xpPct >= 100
+   447→                      ? 'Ready to level up!'
+   448→                      : `${(threshold - joinedGuild.experience).toLocaleString()} XP to Guild Lv. ${joinedGuild.level + 1}`}
+   449→                  </div>
+   450→                </div>
+   451→              </div>
+   452→            </div>
+   453→          </div>
+   454→        </motion.div>
+   455→
+   456→        <OrnateDivider />
+   457→
+   458→        {/* Two-column: Members + Side panel */}
+   459→        <div className="grid lg:grid-cols-3 gap-4">
+   460→          {/* Member list */}
+   461→          <motion.section
+   462→            initial={{ opacity: 0, y: 12 }}
+   463→            animate={{ opacity: 1, y: 0 }}
+   464→            transition={{ delay: 0.1 }}
+   465→            className="lg:col-span-2 rounded-2xl border border-amber-500/15 bg-[#0f0a1c]/80 overflow-hidden"
+   466→          >
+   467→            <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/15 bg-gradient-to-r from-amber-900/15 to-transparent">
+   468→              <div className="flex items-center gap-2">
+   469→                <Users className="w-4 h-4 text-amber-300" />
+   470→                <h3 className="text-sm font-bold text-amber-200">Guild Roster</h3>
+   471→              </div>
+   472→              <span className="text-[10px] text-purple-300/60">
+   473→                {displayMembers.length} champions
+   474→              </span>
+   475→            </div>
+   476→
+   477→            <div className="max-h-[28rem] overflow-y-auto custom-scroll divide-y divide-purple-900/30">
+   478→              {displayMembers.map((m, i) => (
+   479→                <GuildMemberRow key={`${m.name}-${i}`} member={m} index={i} />
+   480→              ))}
+   481→            </div>
+   482→          </motion.section>
+   483→
+   484→          {/* Side panel: Perks + Chat + Leave */}
+   485→          <div className="space-y-4">
+   486→            {/* Perks */}
+   487→            <motion.section
+   488→              initial={{ opacity: 0, y: 12 }}
+   489→              animate={{ opacity: 1, y: 0 }}
+   490→              transition={{ delay: 0.18 }}
+   491→              className="rounded-2xl border border-amber-500/15 bg-[#0f0a1c]/80 p-4"
+   492→            >
+   493→              <div className="flex items-center gap-2 mb-3">
+   494→                <Award className="w-4 h-4 text-amber-300" />
+   495→                <h3 className="text-sm font-bold text-amber-200">Guild Perks</h3>
+   496→              </div>
+   497→              <ul className="space-y-2">
+   498→                {joinedGuild.perks.map((perk, i) => (
+   499→                  <motion.li
+   500→                    key={i}
+   501→                    initial={{ opacity: 0, x: -8 }}
+   502→                    animate={{ opacity: 1, x: 0 }}
+   503→                    transition={{ delay: 0.25 + i * 0.07 }}
+   504→                    className="flex items-start gap-2 text-xs text-purple-100/90"
+   505→                  >
+   506→                    <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center border ${theme.chip}`}>
+   507→                      <Check className="w-3 h-3" />
+   508→                    </span>
+   509→                    <span>{perk}</span>
+   510→                  </motion.li>
+   511→                ))}
+   512→              </ul>
+   513→            </motion.section>
+   514→
+   515→            {/* Chat preview */}
+   516→            <motion.section
+   517→              initial={{ opacity: 0, y: 12 }}
+   518→              animate={{ opacity: 1, y: 0 }}
+   519→              transition={{ delay: 0.26 }}
+   520→              className="rounded-2xl border border-amber-500/15 bg-[#0f0a1c]/80 overflow-hidden"
+   521→            >
+   522→              <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/15 bg-gradient-to-r from-purple-900/15 to-transparent">
+   523→                <div className="flex items-center gap-2">
+   524→                  <MessageSquare className="w-4 h-4 text-amber-300" />
+   525→                  <h3 className="text-sm font-bold text-amber-200">Guild Chat</h3>
+   526→                </div>
+   527→                <span className="flex items-center gap-1 text-[10px] text-emerald-300">
+   528→                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+   529→                  Live
+   530→                </span>
+   531→              </div>
+   532→              <div className="p-3 space-y-2.5 max-h-56 overflow-y-auto custom-scroll">
+   533→                {MOCK_CHAT.map((msg, i) => {
+   534→                  const cfg = ROLE_CONFIG[msg.role];
+   535→                  return (
+   536→                    <motion.div
+   537→                      key={i}
+   538→                      initial={{ opacity: 0, y: 6 }}
+   539→                      animate={{ opacity: 1, y: 0 }}
+   540→                      transition={{ delay: 0.3 + i * 0.08 }}
+   541→                      className="flex gap-2"
+   542→                    >
+   543→                      <span className="shrink-0 text-base leading-5">{cfg.icon}</span>
+   544→                      <div className="min-w-0">
+   545→                        <div className="flex items-center gap-1.5">
+   546→                          <span className={`text-[11px] font-bold ${cfg.text}`}>{msg.name}</span>
+   547→                          <span className="text-[9px] text-purple-400/60">{msg.time}</span>
+   548→                        </div>
+   549→                        <p className="text-[11px] text-purple-100/80 leading-snug">{msg.text}</p>
+   550→                      </div>
+   551→                    </motion.div>
+   552→                  );
+   553→                })}
+   554→              </div>
+   555→              <div className="px-3 py-2 border-t border-amber-500/10 bg-black/30 flex items-center gap-2">
+   556→                <input
+   557→                  disabled
+   558→                  placeholder="Chat with guild..."
+   559→                  className="flex-1 bg-transparent text-[11px] text-purple-100/70 placeholder:text-purple-400/40 outline-none cursor-not-allowed"
+   560→                />
+   561→                <ChevronRight className="w-4 h-4 text-purple-500/50" />
+   562→              </div>
+   563→            </motion.section>
+   564→
+   565→            {/* Leave Guild */}
+   566→            <motion.button
+   567→              initial={{ opacity: 0, y: 12 }}
+   568→              animate={{ opacity: 1, y: 0 }}
+   569→              transition={{ delay: 0.34 }}
+   570→              whileHover={{ scale: 1.02 }}
+   571→              whileTap={{ scale: 0.98 }}
+   572→              onClick={() => setShowLeaveConfirm(true)}
+   573→              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-rose-500/50 bg-rose-950/20 text-rose-300 text-sm font-bold hover:bg-rose-900/30 hover:border-rose-500/70 transition-colors"
+   574→            >
+   575→              <LogOut className="w-4 h-4" />
+   576→              Leave Guild
+   577→            </motion.button>
+   578→          </div>
+   579→        </div>
+   580→
+   581→        {/* Inline custom scrollbar styling */}
+   582→        <style>{`
+   583→          .custom-scroll::-webkit-scrollbar { width: 6px; }
+   584→          .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+   585→          .custom-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#a855f7,#f59e0b); border-radius: 6px; }
+   586→        `}</style>
+   587→      </div>
+   588→
+   589→      {/* Leave Confirmation Modal */}
+   590→      <AnimatePresence>
+   591→        {showLeaveConfirm && (
+   592→          <motion.div
+   593→            initial={{ opacity: 0 }}
+   594→            animate={{ opacity: 1 }}
+   595→            exit={{ opacity: 0 }}
+   596→            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+   597→            onClick={() => setShowLeaveConfirm(false)}
+   598→          >
+   599→            <motion.div
+   600→              initial={{ opacity: 0, scale: 0.9, y: 12 }}
+   601→              animate={{ opacity: 1, scale: 1, y: 0 }}
+   602→              exit={{ opacity: 0, scale: 0.9, y: 12 }}
+   603→              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+   604→              onClick={e => e.stopPropagation()}
+   605→              className="relative w-full max-w-sm rounded-2xl border border-rose-500/40 bg-gradient-to-br from-[#1a0d1f]/95 to-[#0a0612]/95 p-6 shadow-[0_0_50px_-10px_rgba(220,38,38,0.5)]"
+   606→            >
+   607→              <div className="flex flex-col items-center text-center">
+   608→                <div className="w-14 h-14 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mb-3">
+   609→                  <LogOut className="w-7 h-7 text-rose-400" />
+   610→                </div>
+   611→                <h3 className="text-lg font-bold text-rose-200">Leave {joinedGuild.name}?</h3>
+   612→                <p className="text-xs text-purple-200/70 mt-2 max-w-[16rem]">
+   613→                  You will lose all active guild perks immediately. You can rejoin this or another
+   614→                  guild at any time.
+   615→                </p>
+   616→
+   617→                <div className="flex gap-3 w-full mt-5">
+   618→                  <button
+   619→                    onClick={() => setShowLeaveConfirm(false)}
+   620→                    className="flex-1 px-4 py-2.5 rounded-xl border border-purple-500/40 bg-purple-900/20 text-purple-200 text-sm font-semibold hover:bg-purple-900/30 transition-colors"
+   621→                  >
+   622→                    <span className="flex items-center justify-center gap-1.5">
+   623→                      <X className="w-4 h-4" />
+   624→                      Stay
+   625→                    </span>
+   626→                  </button>
+   627→                  <button
+   628→                    onClick={handleLeave}
+   629→                    className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 text-white text-sm font-bold hover:from-rose-500 hover:to-red-600 transition-colors shadow-[0_0_18px_-4px_rgba(220,38,38,0.7)]"
+   630→                  >
+   631→                    <span className="flex items-center justify-center gap-1.5">
+   632→                      <LogOut className="w-4 h-4" />
+   633→                      Leave
+   634→                    </span>
+   635→                  </button>
+   636→                </div>
+   637→              </div>
+   638→            </motion.div>
+   639→          </motion.div>
+   640→        )}
+   641→      </AnimatePresence>
+   642→    </div>
+   643→  );
+   644→}
+   645→
+   646→// ----------------------- Stat Pill -----------------------
+   647→function StatPill({
+   648→  icon,
+   649→  label,
+   650→  value,
+   651→  tone,
+   652→}: {
+   653→  icon: React.ReactNode;
+   654→  label: string;
+   655→  value: string;
+   656→  tone: string;
+   657→}) {
+   658→  return (
+   659→    <div className="rounded-lg bg-black/40 border border-white/5 px-2.5 py-2">
+   660→      <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-purple-300/60">
+   661→        {icon}
+   662→        {label}
+   663→      </div>
+   664→      <div className={`text-sm font-bold ${tone} mt-0.5`}>{value}</div>
+   665→    </div>
+   666→  );
+   667→}
+   668→
+   669→// ----------------------- Guild Recruitment Card -----------------------
+   670→function GuildRecruitCard({
+   671→  guild,
+   672→  index,
+   673→  onJoin,
+   674→}: {
+   675→  guild: Guild;
+   676→  index: number;
+   677→  onJoin: () => void;
+   678→}) {
+   679→  const theme = themeFor(guild);
+   680→  const power = totalPower(guild);
+   681→  const fillPct = Math.round((guild.members.length / guild.maxMembers) * 100);
+   682→
+   683→  return (
+   684→    <motion.article
+   685→      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+   686→      animate={{ opacity: 1, y: 0, scale: 1 }}
+   687→      transition={{ delay: index * 0.12, duration: 0.45, ease: 'easeOut' }}
+   688→      whileHover={{ y: -4 }}
+   689→      className={`group relative rounded-2xl p-[2px] ${theme.ring} ${theme.glow}`}
+   690→    >
+   691→      <div className="relative rounded-2xl bg-[#0d0817]/95 overflow-hidden">
+   692→        {/* gradient wash */}
+   693→        <div
+   694→          className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50`}
+   695→          aria-hidden
+   696→        />
+   697→        <div className="relative z-10 p-4 sm:p-5">
+   698→          {/* Top: banner + name */}
+   699→          <div className="flex items-start gap-3">
+   700→            <motion.div
+   701→              whileHover={{ rotate: -6, scale: 1.06 }}
+   702→              className="shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-black/60 to-purple-950/60 border-2 border-amber-500/40 flex items-center justify-center text-4xl shadow-inner"
+   703→            >
+   704→              {guild.banner}
+   705→            </motion.div>
+   706→            <div className="min-w-0 flex-1">
+   707→              <div className="flex items-center gap-2">
+   708→                <h3 className="text-lg font-extrabold gold-text truncate">{guild.name}</h3>
+   709→              </div>
+   710→              <div className="flex items-center gap-2 mt-1">
+   711→                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${theme.chip}`}>
+   712→                  <Star className="w-3 h-3 fill-current" />
+   713→                  Lv. {guild.level}
+   714→                </span>
+   715→                <span className="text-[10px] text-purple-300/60">
+   716→                  {guild.members.length}/{guild.maxMembers} members
+   717→                </span>
+   718→              </div>
+   719→            </div>
+   720→          </div>
+   721→
+   722→          {/* Description */}
+   723→          <p className="text-xs text-purple-100/75 mt-3 min-h-[2.5rem] leading-relaxed">
+   724→            {guild.description}
+   725→          </p>
+   726→
+   727→          {/* Power + member fill */}
+   728→          <div className="mt-3 grid grid-cols-2 gap-2">
+   729→            <div className="rounded-lg bg-black/40 border border-white/5 px-2.5 py-1.5">
+   730→              <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-purple-300/60">
+   731→                <Sword className="w-3 h-3" />
+   732→                Guild Power
+   733→              </div>
+   734→              <div className={`text-sm font-bold ${theme.accentText}`}>{fmtPower(power)}</div>
+   735→            </div>
+   736→            <div className="rounded-lg bg-black/40 border border-white/5 px-2.5 py-1.5">
+   737→              <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-purple-300/60">
+   738→                <Users className="w-3 h-3" />
+   739→                Roster
+   740→              </div>
+   741→              <div className="text-sm font-bold text-purple-100">{fillPct}% full</div>
+   742→            </div>
+   743→          </div>
+   744→
+   745→          {/* Perks */}
+   746→          <div className="mt-3">
+   747→            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-amber-200/70 mb-1.5">
+   748→              <Award className="w-3 h-3" />
+   749→              Guild Perks
+   750→            </div>
+   751→            <ul className="space-y-1">
+   752→              {guild.perks.map((perk, i) => (
+   753→                <li key={i} className="flex items-center gap-1.5 text-[11px] text-purple-100/85">
+   754→                  <Check className={`w-3 h-3 shrink-0 ${theme.accentText}`} />
+   755→                  {perk}
+   756→                </li>
+   757→              ))}
+   758→            </ul>
+   759→          </div>
+   760→
+   761→          {/* Join button */}
+   762→          <motion.button
+   763→            whileHover={{ scale: 1.02 }}
+   764→            whileTap={{ scale: 0.97 }}
+   765→            onClick={onJoin}
+   766→            className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold shadow-[0_0_20px_-6px_rgba(16,185,129,0.8)] hover:from-emerald-400 hover:to-green-500 transition-colors`}
+   767→          >
+   768→            <Sword className="w-4 h-4" />
+   769→            Join Guild
+   770→            <ChevronRight className="w-4 h-4" />
+   771→          </motion.button>
+   772→        </div>
+   773→      </div>
+   774→    </motion.article>
+   775→  );
+   776→}
+   777→
+   778→// ----------------------- Guild Member Row -----------------------
+   779→function GuildMemberRow({
+   780→  member,
+   781→  index,
+   782→}: {
+   783→  member: GuildMember & { isYou?: boolean };
+   784→  index: number;
+   785→}) {
+   786→  const cfg = ROLE_CONFIG[member.role];
+   787→  const isOnline = member.lastOnline === 'Online';
+   788→  const isYou = !!member.isYou;
+   789→  const isAlt = index % 2 === 1;
+   790→
+   791→  return (
+   792→    <motion.div
+   793→      initial={{ opacity: 0, x: -8 }}
+   794→      animate={{ opacity: 1, x: 0 }}
+   795→      transition={{ delay: index * 0.04 }}
+   796→      whileHover={{ backgroundColor: 'rgba(168,85,247,0.08)' }}
+   797→      className={`relative flex items-center gap-3 px-4 py-2.5 ${
+   798→        isAlt ? 'bg-purple-950/15' : 'bg-transparent'
+   799→      } ${isYou ? 'ring-1 ring-inset ring-amber-400/60 bg-amber-500/10' : ''}`}
+   800→    >
+   801→      {/* Role badge */}
+   802→      <div
+   803→        className={`relative shrink-0 w-9 h-9 rounded-lg flex items-center justify-center border text-lg ${cfg.bg} ${cfg.border} ${cfg.ring}`}
+   804→        title={cfg.label}
+   805→      >
+   806→        {cfg.icon === '•' ? (
+   807→          <span className={`text-2xl leading-none ${cfg.text}`}>•</span>
+   808→        ) : (
+   809→          <span>{cfg.icon}</span>
+   810→        )}
+   811→      </div>
+   812→
+   813→      {/* Name + meta */}
+   814→      <div className="flex-1 min-w-0">
+   815→        <div className="flex items-center gap-1.5">
+   816→          <span className={`text-sm font-bold truncate ${isYou ? 'text-amber-200' : 'text-white'}`}>
+   817→            {member.name}
+   818→          </span>
+   819→          {isYou && (
+   820→            <span className="bg-amber-500/20 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded">
+   821→              YOU
+   822→            </span>
+   823→          )}
+   824→          <span className={`text-[9px] uppercase tracking-wide ${cfg.text}`}>{cfg.label}</span>
+   825→        </div>
+   826→        <div className="flex items-center gap-2 text-[10px] text-purple-300/60 mt-0.5">
+   827→          <span className="flex items-center gap-0.5">
+   828→            <Sword className="w-2.5 h-2.5" />
+   829→            Lv. {member.level}
+   830→          </span>
+   831→          <span className="text-purple-500/40">·</span>
+   832→          <span className="flex items-center gap-0.5">
+   833→            <Flame className="w-2.5 h-2.5 text-rose-400/80" />
+   834→            {fmtPower(member.power)}
+   835→          </span>
+   836→        </div>
+   837→      </div>
+   838→
+   839→      {/* Contribution */}
+   840→      <div className="hidden sm:block text-right">
+   841→        <div className="flex items-center gap-1 text-[10px] text-purple-300/60 justify-end">
+   842→          <Coins className="w-2.5 h-2.5 text-amber-400" />
+   843→          Contrib.
+   844→        </div>
+   845→        <div className="text-xs font-bold text-amber-300">
+   846→          {member.contributed.toLocaleString()}
+   847→        </div>
+   848→      </div>
+   849→
+   850→      {/* Online status */}
+   851→      <div className="flex flex-col items-end gap-1 w-16">
+   852→        <span
+   853→          className={`flex items-center gap-1 text-[10px] font-medium ${
+   854→            isOnline ? 'text-emerald-300' : 'text-gray-500'
+   855→          }`}
+   856→        >
+   857→          <span
+   858→            className={`w-1.5 h-1.5 rounded-full ${
+   859→              isOnline ? 'bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.7)]' : 'bg-gray-600'
+   860→            }`}
+   861→          />
+   862→          {member.lastOnline}
+   863→        </span>
+   864→      </div>
+   865→    </motion.div>
+   866→  );
+   867→}
+   868→
