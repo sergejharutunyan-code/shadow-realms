@@ -11,11 +11,11 @@
 // ─────────────────────────────────────────────────────────────────
 
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Billboard, Image as DreiImage, ContactShadows, Sparkles } from '@react-three/drei';
+import { Billboard, ContactShadows, Sparkles } from '@react-three/drei';
 import { Suspense, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { BattleHero, BattleState } from '@/lib/game-data';
-import { getHeroImageUrl } from '@/lib/hero-images';
+import { Hero3DModel } from './hero-3d-model';
 
 // Hex colours for WebGL (the game's config stores tailwind class names).
 const RARITY_HEX: Record<string, string> = {
@@ -48,7 +48,6 @@ interface FigurineProps {
 
 function Figurine({ hero, position, facing, isActive }: FigurineProps) {
   const group = useRef<THREE.Group>(null);
-  const url = getHeroImageUrl(hero.templateId);
   const rarityColor = RARITY_HEX[hero.rarity] ?? '#9ca3af';
   const elementColor = ELEMENT_HEX[hero.element] ?? '#a855f7';
 
@@ -106,7 +105,7 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
     g.rotation.z = -facing * dp * 1.2;
   });
 
-  const scale = 1;
+  const scale = 1.12;
 
   return (
     <group ref={group} position={position} scale={scale}>
@@ -132,57 +131,33 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
         />
       </mesh>
 
-      {/* Portrait standee (billboarded to the camera). Portraits are opaque
-          3:4 images with the hero name baked in, so we frame them like a
-          collectible photo-standee mounted on the pedestal. */}
-      <Billboard follow lockX lockZ position={[0, 1.55, 0]}>
-        {/* Rarity frame / backing */}
-        <mesh position={[0, 0, -0.02]}>
-          <planeGeometry args={[1.55, 2.02]} />
-          <meshBasicMaterial color={rarityColor} transparent opacity={isActive ? 0.95 : 0.7} />
-        </mesh>
-        {url ? (
-          <Suspense
-            fallback={
-              <mesh>
-                <planeGeometry args={[1.4, 1.87]} />
-                <meshBasicMaterial color={rarityColor} transparent opacity={0.5} />
-              </mesh>
-            }
-          >
-            <DreiImage
-              url={url}
-              scale={[1.4, 1.87]}
-              // Desaturate/darken on death.
-              color={hero.isAlive ? '#ffffff' : '#4b4b4b'}
-            />
-          </Suspense>
-        ) : (
-          <mesh>
-            <planeGeometry args={[1.4, 1.87]} />
-            <meshBasicMaterial color={rarityColor} transparent opacity={0.6} />
-          </mesh>
-        )}
+      {/* 3D character model (faction/class body, portrait face) */}
+      <Suspense fallback={null}>
+        <Hero3DModel
+          hero={hero}
+          isActive={isActive}
+          facing={facing}
+          rarityColor={rarityColor}
+          elementColor={elementColor}
+        />
+      </Suspense>
 
-        {/* Active-turn marker */}
+      {/* Floating nameplate: HP bar + active marker, always facing camera */}
+      <Billboard follow lockX lockZ position={[0, 2.35, 0]}>
         {isActive && hero.isAlive && (
-          <mesh position={[0, 1.28, 0.05]} rotation={[0, 0, Math.PI]}>
-            <coneGeometry args={[0.16, 0.3, 4]} />
+          <mesh position={[0, 0.32, 0]} rotation={[0, 0, Math.PI]}>
+            <coneGeometry args={[0.13, 0.26, 4]} />
             <meshBasicMaterial color={elementColor} />
           </mesh>
         )}
-
-        {/* HP bar */}
-        <group position={[0, -1.12, 0.05]}>
-          <mesh>
-            <planeGeometry args={[1.44, 0.15]} />
-            <meshBasicMaterial color="#0b0b12" transparent opacity={0.9} />
-          </mesh>
-          <mesh position={[-(1 - hpPercent) * 0.7, 0, 0.01]} scale={[hpPercent, 1, 1]}>
-            <planeGeometry args={[1.4, 0.1]} />
-            <meshBasicMaterial color={hpPercent > 0.3 ? '#22c55e' : '#ef4444'} />
-          </mesh>
-        </group>
+        <mesh>
+          <planeGeometry args={[1.0, 0.13]} />
+          <meshBasicMaterial color="#0b0b12" transparent opacity={0.9} />
+        </mesh>
+        <mesh position={[-(1 - hpPercent) * 0.485, 0, 0.01]} scale={[hpPercent, 1, 1]}>
+          <planeGeometry args={[0.97, 0.09]} />
+          <meshBasicMaterial color={hpPercent > 0.3 ? '#22c55e' : '#ef4444'} />
+        </mesh>
       </Billboard>
 
       {/* Elemental hit burst */}
@@ -220,9 +195,9 @@ function HitBurst({ color }: { color: string }) {
 function CameraRig() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    state.camera.position.x = Math.sin(t * 0.1) * 0.3;
-    state.camera.position.y = 3.2 + Math.sin(t * 0.16) * 0.12;
-    state.camera.lookAt(0, 1.4, 0);
+    state.camera.position.x = Math.sin(t * 0.1) * 0.25;
+    state.camera.position.y = 2.5 + Math.sin(t * 0.16) * 0.1;
+    state.camera.lookAt(0, 1.15, 0);
   });
   return null;
 }
@@ -233,8 +208,8 @@ function CameraRig() {
 // sits closest to the centre line; the rest recede outward and back.
 function teamPositions(count: number, side: number): [number, number, number][] {
   return Array.from({ length: count }, (_, i) => {
-    const x = side * (2.7 + i * 0.7);
-    const z = 2.6 - i * 1.55;
+    const x = side * (2.3 + i * 0.62);
+    const z = 1.9 - i * 1.3;
     return [x, 0, z] as [number, number, number];
   });
 }
@@ -252,11 +227,13 @@ function SceneContents({ battle }: { battle: BattleState }) {
   return (
     <>
       <CameraRig />
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#8b5cf6', '#0b0618', 0.6]} />
-      <directionalLight position={[0, 8, 4]} intensity={1.1} castShadow />
-      <pointLight position={[-6, 3, 2]} intensity={30} color="#3b82f6" distance={20} />
-      <pointLight position={[6, 3, 2]} intensity={30} color="#ef4444" distance={20} />
+      <ambientLight intensity={0.7} />
+      <hemisphereLight args={['#8b5cf6', '#0b0618', 0.7]} />
+      <directionalLight position={[2, 8, 6]} intensity={1.5} castShadow />
+      {/* Front fill so faces/armour read toward the camera */}
+      <pointLight position={[0, 3, 7]} intensity={40} color="#fff4e0" distance={26} />
+      <pointLight position={[-6, 3, 2]} intensity={26} color="#3b82f6" distance={20} />
+      <pointLight position={[6, 3, 2]} intensity={26} color="#ef4444" distance={20} />
 
       {/* Arena floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -301,7 +278,7 @@ export default function Battle3DScene({ battle }: { battle: BattleState }) {
       shadows
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      camera={{ position: [0, 3.2, 11.5], fov: 42 }}
+      camera={{ position: [0, 2.5, 8.6], fov: 44 }}
       style={{ width: '100%', height: '100%', background: 'transparent' }}
     >
       <SceneContents battle={battle} />
