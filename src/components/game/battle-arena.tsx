@@ -4,11 +4,23 @@ import { useGameStore } from '@/lib/game-store';
 import { RARITY_CONFIG, ELEMENT_CONFIG, FACTION_CONFIG, BattleHero } from '@/lib/game-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Swords, Shield, Heart, Zap, Star, Play, FastForward,
   RotateCcw, Trophy, Skull, Sparkles, Flame, ChevronRight,
-  Volume2, VolumeX, Clock, Users, Crown, AlertTriangle
+  Volume2, VolumeX, Clock, Users, Crown, AlertTriangle, Box, LayoutGrid
 } from 'lucide-react';
+
+// The 3D arena is WebGL and must only run in the browser/WebView, so it is
+// loaded client-side (no SSR/prerender) to keep the static export happy.
+const Battle3DScene = dynamic(() => import('./battle-3d-scene'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full text-purple-300/60 text-sm animate-pulse">
+      Summoning arena…
+    </div>
+  ),
+});
 
 // ─── Floating Damage Type ────────────────────────────────────────
 interface FloatingDamage {
@@ -49,6 +61,7 @@ export function BattleArena() {
   const [skillFlash, setSkillFlash] = useState<SkillFlash[]>([]);
   const [killEffects, setKillEffects] = useState<KillEffect[]>([]);
   const [screenShake, setScreenShake] = useState(false);
+  const [view3d, setView3d] = useState(true);
   const turnCount = battle?.turnNumber ?? 0;
 
   // ─── Auto-scroll battle log ────────────────────────────────
@@ -205,6 +218,19 @@ export function BattleArena() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setView3d(v => !v)}
+            className={`flex items-center gap-1 rounded-lg px-2 py-1 border transition-all ${
+              view3d
+                ? 'bg-purple-600/25 border-purple-500/40 text-purple-200 shadow-lg shadow-purple-600/20'
+                : 'bg-gray-800/50 border-gray-700/50 text-gray-400'
+            }`}
+            title={view3d ? 'Switch to 2D view' : 'Switch to 3D view'}
+          >
+            {view3d ? <Box className="w-3.5 h-3.5" /> : <LayoutGrid className="w-3.5 h-3.5" />}
+            <span className="text-[10px] font-bold">{view3d ? '3D' : '2D'}</span>
+          </motion.button>
           {battle.autoPlay && (
             <motion.div
               animate={{ opacity: [0.5, 1, 0.5] }}
@@ -282,7 +308,15 @@ export function BattleArena() {
           />
         </div>
 
-        {/* ─── Enemy Team Section ────────────────────────── */}
+        {/* ─── 3D Battle Arena ───────────────────────────── */}
+        {view3d && (
+          <div className="relative z-10 h-[440px] sm:h-[540px]">
+            <Battle3DScene battle={battle} />
+          </div>
+        )}
+
+        {/* ─── Enemy Team Section (2D fallback) ───────────── */}
+        {!view3d && (<>
         <div className="relative z-10 p-3 sm:p-4">
           <div className="flex items-center justify-center gap-2 mb-3">
             <motion.div
@@ -372,6 +406,7 @@ export function BattleArena() {
             ))}
           </div>
         </div>
+        </>)}
       </div>
 
       {/* ─── Battle Controls ──────────────────────────────── */}
