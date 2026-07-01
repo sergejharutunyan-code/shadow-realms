@@ -4,6 +4,7 @@ import { useGameStore, GameScreen } from '@/lib/game-store';
 import { Home, Users, Sparkles, Swords, Map, ShoppingBag, Crown, Shirt, Trophy, Medal, Swords as ArenaIcon, Scroll, Flag, Castle, Flame, Store, CalendarDays } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { feedback } from '@/lib/feedback';
 
 const PRIMARY_NAV: { screen: GameScreen; label: string; icon: React.ReactNode }[] = [
   { screen: 'dashboard', label: 'Home', icon: <Home className="w-5 h-5" /> },
@@ -47,7 +48,7 @@ export function GameNav() {
             <motion.button
               key={item.screen}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setScreen(item.screen)}
+              onClick={() => { feedback.unlock(); feedback.tap(); setScreen(item.screen); }}
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all relative ${
                 isActive
                   ? 'text-amber-400'
@@ -149,6 +150,8 @@ export function GameNav() {
                     transition={{ delay: i * 0.03 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => {
+                      feedback.unlock();
+                      feedback.select();
                       setScreen(item.screen);
                       setShowMore(false);
                     }}

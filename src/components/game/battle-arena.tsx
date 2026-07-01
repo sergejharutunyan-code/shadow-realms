@@ -5,6 +5,7 @@ import { RARITY_CONFIG, ELEMENT_CONFIG, FACTION_CONFIG, BattleHero } from '@/lib
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { feedback } from '@/lib/feedback';
 import {
   Swords, Shield, Heart, Zap, Star, Play, FastForward,
   RotateCcw, Trophy, Skull, Sparkles, Flame, ChevronRight,
@@ -63,6 +64,12 @@ export function BattleArena() {
   const [screenShake, setScreenShake] = useState(false);
   const [view3d, setView3d] = useState(true);
   const turnCount = battle?.turnNumber ?? 0;
+
+  // Victory/defeat stinger (plays once when the battle resolves).
+  useEffect(() => {
+    if (battle?.result === 'victory') feedback.victory();
+    else if (battle?.result === 'defeat') feedback.defeat();
+  }, [battle?.result]);
 
   // ─── Auto-scroll battle log ────────────────────────────────
   useEffect(() => {
@@ -415,7 +422,7 @@ export function BattleArena() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            onClick={executeBattleTurn}
+            onClick={() => { feedback.attack(); executeBattleTurn(); }}
             className="flex-1 bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:from-red-500 hover:via-red-600 hover:to-red-700 transition-all shadow-lg shadow-red-600/30 border border-red-500/30"
           >
             <motion.div

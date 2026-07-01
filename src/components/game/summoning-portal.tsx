@@ -10,6 +10,7 @@ import {
   HeroInstance,
 } from '@/lib/game-data';
 import { GAME_IMAGES, getHeroImageUrl } from '@/lib/hero-images';
+import { feedback } from '@/lib/feedback';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -233,11 +234,15 @@ export function SummoningPortal() {
   const canSummon10 = player.gems >= 1200;
 
   const handleSummon1 = useCallback(() => {
+    feedback.unlock();
+    feedback.summon();
     if (selectedBanner === 'mystic') summon(1, 150);
     else summon(1, 3000);
   }, [selectedBanner, summon]);
 
   const handleSummon10 = useCallback(() => {
+    feedback.unlock();
+    feedback.summon();
     summon(10, 1200);
   }, [summon]);
 
@@ -863,6 +868,7 @@ function SummonAnimationOverlay({
       // Single reveal — flip after intro, then complete
       const flipT = setTimeout(() => {
         setActiveCloseup(0);
+        feedback.reveal(ordered[0].rarity);
       }, 1700);
       const completeT = setTimeout(() => {
         setPhase('complete');
@@ -877,6 +883,8 @@ function SummonAnimationOverlay({
         const step = isLast ? 600 : quickStep;
         const revealT = setTimeout(() => {
           setRevealedCount(c => Math.max(c, i + 1));
+          if (RARITY_ORDER[ordered[i].rarity] >= RARITY_ORDER.epic) feedback.reveal(ordered[i].rarity);
+          else feedback.select();
           if (isLast) {
             // Only closeup if epic+
             if (RARITY_ORDER[ordered[i].rarity] >= RARITY_ORDER.epic) {

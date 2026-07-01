@@ -2520,3 +2520,51 @@
   border: 1px solid rgba(255, 215, 0, 0.15);
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Living ambient background (UX overhaul)
+   Enhances the existing .dark-fantasy-bg: a slow-drifting nebula on
+   ::after (::before is already used by .particles-bg), plus a fine
+   starfield + vignette folded into the element's own background so it
+   frames every screen. GPU-friendly; honours reduced-motion.
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes sr-nebula-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05); opacity: 0.8; }
+  50%  { transform: translate3d(-2.5%, -2%, 0) scale(1.15); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0) scale(1.05); opacity: 0.8; }
+}
+
+.dark-fantasy-bg {
+  background:
+    radial-gradient(1px 1px at 22% 28%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1px 1px at 68% 62%, rgba(255,255,255,0.38), transparent),
+    radial-gradient(1.5px 1.5px at 44% 82%, rgba(255,235,180,0.40), transparent),
+    radial-gradient(1px 1px at 86% 38%, rgba(200,220,255,0.42), transparent),
+    radial-gradient(1px 1px at 12% 68%, rgba(255,255,255,0.32), transparent),
+    radial-gradient(1px 1px at 58% 16%, rgba(255,255,255,0.30), transparent),
+    radial-gradient(135% 120% at 50% 35%, transparent 55%, rgba(0,0,0,0.55) 100%),
+    radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(220, 38, 38, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(234, 179, 8, 0.03) 0%, transparent 50%),
+    linear-gradient(180deg, #060612 0%, #0a0a1a 50%, #060612 100%);
+  background-attachment: fixed;
+}
+
+.dark-fantasy-bg::after {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 34% at 16% 14%, rgba(124, 58, 237, 0.30), transparent 70%),
+    radial-gradient(40% 38% at 86% 22%, rgba(220, 38, 38, 0.16), transparent 72%),
+    radial-gradient(48% 42% at 78% 86%, rgba(37, 99, 235, 0.20), transparent 74%),
+    radial-gradient(34% 34% at 32% 82%, rgba(255, 170, 0, 0.10), transparent 72%);
+  filter: blur(6px) saturate(1.12);
+  animation: sr-nebula-drift 28s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dark-fantasy-bg::after { animation: none; }
+}

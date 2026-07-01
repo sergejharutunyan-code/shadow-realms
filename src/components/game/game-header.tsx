@@ -1,12 +1,21 @@
 'use client';
 
 import { useGameStore } from '@/lib/game-store';
-import { Gem, Coins, Zap, Crown, Star, Flame, Bell } from 'lucide-react';
+import { Gem, Coins, Zap, Crown, Star, Flame, Bell, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { feedback } from '@/lib/feedback';
 
 export function GameHeader() {
   const player = useGameStore(s => s.player);
   const notifications = useGameStore(s => s.notifications);
+  const [muted, setMuted] = useState(false);
+
+  // Sync the persisted mute preference after hydration (localStorage only
+  // exists on the client, so we read it in an effect to avoid mismatches).
+  useEffect(() => {
+    setMuted(feedback.isMuted());
+  }, []);
   const playerLevel = player.level;
   const xpNeeded = Math.floor(100 * Math.pow(1.5, playerLevel - 1));
   const xpPercent = Math.min(100, (player.experience / xpNeeded) * 100);
@@ -100,6 +109,19 @@ export function GameHeader() {
               color="text-cyan-400"
               iconBg="bg-cyan-500/20"
             />
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                feedback.unlock();
+                const m = feedback.toggleMuted();
+                setMuted(m);
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-black/40 border border-white/10 text-amber-300/80 hover:text-amber-200 transition-colors"
+              title={muted ? 'Unmute sound' : 'Mute sound'}
+              aria-label={muted ? 'Unmute sound' : 'Mute sound'}
+            >
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </motion.button>
           </div>
         </div>
       </div>
