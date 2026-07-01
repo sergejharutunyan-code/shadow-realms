@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Static HTML/JS/CSS export so the game can be bundled into a native
+  // Capacitor Android app (WebView) and run fully offline.
+  output: "export",
   typescript: {
     ignoreBuildErrors: true,
   },

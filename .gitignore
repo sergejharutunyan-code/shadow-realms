@@ -17,6 +17,10 @@ node_modules
 /.next/
 /out/
 
+# capacitor (android project is generated in CI)
+/android/
+/ios/
+
 # production
 /build
 

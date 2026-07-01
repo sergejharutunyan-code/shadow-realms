@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "An epic dark fantasy gacha RPG. Collect legendary champions, battle through campaigns, and dominate the Shadow Realms!",
   keywords: ["RPG", "gacha", "dark fantasy", "champions", "heroes", "Shadow Realms"],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
 };
 
