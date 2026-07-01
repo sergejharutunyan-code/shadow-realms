@@ -1,6 +1,8 @@
 'use client';
 
 import { useGameStore, GameScreen } from '@/lib/game-store';
+import { useAuthStore } from '@/lib/auth-store';
+import { AuthScreen } from '@/components/game/auth-screen';
 import { GameHeader } from '@/components/game/game-header';
 import { GameNav } from '@/components/game/game-nav';
 import { GameDashboard } from '@/components/game/game-dashboard';
@@ -20,7 +22,7 @@ import { TowerScreen } from '@/components/game/tower-screen';
 import { DungeonScreen } from '@/components/game/dungeon-screen';
 import { MerchantScreen } from '@/components/game/merchant-screen';
 import { LoginStreakScreen } from '@/components/game/login-streak-screen';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Map screens to their ambient backdrop class
@@ -50,6 +52,9 @@ export default function GamePage() {
   const dailyClaimed = useGameStore(s => s.dailyClaimed);
   const checkAchievements = useGameStore(s => s.checkAchievements);
   const checkLoginStreak = useGameStore(s => s.checkLoginStreak);
+  const authUser = useAuthStore(s => s.user);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Check energy refill on mount
   useEffect(() => {
@@ -85,6 +90,11 @@ export default function GamePage() {
   }, []);
 
   const backdropClass = SCREEN_BACKDROP[screen] || '';
+
+  // Gate the game behind the login/profile screen (offline-first).
+  // Avoid a hydration flash by waiting for the client mount first.
+  if (!mounted) return <div className="min-h-screen dark-fantasy-bg particles-bg" />;
+  if (!authUser) return <AuthScreen />;
 
   const renderScreen = () => {
     switch (screen) {

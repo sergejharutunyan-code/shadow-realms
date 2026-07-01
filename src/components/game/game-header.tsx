@@ -1,14 +1,16 @@
 'use client';
 
 import { useGameStore } from '@/lib/game-store';
-import { Gem, Coins, Zap, Crown, Star, Flame, Bell, Volume2, VolumeX } from 'lucide-react';
+import { Gem, Coins, Zap, Crown, Star, Flame, Bell, Volume2, VolumeX, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { feedback } from '@/lib/feedback';
+import { useAuthStore } from '@/lib/auth-store';
 
 export function GameHeader() {
   const player = useGameStore(s => s.player);
   const notifications = useGameStore(s => s.notifications);
+  const signOut = useAuthStore(s => s.signOut);
   const [muted, setMuted] = useState(false);
 
   // Sync the persisted mute preference after hydration (localStorage only
@@ -121,6 +123,15 @@ export function GameHeader() {
               aria-label={muted ? 'Unmute sound' : 'Mute sound'}
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { feedback.tap(); signOut(); }}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-black/40 border border-white/10 text-amber-300/80 hover:text-red-300 transition-colors"
+              title="Switch profile / sign out"
+              aria-label="Switch profile or sign out"
+            >
+              <LogOut className="w-4 h-4" />
             </motion.button>
           </div>
         </div>
