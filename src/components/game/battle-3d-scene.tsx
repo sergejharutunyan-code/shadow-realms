@@ -191,13 +191,18 @@ function HitBurst({ color }: { color: string }) {
   );
 }
 
-// ─── Gentle idle camera drift ─────────────────────────────────────
+// ─── Gentle idle camera drift (aspect-aware) ─────────────────────
+// Narrow/portrait canvases pull the camera back so both teams stay
+// fully in frame on phones; wide canvases sit closer.
 function CameraRig() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
+    const aspect = state.size.width / state.size.height;
+    const dist = 9.2 * THREE.MathUtils.clamp(1.15 / aspect, 1, 2.1);
     state.camera.position.x = Math.sin(t * 0.1) * 0.25;
-    state.camera.position.y = 2.7 + Math.sin(t * 0.16) * 0.1;
-    state.camera.lookAt(0, 1.3, 0);
+    state.camera.position.y = 2.7 + Math.sin(t * 0.16) * 0.1 + (dist - 9.2) * 0.12;
+    state.camera.position.z = dist;
+    state.camera.lookAt(0, 1.25, 0);
   });
   return null;
 }
@@ -208,8 +213,8 @@ function CameraRig() {
 // sits closest to the centre line; the rest recede outward and back.
 function teamPositions(count: number, side: number): [number, number, number][] {
   return Array.from({ length: count }, (_, i) => {
-    const x = side * (2.55 + i * 0.72);
-    const z = 1.6 - i * 1.4;
+    const x = side * (1.95 + i * 0.5);
+    const z = 1.7 - i * 1.35;
     return [x, 0, z] as [number, number, number];
   });
 }
@@ -227,11 +232,11 @@ function SceneContents({ battle }: { battle: BattleState }) {
   return (
     <>
       <CameraRig />
-      <ambientLight intensity={0.7} />
-      <hemisphereLight args={['#8b5cf6', '#0b0618', 0.7]} />
-      <directionalLight position={[2, 8, 6]} intensity={1.5} castShadow />
+      <ambientLight intensity={0.9} />
+      <hemisphereLight args={['#8b5cf6', '#0b0618', 0.8]} />
+      <directionalLight position={[2, 8, 6]} intensity={1.7} castShadow />
       {/* Front fill so faces/armour read toward the camera */}
-      <pointLight position={[0, 3, 7]} intensity={40} color="#fff4e0" distance={26} />
+      <pointLight position={[0, 3.2, 7]} intensity={60} color="#fff4e0" distance={30} />
       <pointLight position={[-6, 3, 2]} intensity={26} color="#3b82f6" distance={20} />
       <pointLight position={[6, 3, 2]} intensity={26} color="#ef4444" distance={20} />
 

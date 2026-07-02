@@ -8,6 +8,7 @@ import {
   HERO_TEMPLATES,
   Rarity,
   HeroInstance,
+  PITY_CONFIG,
 } from '@/lib/game-data';
 import { GAME_IMAGES, getHeroImageUrl } from '@/lib/hero-images';
 import { feedback } from '@/lib/feedback';
@@ -414,6 +415,8 @@ export function SummoningPortal() {
           />
         )}
       </div>
+
+      <PityMeter />
 
       {/* Gem Purchase CTA */}
       {player.gems < 150 && (
@@ -1935,4 +1938,43 @@ function timeAgo(ts: number): string {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   return `${d}d ago`;
+}
+
+// ─── Pity / Mercy meter ───────────────────────────────────────────
+// Genre-standard transparency: shows how many pulls remain before an
+// Epic (20) and a Legendary (50) are guaranteed.
+function PityMeter() {
+  const pityEpic = useGameStore(s => s.pityEpic);
+  const pityLegendary = useGameStore(s => s.pityLegendary);
+  const rows = [
+    { label: 'Epic', at: PITY_CONFIG.epicAt, count: pityEpic, bar: 'from-purple-600 to-fuchsia-500', text: 'text-purple-300' },
+    { label: 'Legendary', at: PITY_CONFIG.legendaryAt, count: pityLegendary, bar: 'from-amber-500 to-yellow-400', text: 'text-amber-300' },
+  ];
+  return (
+    <div className="mb-4 rounded-xl border border-white/10 bg-black/35 p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400">Mercy System</span>
+        <span className="text-[9px] text-gray-500">— guaranteed drops</span>
+      </div>
+      <div className="space-y-2">
+        {rows.map(r => {
+          const left = Math.max(0, r.at - r.count);
+          const pct = Math.min(100, (r.count / r.at) * 100);
+          return (
+            <div key={r.label}>
+              <div className="flex justify-between text-[10px] mb-0.5">
+                <span className={`font-bold ${r.text}`}>{r.label}</span>
+                <span className="text-gray-400">
+                  {left === 0 ? 'GUARANTEED next pull!' : `guaranteed in ${left} pull${left === 1 ? '' : 's'}`}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div className={`h-full rounded-full bg-gradient-to-r ${r.bar} transition-all`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

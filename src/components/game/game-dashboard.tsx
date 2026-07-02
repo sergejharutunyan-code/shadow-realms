@@ -266,6 +266,9 @@ export function GameDashboard() {
         </motion.div>
       )}
 
+      {/* ===== IDLE EARNINGS CHEST ===== */}
+      <IdleRewardsCard />
+
       {/* ===== PREMIUM QUICK ACTIONS ===== */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <PremiumQuickAction
@@ -784,5 +787,54 @@ function PremiumActivityCard({ icon, label, value, sublabel, accentColor, bgColo
       <div className={`text-sm font-bold ${accentColor}`}>{value}</div>
       <div className="text-[9px] text-gray-500 mt-0.5">{sublabel}</div>
     </motion.button>
+  );
+}
+
+// ─── Idle earnings chest (AFK-style offline farming) ─────────────
+function IdleRewardsCard() {
+  const getIdleRewards = useGameStore(s => s.getIdleRewards);
+  const claimIdleRewards = useGameStore(s => s.claimIdleRewards);
+  const lastIdleClaimAt = useGameStore(s => s.lastIdleClaimAt);
+  const [rewards, setRewards] = useState(() => getIdleRewards());
+
+  // Tick the accrual display every 30s.
+  useEffect(() => {
+    setRewards(getIdleRewards());
+    const t = setInterval(() => setRewards(getIdleRewards()), 30_000);
+    return () => clearInterval(t);
+  }, [lastIdleClaimAt, getIdleRewards]);
+
+  if (rewards.minutes < 5) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden bg-gradient-to-r from-emerald-800/25 via-teal-700/15 to-emerald-800/10 border border-emerald-500/25 rounded-xl p-3.5 flex items-center justify-between"
+    >
+      <div className="absolute inset-0 premium-shimmer opacity-30" />
+      <div className="flex items-center gap-3 relative z-10 min-w-0">
+        <motion.div
+          animate={{ rotate: [0, -8, 8, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity }}
+          className="w-11 h-11 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-lg shadow-emerald-500/20 text-xl"
+        >
+          ⛏️
+        </motion.div>
+        <div className="min-w-0">
+          <div className="text-sm font-bold text-emerald-300">Idle Loot {rewards.capped && <span className="text-[9px] text-red-300 font-bold align-middle">FULL (8h cap)</span>}</div>
+          <div className="text-xs text-emerald-200/70 truncate">
+            Your champions farmed {rewards.minutes >= 60 ? `${Math.floor(rewards.minutes / 60)}h ${rewards.minutes % 60}m` : `${rewards.minutes}m`}: 🪙 {rewards.gold.toLocaleString()}{rewards.gems > 0 ? ` · 💎 ${rewards.gems}` : ''}
+          </div>
+        </div>
+      </div>
+      <motion.button
+        whileTap={{ scale: 0.92 }}
+        onClick={claimIdleRewards}
+        className="relative z-10 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-black text-xs font-black shadow-lg shadow-emerald-600/30 hover:brightness-110 transition-all"
+      >
+        CLAIM
+      </motion.button>
+    </motion.div>
   );
 }

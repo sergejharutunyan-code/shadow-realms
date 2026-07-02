@@ -2568,3 +2568,16 @@
 @media (prefers-reduced-motion: reduce) {
   .dark-fantasy-bg::after { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Premium typography (UI overhaul 2)
+   Cinzel display serif for titles/headings gives the whole game the
+   engraved, AAA dark-fantasy look. Body copy stays on Geist.
+   ═══════════════════════════════════════════════════════════════ */
+h1, h2, h3,
+.font-display,
+.premium-gold-text,
+.gold-text {
+  font-family: var(--font-display), var(--font-geist-sans), serif;
+  letter-spacing: 0.03em;
+}

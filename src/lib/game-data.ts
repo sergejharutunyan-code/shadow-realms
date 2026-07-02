@@ -1393,3 +1393,60 @@ export function getSkinsForHero(templateId: string): HeroSkin[] {
 }
 
 
+
+// ============= MARKET-STANDARD META MECHANICS =============
+// (pity/mercy summons, elemental affinity, idle earnings)
+
+// Pity ("mercy") system — genre standard (cf. Raid's mercy rule, scaled
+// to this game's much higher base rates): an Epic-or-better champion is
+// guaranteed within 20 pulls and a Legendary-or-better within 50.
+export const PITY_CONFIG = { epicAt: 20, legendaryAt: 50 };
+
+const RARITY_RANK: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
+
+export function rarityRank(r: Rarity): number {
+  return RARITY_RANK[r];
+}
+
+export function getSummonOfRarity(rarity: Rarity): HeroTemplate {
+  const eligible = HERO_TEMPLATES.filter(h => h.rarity === rarity);
+  return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
+// Elemental affinity wheel: fire → earth → water → fire; light ⇄ dark
+// punish each other; void sits outside the wheel. Attacking into an
+// advantage deals +25%, into a disadvantage −20%.
+export const ELEMENT_ADVANTAGE: Record<Element, Element | null> = {
+  fire: 'earth',
+  earth: 'water',
+  water: 'fire',
+  light: 'dark',
+  dark: 'light',
+  void: null,
+};
+
+export function elementMultiplier(attacker: Element, defender: Element): number {
+  if (ELEMENT_ADVANTAGE[attacker] === defender) return 1.25;
+  if (ELEMENT_ADVANTAGE[defender] === attacker) return 0.8;
+  return 1;
+}
+
+// Idle earnings (AFK-style): your champions farm while you're away.
+// Rewards scale with campaign progress and cap at 8 hours.
+export const IDLE_CONFIG = {
+  goldPerMinutePerStage: 6,
+  capHours: 8,
+  minMinutes: 5,
+  gemsCap: 20, // small gem trickle, maxes out at the cap
+};
+
+export function computeIdleRewards(elapsedMs: number, campaignStage: number): { minutes: number; gold: number; gems: number; capped: boolean } {
+  const capMs = IDLE_CONFIG.capHours * 3600_000;
+  const capped = elapsedMs >= capMs;
+  const ms = Math.min(elapsedMs, capMs);
+  const minutes = Math.floor(ms / 60_000);
+  const stage = Math.max(1, campaignStage);
+  const gold = Math.floor(minutes * IDLE_CONFIG.goldPerMinutePerStage * (1 + stage * 0.35));
+  const gems = Math.min(IDLE_CONFIG.gemsCap, Math.floor(minutes / 30));
+  return { minutes, gold, gems, capped };
+}

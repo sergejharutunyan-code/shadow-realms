@@ -38,6 +38,11 @@ import {
   HERO_SKINS,
   getSkinsForHero,
   ASCENSION_COSTS,
+  PITY_CONFIG,
+  rarityRank,
+  getSummonOfRarity,
+  elementMultiplier,
+  computeIdleRewards,
 } from './game-data';
 
 export type GameScreen = 'dashboard' | 'heroes' | 'summon' | 'battle' | 'campaign' | 'shop' | 'vip' | 'equipment' | 'achievements' | 'leaderboard' | 'arena' | 'missions' | 'guild' | 'tower' | 'dungeon' | 'merchant' | 'login-streak';
@@ -120,6 +125,13 @@ export interface GameState {
 
   // Actions
   setScreen: (screen: GameScreen) => void;
+  // Pity ("mercy") counters — pulls since the last epic+/legendary+ hit
+  pityEpic: number;
+  pityLegendary: number;
+  // Idle earnings
+  lastIdleClaimAt: number;
+  getIdleRewards: () => { minutes: number; gold: number; gems: number; capped: boolean };
+  claimIdleRewards: () => void;
   summon: (count: 1 | 10, cost: number) => void;
   addToTeam: (heroId: string) => void;
   removeFromTeam: (heroId: string) => void;
@@ -235,6 +247,9 @@ export const useGameStore = create<GameState>()(
       summonResults: [],
       showSummonAnimation: false,
       notifications: [],
+      pityEpic: 0,
+      pityLegendary: 0,
+      lastIdleClaimAt: Date.now(),
       dailyClaimed: false,
       showDailyReward: false,
       equipment: [],
@@ -292,8 +307,26 @@ export const useGameStore = create<GameState>()(
         }
 
         const results: HeroInstance[] = [];
+        let pityEpic = state.pityEpic;
+        let pityLegendary = state.pityLegendary;
+        let pityTriggered: 'epic' | 'legendary' | null = null;
         for (let i = 0; i < count; i++) {
-          const template = getSummonResult(state.player.vipLevel);
+          pityEpic++;
+          pityLegendary++;
+          let template: HeroTemplate;
+          if (pityLegendary >= PITY_CONFIG.legendaryAt) {
+            // Mercy: guaranteed legendary (small chance to upgrade to mythic)
+            template = getSummonOfRarity(Math.random() < 0.1 ? 'mythic' : 'legendary');
+            pityTriggered = 'legendary';
+          } else if (pityEpic >= PITY_CONFIG.epicAt) {
+            // Mercy: guaranteed epic
+            template = getSummonOfRarity('epic');
+            pityTriggered = pityTriggered ?? 'epic';
+          } else {
+            template = getSummonResult(state.player.vipLevel);
+          }
+          if (rarityRank(template.rarity) >= rarityRank('epic')) pityEpic = 0;
+          if (rarityRank(template.rarity) >= rarityRank('legendary')) pityLegendary = 0;
           const instance = createHeroInstance(template);
           results.push(instance);
         }
@@ -319,7 +352,18 @@ export const useGameStore = create<GameState>()(
           showSummonAnimation: true,
           heroesSummoned: state.heroesSummoned + count,
           gemsSpent: state.gemsSpent + cost,
+          pityEpic,
+          pityLegendary,
         });
+
+        if (pityTriggered) {
+          state.addNotification(
+            pityTriggered === 'legendary'
+              ? '🛡️ Mercy invoked — a Legendary was guaranteed!'
+              : '🛡️ Mercy invoked — an Epic was guaranteed!',
+            'epic',
+          );
+        }
 
         // Update mission progress
         get().updateMissionProgress('summon', count);
@@ -524,7 +568,8 @@ export const useGameStore = create<GameState>()(
           if (!target) continue;
 
           const isCrit = Math.random() < hero.critRate;
-          let damage = Math.floor(hero.attack * (1.5 + Math.random() * 0.5) * (isCrit ? hero.critDamage : 1));
+          const affinity = elementMultiplier(hero.element, target.element);
+          let damage = Math.floor(hero.attack * (1.5 + Math.random() * 0.5) * (isCrit ? hero.critDamage : 1) * affinity);
           const defReduction = target.defense / (target.defense + 500);
           damage = Math.floor(damage * (1 - defReduction));
 
@@ -540,7 +585,7 @@ export const useGameStore = create<GameState>()(
             isAlive: target.currentHealth - damage > 0,
           };
 
-          log.push(`${hero.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}`);
+          log.push(`${hero.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}${affinity > 1 ? ' ⚡Effective' : affinity < 1 ? ' 🛡Resisted' : ''}`);
 
           if (enemyTeam[enemyIdx].currentHealth <= 0) {
             enemyTeam[enemyIdx] = { ...enemyTeam[enemyIdx], isAlive: false, currentHealth: 0 };
@@ -575,7 +620,8 @@ export const useGameStore = create<GameState>()(
           if (!target) continue;
 
           const isCrit = Math.random() < enemy.critRate;
-          let damage = Math.floor(enemy.attack * (1.2 + Math.random() * 0.3) * (isCrit ? enemy.critDamage : 1));
+          const affinity = elementMultiplier(enemy.element, target.element);
+          let damage = Math.floor(enemy.attack * (1.2 + Math.random() * 0.3) * (isCrit ? enemy.critDamage : 1) * affinity);
           const defReduction = target.defense / (target.defense + 500);
           damage = Math.floor(damage * (1 - defReduction));
 
@@ -586,7 +632,7 @@ export const useGameStore = create<GameState>()(
             isAlive: target.currentHealth - damage > 0,
           };
 
-          log.push(`${enemy.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}`);
+          log.push(`${enemy.name} attacks ${target.name} for ${damage}${isCrit ? ' CRIT!' : ''}${affinity > 1 ? ' ⚡Effective' : affinity < 1 ? ' 🛡Resisted' : ''}`);
 
           if (playerTeam[playerIdx].currentHealth <= 0) {
             playerTeam[playerIdx] = { ...playerTeam[playerIdx], isAlive: false, currentHealth: 0 };
@@ -947,6 +993,30 @@ export const useGameStore = create<GameState>()(
       })),
 
       endBattle: () => set({ battle: null }),
+
+      // ─── Idle earnings (AFK-style) ─────────────────────────
+      getIdleRewards: () => {
+        const state = get();
+        return computeIdleRewards(Date.now() - state.lastIdleClaimAt, state.player.campaignStage);
+      },
+
+      claimIdleRewards: () => {
+        const state = get();
+        const rewards = computeIdleRewards(Date.now() - state.lastIdleClaimAt, state.player.campaignStage);
+        if (rewards.gold <= 0) return;
+        set({
+          player: {
+            ...state.player,
+            gold: state.player.gold + rewards.gold,
+            gems: state.player.gems + rewards.gems,
+          },
+          lastIdleClaimAt: Date.now(),
+        });
+        state.addNotification(
+          `⛏️ Idle loot claimed: +${rewards.gold.toLocaleString()} gold${rewards.gems > 0 ? `, +${rewards.gems} gems` : ''}!`,
+          'success',
+        );
+      },
 
       checkEnergyRefill: () => {
         const state = get();
@@ -1822,6 +1892,9 @@ export const useGameStore = create<GameState>()(
         equipmentEquipped: state.equipmentEquipped,
         campaignStagesWon: state.campaignStagesWon,
         heroesLeveledUp: state.heroesLeveledUp,
+        pityEpic: state.pityEpic,
+        pityLegendary: state.pityLegendary,
+        lastIdleClaimAt: state.lastIdleClaimAt,
       }),
     }
   )
