@@ -16,6 +16,8 @@ import { Suspense, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { BattleHero, BattleState } from '@/lib/game-data';
 import { Hero3DModel } from './hero-3d-model';
+import { HeroGlbModel } from './hero-glb-model';
+import { getHeroModelUrl } from '@/lib/hero-models';
 
 // Hex colours for WebGL (the game's config stores tailwind class names).
 const RARITY_HEX: Record<string, string> = {
@@ -131,15 +133,25 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
         />
       </mesh>
 
-      {/* 3D character model (faction/class body, portrait face) */}
+      {/* 3D character: real GLB model when one is mapped for this hero,
+          otherwise the procedural figure generated from the portrait. */}
       <Suspense fallback={null}>
-        <Hero3DModel
-          hero={hero}
-          isActive={isActive}
-          facing={facing}
-          rarityColor={rarityColor}
-          elementColor={elementColor}
-        />
+        {getHeroModelUrl(hero.templateId) ? (
+          <HeroGlbModel
+            url={getHeroModelUrl(hero.templateId)!}
+            facing={facing}
+            isActive={isActive}
+            dead={!hero.isAlive}
+          />
+        ) : (
+          <Hero3DModel
+            hero={hero}
+            isActive={isActive}
+            facing={facing}
+            rarityColor={rarityColor}
+            elementColor={elementColor}
+          />
+        )}
       </Suspense>
 
       {/* Floating nameplate: HP bar + active marker, always facing camera */}
