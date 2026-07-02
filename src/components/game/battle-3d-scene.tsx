@@ -16,8 +16,6 @@ import { Suspense, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { BattleHero, BattleState } from '@/lib/game-data';
 import { Hero3DModel } from './hero-3d-model';
-import { HeroGlbModel } from './hero-glb-model';
-import { getHeroModelUrl } from '@/lib/hero-models';
 
 // Hex colours for WebGL (the game's config stores tailwind class names).
 const RARITY_HEX: Record<string, string> = {
@@ -133,25 +131,15 @@ function Figurine({ hero, position, facing, isActive }: FigurineProps) {
         />
       </mesh>
 
-      {/* 3D character: real GLB model when one is mapped for this hero,
-          otherwise the procedural figure generated from the portrait. */}
+      {/* Hero card figurine (curved portrait standee on a pedestal) */}
       <Suspense fallback={null}>
-        {getHeroModelUrl(hero.templateId) ? (
-          <HeroGlbModel
-            url={getHeroModelUrl(hero.templateId)!}
-            facing={facing}
-            isActive={isActive}
-            dead={!hero.isAlive}
-          />
-        ) : (
-          <Hero3DModel
-            hero={hero}
-            isActive={isActive}
-            facing={facing}
-            rarityColor={rarityColor}
-            elementColor={elementColor}
-          />
-        )}
+        <Hero3DModel
+          hero={hero}
+          isActive={isActive}
+          facing={facing}
+          rarityColor={rarityColor}
+          elementColor={elementColor}
+        />
       </Suspense>
 
       {/* Floating nameplate: HP bar + active marker, always facing camera */}
@@ -225,8 +213,8 @@ function CameraRig() {
 // sits closest to the centre line; the rest recede outward and back.
 function teamPositions(count: number, side: number): [number, number, number][] {
   return Array.from({ length: count }, (_, i) => {
-    const x = side * (1.95 + i * 0.5);
-    const z = 1.7 - i * 1.35;
+    const x = side * (2.3 + i * 0.68);
+    const z = 1.65 - i * 1.4;
     return [x, 0, z] as [number, number, number];
   });
 }
